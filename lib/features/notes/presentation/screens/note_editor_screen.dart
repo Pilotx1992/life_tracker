@@ -8,6 +8,7 @@ import 'package:life_tracker/features/notes/presentation/widgets/audio_player_wi
 import 'package:life_tracker/features/notes/presentation/widgets/checklist_widget.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/color_picker.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
+import 'package:life_tracker/features/notes/presentation/widgets/voice_recorder_widget.dart';
 import 'package:life_tracker/features/notes/services/attachment_service.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
@@ -582,20 +583,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _recordVoiceNote(BuildContext context) async {
-    // TODO: Implement voice recording when record package is available
-    // For now, show a placeholder
-    FeedbackService.showInfo(
-      context,
-      'Voice recording coming soon. Use file picker to add audio files.',
-    );
+    // Import and use the voice recorder bottom sheet
+    final result = await showVoiceRecorderSheet(context);
 
-    // Allow user to pick an audio file as a workaround
-    final path = await _attachmentService.pickFile();
-    if (path != null && _attachmentService.isAudio(path)) {
+    if (result != null && mounted) {
       setState(() {
-        _voiceNotePath = path;
+        _voiceNotePath = result.path;
         _hasChanges = true;
       });
+      if (mounted) {
+        final name = result.name ?? 'Voice note';
+        FeedbackService.showSuccess(context, '$name saved successfully');
+      }
     }
   }
 

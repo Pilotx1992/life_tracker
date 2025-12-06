@@ -46,9 +46,9 @@ dependencies:
   url_launcher: ^6.3.2
   uuid: ^4.4.1
 
-  # Audio playback (for voice notes)
-  # TODO: Add record package when needed (has compatibility issues currently)
-  # record: ^5.1.2
+  # Audio recording
+  open_filex: ^4.5.0
+  flutter_sound: ^9.16.3  # For voice recording
 
 dev_dependencies:
   # Dev dependencies (sorted alphabetically)
