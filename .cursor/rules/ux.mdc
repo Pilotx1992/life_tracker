@@ -1,0 +1,288 @@
+---
+alwaysApply: true
+---
+
+# UX/UI Implementation Rules - Expert Guidelines
+
+## 🎯 Implementation Philosophy
+
+> "Write code as if the next person to maintain it is a violent psychopath who knows where you live."
+
+### Core Principles:
+1. **Consistency over creativity** - Follow existing patterns
+2. **User feedback is king** - Always show loading, error, and empty states
+3. **Performance first** - Every widget should be optimized
+4. **Accessibility matters** - 15% of users have disabilities
+
+## 🚨 MANDATORY Checks Before ANY UX/UI Change
+
+### 1. Verify File Location
+```bash
+# WRONG PATH (common mistake):
+lib/shared/widgets/empty_state_widget.dart
+
+# CORRECT PATH:
+lib/shared/widgets/states/empty_state_widget.dart
+```
+
+### 2. Check Imports Before Deleting
+```bash
+# ALWAYS run this before deleting any file:
+grep -r "path/to/file" lib/
+```
+
+### 3. Run Analyze After Every Change
+```bash
+flutter analyze
+# Fix ALL errors before proceeding
+```
+
+## 🎨 Theme Colors - NEVER Hardcode
+
+### Light/Dark Mode Aware Colors:
+
+| Hardcoded ❌ | Theme Color ✅ |
+|-------------|----------------|
+| `Colors.black` | `colorScheme.onSurface` |
+| `Colors.white` | `colorScheme.surface` |
+| `Colors.grey` | `colorScheme.outline` |
+| `Colors.red` | `colorScheme.error` |
+| `Colors.blue` | `colorScheme.primary` |
+| `Colors.black12` | `colorScheme.shadow.withOpacity(0.1)` |
+
+### Shadows in Dark Mode:
+```dart
+// ❌ Bad - visible shadow in dark mode
+boxShadow: [BoxShadow(color: Colors.black26)]
+
+// ✅ Good - no shadow in dark mode
+boxShadow: Theme.of(context).brightness == Brightness.light
+    ? [BoxShadow(color: Colors.black.withOpacity(0.1))]
+    : null
+```
+
+## 📊 Three-State Pattern (MANDATORY for all data screens)
+
+Every screen that displays data MUST handle:
+1. ⏳ **Loading** - Show skeleton or spinner
+2. ❌ **Error** - Show error with retry button
+3. 📭 **Empty** - Show empty state with action button
+4. ✅ **Data** - Show the actual content
+
+```dart
+Widget build(BuildContext context) {
+  final dataAsync = ref.watch(dataProvider);
+  
+  return dataAsync.when(
+    loading: () => const LoadingWidget(useShimmer: true),
+    error: (error, _) => ErrorStateWidget(
+      message: error.toString(),
+      onRetry: () => ref.invalidate(dataProvider),
+    ),
+    data: (items) {
+      if (items.isEmpty) {
+        return EmptyStateWidget(
+          icon: Icons.inbox,
+          message: 'No items yet',
+          actionLabel: 'Add First Item',
+          onAction: _showAddDialog,
+        );
+      }
+      return _buildList(items);
+    },
+  );
+}
+```
+
+## 🔄 RefreshIndicator Pattern
+
+### For List Screens:
+```dart
+RefreshIndicator(
+  onRefresh: () async {
+    ref.invalidate(dataProvider);
+    await ref.read(dataProvider.future);
+  },
+  child: ListView.builder(
+    // CRITICAL: Enable pull even when empty
+    physics: const AlwaysScrollableScrollPhysics(),
+    cacheExtent: 500, // Performance optimization
+    itemCount: items.length,
+    itemBuilder: (context, index) => ItemCard(
+      key: ValueKey(items[index].id),
+      item: items[index],
+    ),
+  ),
+)
+```
+
+## ⚡ Performance Optimizations
+
+### 1. ListView Best Practices:
+```dart
+ListView.builder(
+  // Performance optimizations
+  cacheExtent: 500,          // Pre-render items ahead
+  addAutomaticKeepAlives: false,  // Reduce memory
+  addRepaintBoundaries: true,     // Reduce repaints
+  
+  // Enable pull-to-refresh on empty list
+  physics: const AlwaysScrollableScrollPhysics(),
+  
+  // Use Keys for efficient rebuilds
+  itemBuilder: (context, index) => KeyedSubtree(
+    key: ValueKey(items[index].id),
+    child: ItemCard(item: items[index]),
+  ),
+)
+```
+
+### 2. Provider Optimization:
+```dart
+// ❌ Bad - rebuilds on ANY account change
+final account = ref.watch(accountProvider);
+
+// ✅ Good - rebuilds only when balance changes
+final balance = ref.watch(accountProvider.select((a) => a.balance));
+```
+
+### 3. const Constructors:
+```dart
+// ✅ ALWAYS use const for static widgets
+const SizedBox(height: 16)
+const EdgeInsets.all(16)
+const Icon(Icons.add)
+const Text('Title')
+```
+
+## 🔐 Context Safety After Async
+
+### ALWAYS check context.mounted:
+```dart
+Future<void> _performAction() async {
+  try {
+    await ref.read(notifier).doSomething();
+    
+    // ✅ CRITICAL: Check before using context
+    if (!context.mounted) return;
+    
+    FeedbackService.showSuccess(context, 'Done!');
+    Navigator.pop(context);
+    
+  } catch (e) {
+    // ✅ Also check in catch block
+    if (!context.mounted) return;
+    
+    FeedbackService.showError(context, e.toString());
+  }
+}
+```
+
+## 📱 Touch Targets (Accessibility)
+
+Minimum touch target size: **48x48 dp**
+
+```dart
+// ❌ Bad - Icon is only 24x24
+Icon(Icons.add, size: 24)
+
+// ✅ Good - Padding brings it to 48x48
+Padding(
+  padding: const EdgeInsets.all(12), // 24 + 12*2 = 48
+  child: Icon(Icons.add, size: 24),
+)
+
+// ✅ Better - Use IconButton (48x48 default)
+IconButton(
+  icon: const Icon(Icons.add),
+  onPressed: _onAdd,
+  tooltip: 'Add item', // Also adds accessibility label
+)
+```
+
+## 🌍 RTL Support
+
+### Use Directional Properties:
+```dart
+// ❌ Wrong - doesn't flip in RTL
+EdgeInsets.only(left: 16)
+Alignment.centerLeft
+
+// ✅ Correct - flips automatically in RTL
+EdgeInsetsDirectional.only(start: 16)
+AlignmentDirectional.centerStart
+```
+
+### Arrow Icons:
+```dart
+// ❌ Wrong - arrow points wrong way in RTL
+Icon(Icons.arrow_forward)
+
+// ✅ Correct - arrow respects text direction
+Icon(Icons.arrow_forward_ios)
+// Or use Directionality check:
+Icon(Directionality.of(context) == TextDirection.rtl 
+    ? Icons.arrow_back_ios 
+    : Icons.arrow_forward_ios)
+```
+
+## 📝 Widget File Locations (Reference)
+
+```
+lib/shared/widgets/
+├── states/                          # ← State widgets HERE
+│   ├── empty_state_widget.dart      ✅ Has actionLabel
+│   ├── loading_widget.dart          ⚠️ Needs shimmer
+│   └── error_widget.dart            ✅ Has retry
+├── buttons/
+│   └── app_button.dart
+├── fields/
+│   └── app_text_field.dart
+├── app_button.dart                  # Root level
+├── app_list_item.dart
+└── app_text_field.dart
+
+lib/core/
+├── constants/                       # ← PRIMARY THEME
+│   ├── app_theme.dart               ✅ USE THIS
+│   ├── app_colors.dart              ✅ USE THIS
+│   └── app_design_tokens.dart       ✅ USE THIS
+├── theme/                           # ← DUPLICATES (check before delete)
+│   ├── app_theme.dart               ⚠️ Verify imports
+│   └── app_colors.dart              ⚠️ Used internally
+└── services/                        # ← Services
+    └── feedback_service.dart        📝 TO CREATE
+```
+
+## ✅ Testing Checklist (Run After Every Change)
+
+### Mandatory Checks:
+- [ ] `flutter analyze` shows no errors
+- [ ] App runs without crashes
+- [ ] Changed feature works correctly
+
+### UI Checks:
+- [ ] Light mode displays correctly
+- [ ] Dark mode displays correctly
+- [ ] Colors adapt to theme
+
+### Layout Checks (if layout changed):
+- [ ] RTL layout works correctly
+- [ ] No overflow errors
+- [ ] Responsive on different screen sizes
+
+### Performance Checks:
+- [ ] No jank or lag
+- [ ] Lists scroll smoothly
+- [ ] No memory leaks (test with many items)
+
+## 🛑 Common Mistakes to Avoid
+
+1. ❌ Using wrong file path
+2. ❌ Hardcoding colors
+3. ❌ Missing `context.mounted` check
+4. ❌ Missing loading/error/empty states
+5. ❌ Not testing dark mode
+6. ❌ Not testing RTL
+7. ❌ Deleting files without checking imports
+8. ❌ Skipping `flutter analyze`

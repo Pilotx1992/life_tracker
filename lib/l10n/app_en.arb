@@ -1,0 +1,88 @@
+{
+  "@@locale": "en",
+  "appTitle": "Life Tracker",
+  "@appTitle": {
+    "description": "The application title"
+  },
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Dashboard screen title"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  "customizeDashboard": "Customize Dashboard",
+  "@customizeDashboard": {
+    "description": "Dashboard customization screen title"
+  },
+  "goodMorning": "Good morning",
+  "@goodMorning": {
+    "description": "Morning greeting"
+  },
+  "goodAfternoon": "Good afternoon",
+  "@goodAfternoon": {
+    "description": "Afternoon greeting"
+  },
+  "goodEvening": "Good evening",
+  "@goodEvening": {
+    "description": "Evening greeting"
+  },
+  "overviewForToday": "Here's your overview for today",
+  "@overviewForToday": {
+    "description": "Dashboard subtitle"
+  },
+  "health": "Health",
+  "@health": {
+    "description": "Health module name"
+  },
+  "finance": "Finance",
+  "@finance": {
+    "description": "Finance module name"
+  },
+  "reminders": "Reminders",
+  "@reminders": {
+    "description": "Reminders module name"
+  },
+  "notes": "Notes",
+  "@notes": {
+    "description": "Notes module name"
+  },
+  "add": "Add",
+  "@add": {
+    "description": "Add button label"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button label"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button label"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button label"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button label"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading state message"
+  },
+  "error": "Error",
+  "@error": {
+    "description": "Error state title"
+  },
+  "noData": "No data available",
+  "@noData": {
+    "description": "Empty state message"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button label"
+  }
+}
+

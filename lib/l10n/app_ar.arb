@@ -1,0 +1,25 @@
+{
+  "@@locale": "ar",
+  "appTitle": "متتبع الحياة",
+  "dashboard": "لوحة التحكم",
+  "settings": "الإعدادات",
+  "customizeDashboard": "تخصيص لوحة التحكم",
+  "goodMorning": "صباح الخير",
+  "goodAfternoon": "مساء الخير",
+  "goodEvening": "مساء الخير",
+  "overviewForToday": "هذه نظرة عامة ليومك",
+  "health": "الصحة",
+  "finance": "المالية",
+  "reminders": "التذكيرات",
+  "notes": "الملاحظات",
+  "add": "إضافة",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "save": "حفظ",
+  "cancel": "إلغاء",
+  "loading": "جاري التحميل...",
+  "error": "خطأ",
+  "noData": "لا توجد بيانات متاحة",
+  "retry": "إعادة المحاولة"
+}
+

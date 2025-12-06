@@ -1,0 +1,120 @@
+# Life Tracker - Project Rules
+
+## Code Quality & Standards
+
+### Always Follow These Rules:
+
+1. **Read the entire file before modifying it**
+   - Understand the existing structure and patterns
+   - Check all imports and dependencies
+   - Note any potential conflicts
+
+2. **Use theme colors, never hardcoded colors**
+   - ❌ Bad: `Colors.black87`, `Colors.white`
+   - ✅ Good: `Theme.of(context).colorScheme.onSurface`
+   - ✅ Good: `Theme.of(context).colorScheme.surface`
+
+3. **Always check `context.mounted` after async operations**
+   ```dart
+   await someAsyncOperation();
+   if (!context.mounted) return;
+   Navigator.pop(context);
+   ```
+
+4. **Use `const` constructors wherever possible**
+   - Improves performance and reduces rebuilds
+   - ✅ Good: `const SizedBox(height: 16)`
+
+5. **Follow existing code patterns**
+   - Match the style and structure of the file you're editing
+   - Don't introduce new patterns unless necessary
+
+6. **Verify file paths before editing**
+   - Widgets are in `lib/shared/widgets/states/` not root
+   - Theme files are in `lib/core/constants/` not `lib/core/theme/`
+
+7. **Test after every change**
+   - Run `flutter analyze` before committing
+   - Test manually on both Light and Dark modes
+   - Test RTL layout if layout changed
+
+## File Organization
+
+### Import Order:
+```dart
+// 1. Dart imports
+import 'dart:async';
+
+// 2. Flutter imports
+import 'package:flutter/material.dart';
+
+// 3. Package imports
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// 4. Local imports
+import 'package:life_tracker/core/constants/app_colors.dart';
+```
+
+### Common File Paths:
+- Empty State: `lib/shared/widgets/states/empty_state_widget.dart`
+- Loading: `lib/shared/widgets/states/loading_widget.dart`
+- Error: `lib/shared/widgets/states/error_widget.dart`
+- Theme: `lib/core/constants/app_theme.dart`
+- Colors: `lib/core/constants/app_colors.dart`
+
+## Architecture Rules
+
+1. **Clean Architecture**
+   - Data → Domain → Presentation layers
+   - Use Repository pattern for data access
+   - Use UseCases for business logic
+
+2. **State Management**
+   - Use Riverpod for state management
+   - Use `ref.watch` for UI updates
+   - Use `ref.read` for actions
+   - Use `.select()` for partial rebuilds when possible
+
+3. **Navigation**
+   - Use GoRouter for navigation
+   - Always use `context.push()` or `context.go()`
+   - Never use `Navigator.push()` directly
+
+## Error Prevention
+
+1. **Never delete files without verification**
+   - Search for imports: `grep -r "path/to/file" lib/`
+   - Update imports first, then delete
+
+2. **One task at a time**
+   - Complete task → Test → Commit → Next task
+   - Don't mix multiple changes in one commit
+
+3. **Small, focused commits**
+   - One logical change per commit
+   - Clear commit messages: `feat(ux-ui): Add RefreshIndicator to expenses_screen`
+
+## Testing Requirements
+
+Before committing any change:
+- [ ] `flutter analyze` passes
+- [ ] App builds successfully
+- [ ] Manual testing passes
+- [ ] Dark mode tested (if UI changed)
+- [ ] RTL tested (if layout changed)
+- [ ] No breaking changes
+
+## Documentation
+
+- Update progress in `UX_UI_COMPLETION_PLAN.md` after completing tasks
+- Document any deviations from the plan
+- Add comments for complex logic
+
+## Out of Scope
+
+- ❌ New charts or graphs (keep existing ones only)
+- ❌ New external packages (unless absolutely necessary)
+- ❌ Major architectural changes
+- ❌ New features not in the current plan
+- ❌ Database schema changes
+

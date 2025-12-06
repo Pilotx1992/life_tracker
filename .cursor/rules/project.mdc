@@ -1,0 +1,232 @@
+---
+alwaysApply: true
+---
+
+# Life Tracker - Project-Specific Rules
+
+## Project Context
+
+This is a Flutter application for life tracking (health, finance, notes, reminders) built with:
+- **Architecture:** Clean Architecture
+- **State Management:** Riverpod
+- **Navigation:** GoRouter
+- **Database:** Isar (local NoSQL)
+- **Languages:** English & Arabic (RTL support)
+
+## Current Phase: UX/UI Improvements
+
+We are implementing UX/UI improvements according to `UX_UI_COMPLETION_PLAN.md`.
+
+### Key Documents:
+- `UX_UI_COMPLETION_PLAN.md` - Main implementation plan (12 phases)
+- `IMPLEMENTATION_WORKFLOW.md` - Workflow and rules
+- `QUICK_REFERENCE.md` - Daily checklist
+
+## Critical File Locations
+
+### Shared Widgets (in `lib/shared/widgets/`):
+```
+lib/shared/widgets/
+├── states/
+│   ├── empty_state_widget.dart  ✅ Has actionLabel & onAction
+│   ├── loading_widget.dart      ⚠️ Needs shimmer enhancement
+│   └── error_widget.dart        ✅ Has retry callback
+├── app_button.dart
+├── app_text_field.dart
+└── app_list_item.dart
+```
+
+### Theme Files (PRIMARY - use these):
+```
+lib/core/constants/
+├── app_theme.dart         ✅ PRIMARY (289 lines, Google Fonts)
+├── app_colors.dart        ✅ PRIMARY
+└── app_design_tokens.dart ✅ PRIMARY
+```
+
+### Theme Files (DUPLICATE - verify before removing):
+```
+lib/core/theme/
+├── app_theme.dart         ⚠️ Check imports first
+├── app_colors.dart        ⚠️ Used by app_theme.dart in same dir
+├── app_text_styles.dart   ⚠️ May need to merge
+└── app_design_tokens.dart ⚠️ May be duplicate
+```
+
+## Implementation Workflow (MANDATORY)
+
+### Step 1: Before ANY Change
+```bash
+# Verify file exists
+ls lib/path/to/file.dart
+
+# Check current imports (before deleting)
+grep -r "path/to/file" lib/
+
+# Read the entire file first
+```
+
+### Step 2: Implement Change
+- Follow existing patterns in file
+- Use theme colors, not hardcoded
+- Add `context.mounted` checks after async
+
+### Step 3: Verify Change
+```bash
+# Check for errors
+flutter analyze
+
+# Test the app
+flutter run
+```
+
+### Step 4: Test Manually
+- [ ] Light mode works
+- [ ] Dark mode works
+- [ ] RTL works (if layout changed)
+- [ ] No console errors
+
+## Provider Patterns
+
+### Reading Data (for UI):
+```dart
+// ✅ Use watch for reactive UI
+final data = ref.watch(dataProvider);
+
+// ✅ Use select for performance
+final balance = ref.watch(accountProvider.select((a) => a.balance));
+```
+
+### Triggering Actions:
+```dart
+// ✅ Use read for one-time actions
+ref.read(notifierProvider.notifier).doAction();
+
+// ✅ Invalidate to refresh
+ref.invalidate(dataProvider);
+```
+
+### AsyncValue Handling (ALWAYS use this pattern):
+```dart
+return dataAsync.when(
+  loading: () => const LoadingWidget(),
+  error: (error, stack) => ErrorStateWidget(
+    message: error.toString(),
+    onRetry: () => ref.invalidate(dataProvider),
+  ),
+  data: (items) {
+    if (items.isEmpty) {
+      return EmptyStateWidget(
+        icon: Icons.inbox,
+        message: 'No items yet',
+        actionLabel: 'Add First',
+        onAction: () => _addItem(),
+      );
+    }
+    return ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) => ItemCard(item: items[index]),
+    );
+  },
+);
+```
+
+## Common Patterns
+
+### RefreshIndicator (add to all list screens):
+```dart
+RefreshIndicator(
+  onRefresh: () async {
+    ref.invalidate(dataProvider);
+    // Wait for the provider to reload
+    await ref.read(dataProvider.future);
+  },
+  child: ListView.builder(
+    physics: const AlwaysScrollableScrollPhysics(), // IMPORTANT!
+    // ... rest
+  ),
+)
+```
+
+### Context After Async:
+```dart
+Future<void> _saveItem() async {
+  await ref.read(notifier).save();
+  
+  // ✅ ALWAYS check mounted
+  if (!context.mounted) return;
+  
+  FeedbackService.showSuccess(context, 'Saved!');
+  Navigator.pop(context);
+}
+```
+
+### Theme Colors (NEVER hardcode):
+```dart
+// ❌ BAD
+color: Colors.black87
+color: Colors.white
+
+// ✅ GOOD
+color: Theme.of(context).colorScheme.onSurface
+color: Theme.of(context).colorScheme.surface
+
+// ❌ BAD (hardcoded grey)
+color: Colors.grey.shade300
+
+// ✅ GOOD (dark mode aware)
+color: Theme.of(context).dividerColor
+```
+
+## Performance Rules
+
+### ListView Optimization:
+```dart
+ListView.builder(
+  cacheExtent: 500,           // Pre-render ahead
+  itemExtent: 72,             // If fixed height
+  physics: const AlwaysScrollableScrollPhysics(),
+  itemBuilder: (context, index) => ItemCard(
+    key: ValueKey(items[index].id), // Unique key
+    item: items[index],
+  ),
+)
+```
+
+### const Constructors:
+```dart
+// ✅ Use const wherever possible
+const SizedBox(height: 16)
+const EdgeInsets.all(16)
+const Icon(Icons.add)
+```
+
+## Current Known Issues
+
+1. ⚠️ Some screens missing RefreshIndicator
+2. ⚠️ Some hardcoded colors need theme migration
+3. ⚠️ Duplicate theme files need cleanup (verify imports first!)
+4. ⚠️ Some providers may need `.select()` optimization
+5. ⚠️ Loading widgets use basic spinner (need shimmer)
+
+## Testing Checklist
+
+After any UI change:
+- [ ] `flutter analyze` passes with no errors
+- [ ] Light mode displays correctly
+- [ ] Dark mode displays correctly
+- [ ] RTL layout works (if layout changed)
+- [ ] No console errors or warnings
+- [ ] Performance is acceptable (no jank)
+- [ ] Related features still work (no regressions)
+
+## Git Commit Format
+
+```bash
+# Format: type(scope): message
+git commit -m "feat(ux-ui): Add RefreshIndicator to expenses_screen"
+git commit -m "fix(theme): Replace hardcoded colors with theme colors"
+git commit -m "perf(list): Add cacheExtent to ListView.builder"
+```
+
+Types: `feat`, `fix`, `perf`, `refactor`, `style`, `docs`, `test`

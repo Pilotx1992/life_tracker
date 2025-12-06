@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /B \"C:\\Users\\X\\life_tracker\\lib\")",
+      "Bash(flutter doctor)",
+      "Bash(flutter devices)",
+      "Bash(flutter run -d emulator-5554)",
+      "Bash(flutter pub get)",
+      "Bash(cat lib/core/utils/date_utils.dart)",
+      "Read(//c/Users/X/**)",
+      "Bash(flutter attach -d emulator-5554)",
+      "Bash(timeout 60)",
+      "Bash(copy splash.png androidappsrcmainresdrawablesplash.png)",
+      "Bash(flutter clean)",
+      "Bash(flutter pub run build_runner build:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(flutter build:*)",
+      "Bash(tree:*)",
+      "Bash(if not exist \"C:\\Users\\X\\life_tracker\\lib\\shared\\widgets\\buttons\" mkdir \"C:\\Users\\X\\life_tracker\\lib\\shared\\widgets\\buttons\")",
+      "Bash(if not exist \"C:\\Users\\X\\life_tracker\\lib\\shared\\widgets\\fields\" mkdir \"C:\\Users\\X\\life_tracker\\lib\\shared\\widgets\\fields\")",
+      "Bash(if not exist \"C:\\Users\\X\\life_tracker\\lib\\shared\\widgets\\states\" mkdir \"C:\\Users\\X\\life_tracker\\lib\\shared\\widgets\\states\")",
+      "Bash(if exist lib rd /s /q lib)",
+      "Bash(if exist test rd /s /q test)",
+      "Bash(if exist build rd /s /q build)",
+      "Bash(if exist integration_test rd /s /q integration_test)",
+      "Bash(if exist assets rd /s /q assets)",
+      "Bash(for module in health finance notes reminders settings dashboard)",
+      "Bash(do mkdir -p $module/{data/{datasources,models,repositories},domain/{entities,repositories,usecases},presentation/{providers,screens,widgets}})",
+      "Bash(done)",
+      "Bash(nc:*)",
+      "Bash(flutter run:*)",
+      "Bash(test:*)",
+      "Bash(if not exist \"lib\\shared\\widgets\\states\" mkdir \"lib\\shared\\widgets\\states\")",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

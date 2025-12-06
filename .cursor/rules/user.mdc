@@ -1,0 +1,313 @@
+---
+alwaysApply: true
+---
+
+# User Rules - Expert Development Guidelines
+
+## 🧠 Mindset for Quality Code
+
+### Before You Write a Single Line:
+1. **STOP** - Do you understand the task completely?
+2. **READ** - Have you read the entire file you're modifying?
+3. **THINK** - What's the simplest solution?
+4. **VERIFY** - Does the file/path exist?
+
+### The 5-Minute Rule:
+> If you're stuck for more than 5 minutes, you're probably missing something.
+> - Re-read the error message
+> - Check file paths
+> - Verify imports
+> - Look at similar working code
+
+## 📋 Pre-Implementation Checklist
+
+### For Every Task:
+- [ ] I understand what needs to be done
+- [ ] I know which file(s) to modify
+- [ ] I've verified the file paths exist
+- [ ] I've read the entire file(s) I'm modifying
+- [ ] I know the existing patterns in this codebase
+
+### For UX/UI Tasks:
+- [ ] I've read `UX_UI_COMPLETION_PLAN.md`
+- [ ] I know the correct widget locations (states/ subdirectory)
+- [ ] I understand the theme color system
+
+## 🔄 Implementation Workflow
+
+### Step 1: Verify (30 seconds)
+```bash
+# Check file exists
+ls lib/path/to/file.dart
+
+# Check for imports if deleting
+grep -r "file_name" lib/
+```
+
+### Step 2: Read (2 minutes)
+- Open the file
+- Read the entire file
+- Understand existing patterns
+- Identify where to make changes
+
+### Step 3: Implement (varies)
+- Follow existing patterns
+- Make minimal necessary changes
+- Add comments for complex logic
+- Use meaningful names
+
+### Step 4: Verify (1 minute)
+```bash
+flutter analyze
+# Fix ALL errors immediately
+```
+
+### Step 5: Test (2-5 minutes)
+- Run the app
+- Test the specific feature
+- Check light/dark mode if UI
+- Check RTL if layout
+
+### Step 6: Commit
+```bash
+git add <files>
+git commit -m "type(scope): message"
+```
+
+## ⚡ Performance Best Practices
+
+### Always Use:
+```dart
+// const constructors
+const SizedBox(height: 16)
+const EdgeInsets.all(16)
+const Icon(Icons.add)
+
+// ListView.builder for lists
+ListView.builder(
+  cacheExtent: 500,
+  itemBuilder: ...
+)
+
+// Keys for efficient rebuilds
+ItemCard(key: ValueKey(item.id))
+
+// select() for providers
+ref.watch(provider.select((s) => s.field))
+```
+
+### Never Use:
+```dart
+// Don't use ListView for long lists
+ListView(children: items.map(...)) // ❌
+
+// Don't rebuild entire widgets
+ref.watch(bigProvider) // ❌ if you only need one field
+```
+
+## 🔐 Error Handling Patterns
+
+### Async Operations:
+```dart
+Future<void> _doSomething() async {
+  try {
+    setState(() => _isLoading = true);
+    
+    await performAction();
+    
+    if (!context.mounted) return; // ✅ ALWAYS CHECK
+    
+    FeedbackService.showSuccess(context, 'Done!');
+    
+  } catch (e) {
+    if (!context.mounted) return; // ✅ ALSO IN CATCH
+    
+    FeedbackService.showError(context, e.toString());
+    
+  } finally {
+    if (mounted) { // ✅ FOR setState
+      setState(() => _isLoading = false);
+    }
+  }
+}
+```
+
+### Provider Data:
+```dart
+// ✅ ALWAYS handle all 3 states
+dataAsync.when(
+  loading: () => LoadingWidget(),
+  error: (e, _) => ErrorWidget(e, onRetry: ...),
+  data: (data) => data.isEmpty 
+      ? EmptyWidget() 
+      : DataWidget(data),
+)
+```
+
+## 🎨 UI Consistency Rules
+
+### Colors:
+```dart
+// ❌ NEVER hardcode
+color: Colors.black87
+color: Colors.white
+color: Colors.grey.shade300
+
+// ✅ ALWAYS use theme
+color: Theme.of(context).colorScheme.onSurface
+color: Theme.of(context).colorScheme.surface
+color: Theme.of(context).dividerColor
+```
+
+### Spacing:
+```dart
+// ✅ Use consistent spacing
+const SizedBox(height: 8)   // Small
+const SizedBox(height: 16)  // Medium
+const SizedBox(height: 24)  // Large
+const SizedBox(height: 32)  // Section
+
+// ✅ Use consistent padding
+const EdgeInsets.all(16)           // Default
+const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
+```
+
+### Typography:
+```dart
+// ✅ Use theme text styles
+style: Theme.of(context).textTheme.titleLarge
+style: Theme.of(context).textTheme.bodyMedium
+style: Theme.of(context).textTheme.labelSmall
+```
+
+## 🌍 Internationalization Rules
+
+### Text:
+```dart
+// ❌ NEVER hardcode text
+Text('Hello')
+
+// ✅ ALWAYS use l10n
+Text(AppLocalizations.of(context)!.hello)
+```
+
+### Layout:
+```dart
+// ❌ NEVER use directional values
+EdgeInsets.only(left: 16)
+Alignment.centerLeft
+Row(children: [Icon(), Spacer(), Text()])
+
+// ✅ ALWAYS use directional equivalents
+EdgeInsetsDirectional.only(start: 16)
+AlignmentDirectional.centerStart
+Row(children: [Icon(), Spacer(), Text()]) // Row handles RTL
+```
+
+## 📝 Git Workflow
+
+### Commit Types:
+| Type | Description |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `perf` | Performance improvement |
+| `refactor` | Code restructure |
+| `style` | Formatting, no code change |
+| `docs` | Documentation |
+| `test` | Tests |
+| `chore` | Maintenance |
+
+### Commit Message Format:
+```bash
+# Format: type(scope): message
+git commit -m "feat(ux-ui): Add shimmer loading to expenses screen"
+git commit -m "fix(theme): Use theme colors in account card"
+git commit -m "perf(list): Add cacheExtent to transactions list"
+```
+
+### Branch Strategy:
+```bash
+# Create feature branch
+git checkout -b feature/add-shimmer-loading
+
+# Work on feature
+git add <files>
+git commit -m "feat(ux-ui): ..."
+
+# Keep commits small and focused
+# One logical change per commit
+```
+
+## ✅ Code Review Checklist
+
+Before considering code complete:
+
+### Functionality:
+- [ ] Feature works as expected
+- [ ] Edge cases handled
+- [ ] Error states handled
+- [ ] Loading states shown
+
+### Code Quality:
+- [ ] `flutter analyze` passes
+- [ ] No hardcoded colors
+- [ ] No hardcoded strings
+- [ ] Following existing patterns
+
+### UI/UX:
+- [ ] Light mode works
+- [ ] Dark mode works
+- [ ] RTL works (if layout changed)
+- [ ] No overflow errors
+
+### Performance:
+- [ ] Using const constructors
+- [ ] ListView.builder for lists
+- [ ] No unnecessary rebuilds
+
+## 🛑 When Things Go Wrong
+
+### If `flutter analyze` fails:
+1. Read the error message carefully
+2. Go to the exact file:line mentioned
+3. Fix the specific issue
+4. Run analyze again
+
+### If app crashes:
+1. Read the stack trace
+2. Find the first line in YOUR code
+3. Check what's null or invalid
+4. Add null checks or validations
+
+### If UI looks wrong:
+1. Check if using theme colors
+2. Check both light and dark mode
+3. Check RTL layout
+4. Check for hardcoded values
+
+### If you're stuck:
+1. Take a 2-minute break
+2. Re-read the task description
+3. Look at similar working code
+4. Check file paths
+5. Ask for help if still stuck
+
+## 📊 Progress Documentation
+
+### After Completing a Task:
+1. Update `UX_UI_COMPLETION_PLAN.md` - mark task as complete
+2. Update progress percentage
+3. Commit with descriptive message
+4. Document any deviations or issues
+
+### Commit Message for Phase Completion:
+```bash
+git commit -m "feat(ux-ui): Complete Phase 1.2 - Shimmer loading
+
+- Added shimmer animation to LoadingWidget
+- Applied to 5 screens
+- Tested on light and dark mode
+
+Closes #XX"
+```
