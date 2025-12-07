@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/health/presentation/providers/medication_provider.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart' as error_widget;
+import 'package:life_tracker/shared/widgets/states/error_widget.dart' as error_widget;
 import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
 
 class MedicationsScreen extends ConsumerWidget {
@@ -56,11 +56,13 @@ class MedicationsScreen extends ConsumerWidget {
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
               cacheExtent: 500,
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: true,
               itemCount: medications.length,
               itemBuilder: (context, index) {
                 final medication = medications[index];
                 return Dismissible(
-                  key: Key('medication_${medication.id}'),
+                  key: ValueKey('medication_${medication.id}'),
                   direction: DismissDirection.endToStart,
                   background: Container(
                     alignment: AlignmentDirectional.centerEnd,
@@ -124,7 +126,7 @@ class MedicationsScreen extends ConsumerWidget {
           );
         },
         loading: () => SkeletonList.tiles(itemCount: 8),
-        error: (error, stack) => error_widget.ErrorDisplayWidget(
+        error: (error, stack) => error_widget.ErrorStateWidget(
           message: error.toString(),
         ),
       ),

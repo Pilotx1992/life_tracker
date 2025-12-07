@@ -27,10 +27,11 @@ class IncomeLocalDataSourceImpl implements IncomeLocalDataSource {
   Future<List<IncomeModel>> getAllIncomes() async {
     try {
       final isar = await _databaseService.database;
-      final incomes = await isar.incomeModels.where().findAll();
-      incomes
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return incomes;
+      // Use Isar's built-in sorting for better performance
+      return await isar.incomeModels
+          .where()
+          .sortByDateDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get incomes: $e');
     }
@@ -53,13 +54,12 @@ class IncomeLocalDataSourceImpl implements IncomeLocalDataSource {
   ) async {
     try {
       final isar = await _databaseService.database;
-      final incomes = await isar.incomeModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.incomeModels
           .filter()
           .dateBetween(startDate, endDate)
+          .sortByDateDesc()
           .findAll();
-      incomes
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return incomes;
     } catch (e) {
       throw CacheException('Failed to get incomes by date range: $e');
     }
@@ -69,13 +69,12 @@ class IncomeLocalDataSourceImpl implements IncomeLocalDataSource {
   Future<List<IncomeModel>> getIncomesByAccount(Id accountId) async {
     try {
       final isar = await _databaseService.database;
-      final incomes = await isar.incomeModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.incomeModels
           .filter()
           .accountIdEqualTo(accountId)
+          .sortByDateDesc()
           .findAll();
-      incomes
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return incomes;
     } catch (e) {
       throw CacheException('Failed to get incomes by account: $e');
     }
@@ -85,11 +84,12 @@ class IncomeLocalDataSourceImpl implements IncomeLocalDataSource {
   Future<List<IncomeModel>> getIncomesBySource(String source) async {
     try {
       final isar = await _databaseService.database;
-      final incomes =
-          await isar.incomeModels.filter().sourceEqualTo(source).findAll();
-      incomes
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return incomes;
+      // Use Isar's built-in sorting for better performance
+      return await isar.incomeModels
+          .filter()
+          .sourceEqualTo(source)
+          .sortByDateDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get incomes by source: $e');
     }

@@ -10,7 +10,9 @@ class MedicationModel {
   late String dosage;
   late List<DateTime> times;
   String? instructions;
+  @Index()
   late DateTime startDate;
+  @Index()
   DateTime? endDate;
 
   MedicationModel({

@@ -6,7 +6,9 @@ part 'medication_intake_model.g.dart';
 @collection
 class MedicationIntakeModel {
   Id id = Isar.autoIncrement;
+  @Index()
   late int medicationId; // Link to Medication
+  @Index()
   late DateTime scheduledTime;
   DateTime? actualTakenTime;
   bool isTaken;

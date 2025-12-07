@@ -10,6 +10,7 @@ class DebtPaymentModel {
   @Index()
   late int debtId; // Reference to DebtModel
   late double amount;
+  @Index()
   late DateTime paymentDate;
   String? note;
 

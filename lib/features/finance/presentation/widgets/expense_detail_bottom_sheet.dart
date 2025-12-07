@@ -305,6 +305,9 @@ class ExpenseDetailBottomSheet extends ConsumerWidget {
               width: double.infinity,
               height: 200,
               fit: BoxFit.cover,
+              // Optimize memory usage by caching at display size
+              cacheWidth: (MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio).round(),
+              cacheHeight: (200 * MediaQuery.of(context).devicePixelRatio).round(),
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   height: 200,

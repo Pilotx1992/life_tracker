@@ -9,7 +9,7 @@ import 'package:life_tracker/features/finance/presentation/widgets/add_contribut
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/commitment_card.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart' as error_widget;
+import 'package:life_tracker/shared/widgets/states/error_widget.dart' as error_widget;
 import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
 
 class CommitmentsScreen extends ConsumerStatefulWidget {
@@ -69,11 +69,17 @@ class _CommitmentsScreenState extends ConsumerState<CommitmentsScreen>
                 onRefresh: () => ref
                     .read(commitmentNotifierProvider.notifier)
                     .loadCommitments(),
-                child: ListView(
+                child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  children: activeCommitments.map((commitment) {
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  cacheExtent: 500,
+                  addAutomaticKeepAlives: false,
+                  addRepaintBoundaries: true,
+                  itemCount: activeCommitments.length,
+                  itemBuilder: (context, index) {
+                    final commitment = activeCommitments[index];
                     return Dismissible(
-                      key: Key('commitment_${commitment.id}'),
+                      key: ValueKey('commitment_${commitment.id}'),
                       direction: DismissDirection.endToStart,
                       background: Container(
                         alignment: AlignmentDirectional.centerEnd,
@@ -128,13 +134,13 @@ class _CommitmentsScreenState extends ConsumerState<CommitmentsScreen>
                             _showEditCommitmentDialog(context, commitment),
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               );
             },
             loading: () => const LoadingWidget(useShimmer: true),
             error: (error, stack) =>
-                error_widget.ErrorDisplayWidget(message: error.toString()),
+                error_widget.ErrorStateWidget(message: error.toString()),
           ),
           // Completed Commitments Tab
           commitmentsAsync.when(
@@ -151,11 +157,17 @@ class _CommitmentsScreenState extends ConsumerState<CommitmentsScreen>
                 onRefresh: () => ref
                     .read(commitmentNotifierProvider.notifier)
                     .loadCommitments(),
-                child: ListView(
+                child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  children: completedCommitments.map((commitment) {
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  cacheExtent: 500,
+                  addAutomaticKeepAlives: false,
+                  addRepaintBoundaries: true,
+                  itemCount: completedCommitments.length,
+                  itemBuilder: (context, index) {
+                    final commitment = completedCommitments[index];
                     return Dismissible(
-                      key: Key('commitment_${commitment.id}'),
+                      key: ValueKey('commitment_${commitment.id}'),
                       direction: DismissDirection.endToStart,
                       background: Container(
                         alignment: AlignmentDirectional.centerEnd,
@@ -208,13 +220,13 @@ class _CommitmentsScreenState extends ConsumerState<CommitmentsScreen>
                             _showEditCommitmentDialog(context, commitment),
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               );
             },
             loading: () => const LoadingWidget(useShimmer: true),
             error: (error, stack) =>
-                error_widget.ErrorDisplayWidget(message: error.toString()),
+                error_widget.ErrorStateWidget(message: error.toString()),
           ),
         ],
       ),

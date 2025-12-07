@@ -12,7 +12,7 @@ import 'package:life_tracker/features/finance/presentation/widgets/expense_list_
 import 'package:life_tracker/features/finance/presentation/widgets/expense_summary_card.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart';
+import 'package:life_tracker/shared/widgets/states/error_widget.dart';
 import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
 import 'package:life_tracker/shared/widgets/filters/enhanced_filter_bottom_sheet.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/expense_detail_bottom_sheet.dart';
@@ -200,6 +200,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             physics: const AlwaysScrollableScrollPhysics(),
                             cacheExtent: 500,
+                            addAutomaticKeepAlives: false,
+                            addRepaintBoundaries: true,
                             itemCount: expenses.length,
                             itemBuilder: (context, index) {
                               final expense = expenses[index];
@@ -212,7 +214,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                   .firstOrNull;
 
                               return Dismissible(
-                                key: Key('expense_${expense.id}'),
+                                key: ValueKey('expense_${expense.id}'),
                                 direction: DismissDirection.endToStart,
                                 background: Container(
                                   alignment: AlignmentDirectional.centerEnd,
@@ -282,17 +284,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       },
                       loading: () => SkeletonList.cards(itemCount: 8),
                       error: (error, stack) =>
-                          ErrorDisplayWidget(message: error.toString()),
+                          ErrorStateWidget(message: error.toString()),
                     );
                   },
                   loading: () => SkeletonList.cards(itemCount: 8),
                   error: (error, stack) =>
-                      ErrorDisplayWidget(message: error.toString()),
+                      ErrorStateWidget(message: error.toString()),
                 );
               },
               loading: () => SkeletonList.cards(itemCount: 8),
               error: (error, stack) =>
-                  ErrorDisplayWidget(message: error.toString()),
+                  ErrorStateWidget(message: error.toString()),
             ),
           ),
         ],

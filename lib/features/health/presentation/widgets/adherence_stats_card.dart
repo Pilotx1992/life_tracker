@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:life_tracker/features/health/presentation/providers/medication_provider.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart';
+import 'package:life_tracker/shared/widgets/states/error_widget.dart';
 import 'package:life_tracker/shared/widgets/info_card.dart';
 import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
 
@@ -32,7 +32,7 @@ class AdherenceStatsCard extends ConsumerWidget {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const LoadingWidget();
               } else if (snapshot.hasError) {
-                return ErrorDisplayWidget(message: snapshot.error.toString());
+                return ErrorStateWidget(message: snapshot.error.toString());
               } else if (snapshot.hasData && snapshot.data != null) {
                 final adherence = snapshot.data! * 100;
                 return Column(

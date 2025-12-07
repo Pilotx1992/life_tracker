@@ -178,12 +178,15 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
 
           return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
+            physics: const AlwaysScrollableScrollPhysics(),
             cacheExtent: 500,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
             itemCount: groupedReminders.length,
             itemBuilder: (context, index) {
               final reminder = groupedReminders[index];
               return Dismissible(
-                key: Key('reminder_${reminder.id}'),
+                key: ValueKey('reminder_${reminder.id}'),
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: AlignmentDirectional.centerEnd,

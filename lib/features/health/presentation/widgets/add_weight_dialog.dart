@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/utils/validators.dart';
 import 'package:life_tracker/features/health/domain/entities/weight_entry.dart';
 import 'package:life_tracker/features/health/presentation/providers/weight_provider.dart';
-import 'package:life_tracker/shared/widgets/app_button.dart';
-import 'package:life_tracker/shared/widgets/app_text_field.dart';
+import 'package:life_tracker/shared/widgets/buttons/app_button.dart';
+import 'package:life_tracker/shared/widgets/fields/app_text_field.dart';
 
 class AddWeightDialog extends ConsumerStatefulWidget {
   final WeightEntry? initialWeightEntry;
@@ -87,7 +87,7 @@ class _AddWeightDialogState extends ConsumerState<AddWeightDialog> {
           children: [
             AppTextField(
               controller: _weightController,
-              labelText: 'Weight (kg)',
+              label: 'Weight (kg)',
               keyboardType: TextInputType.number,
               validator: Validators.validateWeight,
             ),
@@ -102,7 +102,7 @@ class _AddWeightDialogState extends ConsumerState<AddWeightDialog> {
             const SizedBox(height: 16),
             AppTextField(
               controller: _noteController,
-              labelText: 'Note (optional)',
+              label: 'Note (optional)',
               maxLines: 3,
             ),
           ],
@@ -111,7 +111,7 @@ class _AddWeightDialogState extends ConsumerState<AddWeightDialog> {
       actions: [
         AppButton(
           text: 'Cancel',
-          variant: AppButtonVariant.text,
+          type: AppButtonType.text,
           onPressed: () => Navigator.of(context).pop(),
         ),
         AppButton(

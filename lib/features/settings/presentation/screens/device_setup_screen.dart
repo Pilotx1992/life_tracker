@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/providers/ble_provider.dart';
 import 'package:life_tracker/core/providers/health_provider.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
-import 'package:life_tracker/shared/widgets/app_button.dart';
+import 'package:life_tracker/shared/widgets/buttons/app_button.dart';
 import 'package:intl/intl.dart';
 
 class DeviceSetupScreen extends ConsumerWidget {
@@ -124,7 +124,7 @@ class DeviceSetupScreen extends ConsumerWidget {
                 onPressed: scanState.isScanning
                     ? null
                     : () => ref.read(bleScanProvider.notifier).startScan(),
-                isLoading: scanState.isScanning,
+                loading: scanState.isScanning,
                 icon: Icons.bluetooth_searching,
               ),
 
@@ -298,7 +298,7 @@ class DeviceSetupScreen extends ConsumerWidget {
                                 );
                               }
                             },
-                      isLoading: healthState.isSyncing,
+                      loading: healthState.isSyncing,
                       icon: Icons.sync,
                     ),
                   ),

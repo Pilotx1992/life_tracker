@@ -27,10 +27,11 @@ class ExpenseLocalDataSourceImpl implements ExpenseLocalDataSource {
   Future<List<ExpenseModel>> getAllExpenses() async {
     try {
       final isar = await _databaseService.database;
-      final expenses = await isar.expenseModels.where().findAll();
-      expenses
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return expenses;
+      // Use Isar's built-in sorting for better performance
+      return await isar.expenseModels
+          .where()
+          .sortByDateDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get expenses: $e');
     }
@@ -53,13 +54,12 @@ class ExpenseLocalDataSourceImpl implements ExpenseLocalDataSource {
   ) async {
     try {
       final isar = await _databaseService.database;
-      final expenses = await isar.expenseModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.expenseModels
           .filter()
           .dateBetween(startDate, endDate)
+          .sortByDateDesc()
           .findAll();
-      expenses
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return expenses;
     } catch (e) {
       throw CacheException('Failed to get expenses by date range: $e');
     }
@@ -69,13 +69,12 @@ class ExpenseLocalDataSourceImpl implements ExpenseLocalDataSource {
   Future<List<ExpenseModel>> getExpensesByCategory(Id categoryId) async {
     try {
       final isar = await _databaseService.database;
-      final expenses = await isar.expenseModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.expenseModels
           .filter()
           .categoryIdEqualTo(categoryId)
+          .sortByDateDesc()
           .findAll();
-      expenses
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return expenses;
     } catch (e) {
       throw CacheException('Failed to get expenses by category: $e');
     }
@@ -85,13 +84,12 @@ class ExpenseLocalDataSourceImpl implements ExpenseLocalDataSource {
   Future<List<ExpenseModel>> getExpensesByAccount(Id accountId) async {
     try {
       final isar = await _databaseService.database;
-      final expenses = await isar.expenseModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.expenseModels
           .filter()
           .accountIdEqualTo(accountId)
+          .sortByDateDesc()
           .findAll();
-      expenses
-          .sort((a, b) => b.date.compareTo(a.date)); // Sort descending by date
-      return expenses;
     } catch (e) {
       throw CacheException('Failed to get expenses by account: $e');
     }

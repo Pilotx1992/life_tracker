@@ -9,7 +9,7 @@ import 'package:life_tracker/features/notes/presentation/widgets/note_card.dart'
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/note_list_item.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart' as error_widget;
+import 'package:life_tracker/shared/widgets/states/error_widget.dart' as error_widget;
 import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
 import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
@@ -170,6 +170,9 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                   child: _isGridView
                       ? GridView.builder(
                           padding: const EdgeInsets.all(8),
+                          cacheExtent: 500,
+                          addAutomaticKeepAlives: false,
+                          addRepaintBoundaries: true,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -181,6 +184,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           itemBuilder: (context, index) {
                             final note = filteredNotes[index];
                             return NoteCard(
+                              key: ValueKey('note_${note.id}'),
                               note: note,
                               onTap: () => _navigateToEditor(context, note),
                               onDelete: () =>
@@ -190,11 +194,13 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                         )
                       : ListView.builder(
                           cacheExtent: 500,
+                          addAutomaticKeepAlives: false,
+                          addRepaintBoundaries: true,
                           itemCount: filteredNotes.length,
                           itemBuilder: (context, index) {
                             final note = filteredNotes[index];
                             return Dismissible(
-                              key: Key('note_${note.id}'),
+                              key: ValueKey('note_${note.id}'),
                               direction: DismissDirection.endToStart,
                               background: Container(
                                 alignment: AlignmentDirectional.centerEnd,
@@ -261,7 +267,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                     )
                   : SkeletonList.cards(itemCount: 6),
               error: (error, stack) =>
-                  error_widget.ErrorDisplayWidget(message: error.toString()),
+                  error_widget.ErrorStateWidget(message: error.toString()),
             ),
           ),
         ],

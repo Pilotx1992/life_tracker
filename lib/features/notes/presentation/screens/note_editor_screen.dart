@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/features/notes/domain/entities/checklist_item.dart';
@@ -100,7 +101,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       _populateFromNote(note);
       _isInitialized = true;
     } catch (e) {
-      debugPrint('Error loading note by ID: $e');
+      if (kDebugMode) debugPrint('Error loading note by ID: $e');
       _isInitialized = true; // Mark as initialized even on error
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -649,7 +650,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     try {
       await _attachmentService.deleteAttachment(path);
     } catch (e) {
-      debugPrint('Error deleting attachment: $e');
+      if (kDebugMode) debugPrint('Error deleting attachment: $e');
       // State already updated, so continue
     }
   }
@@ -678,12 +679,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (_voiceNotePath == null) return;
 
     final pathToDelete = _voiceNotePath!;
-    debugPrint('Attempting to delete voice note: $pathToDelete');
+    if (kDebugMode) debugPrint('Attempting to delete voice note: $pathToDelete');
 
     try {
       // Delete the file first
       final deleted = await _attachmentService.deleteAttachment(pathToDelete);
-      debugPrint('Voice note deletion result: $deleted');
+      if (kDebugMode) debugPrint('Voice note deletion result: $deleted');
 
       if (!mounted) return;
 
@@ -698,13 +699,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         FeedbackService.showSuccess(context, 'Voice note deleted');
       } else {
         // File might not exist, but we still cleared the state
-        debugPrint(
-            'Voice note file not found or already deleted: $pathToDelete',);
+        if (kDebugMode) {
+          debugPrint(
+            'Voice note file not found or already deleted: $pathToDelete',
+          );
+        }
         FeedbackService.showInfo(context, 'Voice note removed');
       }
     } catch (e, stackTrace) {
-      debugPrint('Error deleting voice note: $e');
-      debugPrint('Stack trace: $stackTrace');
+      if (kDebugMode) {
+        debugPrint('Error deleting voice note: $e');
+        debugPrint('Stack trace: $stackTrace');
+      }
 
       if (!mounted) return;
 

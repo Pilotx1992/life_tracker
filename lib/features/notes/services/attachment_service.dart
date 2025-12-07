@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:life_tracker/core/utils/file_storage_service.dart';
@@ -24,7 +25,9 @@ class AttachmentService {
       }
       return null;
     } catch (e) {
-      debugPrint('Error picking image: $e');
+      if (kDebugMode) {
+        debugPrint('Error picking image: $e');
+      }
       return null;
     }
   }
@@ -74,7 +77,9 @@ class AttachmentService {
       }
       return null;
     } catch (e) {
-      debugPrint('Error picking file: $e');
+      if (kDebugMode) {
+        debugPrint('Error picking file: $e');
+      }
       return null;
     }
   }

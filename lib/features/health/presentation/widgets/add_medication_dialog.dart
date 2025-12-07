@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/utils/validators.dart';
 import 'package:life_tracker/features/health/domain/entities/medication.dart';
 import 'package:life_tracker/features/health/presentation/providers/medication_provider.dart';
-import 'package:life_tracker/shared/widgets/app_button.dart';
-import 'package:life_tracker/shared/widgets/app_text_field.dart';
+import 'package:life_tracker/shared/widgets/buttons/app_button.dart';
+import 'package:life_tracker/shared/widgets/fields/app_text_field.dart';
 
 class AddMedicationDialog extends ConsumerStatefulWidget {
   final Medication? initialMedication;
@@ -132,14 +132,14 @@ class _AddMedicationDialogState extends ConsumerState<AddMedicationDialog> {
             children: [
               AppTextField(
                 controller: _nameController,
-                labelText: 'Medication Name',
+                label: 'Medication Name',
                 validator: (value) =>
                     Validators.validateGenericField(value, 'Medication Name'),
               ),
               const SizedBox(height: 16),
               AppTextField(
                 controller: _dosageController,
-                labelText: 'Dosage (e.g., 10mg, 1 pill)',
+                label: 'Dosage (e.g., 10mg, 1 pill)',
                 validator: (value) =>
                     Validators.validateGenericField(value, 'Dosage'),
               ),
@@ -162,7 +162,7 @@ class _AddMedicationDialogState extends ConsumerState<AddMedicationDialog> {
               const SizedBox(height: 16),
               AppTextField(
                 controller: _instructionsController,
-                labelText: 'Instructions (optional)',
+                label: 'Instructions (optional)',
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
@@ -188,7 +188,7 @@ class _AddMedicationDialogState extends ConsumerState<AddMedicationDialog> {
       actions: [
         AppButton(
           text: 'Cancel',
-          variant: AppButtonVariant.text,
+          type: AppButtonType.text,
           onPressed: () => Navigator.of(context).pop(),
         ),
         AppButton(

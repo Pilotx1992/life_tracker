@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:life_tracker/core/utils/file_storage_service.dart';
@@ -110,7 +111,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
         });
       }
     } catch (e) {
-      debugPrint('Error opening recorder: $e');
+      if (kDebugMode) debugPrint('Error opening recorder: $e');
       if (mounted && !_isDisposing) {
         setState(() {
           _isRecorderInitialized = true;
@@ -144,11 +145,11 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
         await _recorder.stopRecorder().timeout(
           const Duration(seconds: 2),
           onTimeout: () {
-            debugPrint('Timeout stopping recorder');
+            if (kDebugMode) debugPrint('Timeout stopping recorder');
             return null;
           },
         ).catchError((e) {
-          debugPrint('Error stopping recorder: $e');
+          if (kDebugMode) debugPrint('Error stopping recorder: $e');
           return null;
         });
       }
@@ -157,15 +158,15 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
       await _recorder.closeRecorder().timeout(
         const Duration(seconds: 2),
         onTimeout: () {
-          debugPrint('Timeout closing recorder');
+            if (kDebugMode) debugPrint('Timeout closing recorder');
           return null;
         },
       ).catchError((e) {
-        debugPrint('Error closing recorder: $e');
+        if (kDebugMode) debugPrint('Error closing recorder: $e');
         return null;
       });
     } catch (e) {
-      debugPrint('Error in _closeRecorderSafely: $e');
+      if (kDebugMode) debugPrint('Error in _closeRecorderSafely: $e');
     }
   }
 
@@ -214,7 +215,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
         });
       }
     } catch (e) {
-      debugPrint('Error starting recording: $e');
+      if (kDebugMode) debugPrint('Error starting recording: $e');
       if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -257,7 +258,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
         });
       }
     } catch (e) {
-      debugPrint('Error stopping recording: $e');
+      if (kDebugMode) debugPrint('Error stopping recording: $e');
       if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -284,7 +285,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
 
       widget.onRecordingComplete(savedPath, recordingName);
     } catch (e) {
-      debugPrint('Error saving recording: $e');
+      if (kDebugMode) debugPrint('Error saving recording: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -329,15 +330,15 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
         await _recorder.stopRecorder().timeout(
           const Duration(seconds: 2),
           onTimeout: () {
-            debugPrint('Timeout stopping recorder in cancel');
+            if (kDebugMode) debugPrint('Timeout stopping recorder in cancel');
             return null;
           },
         ).catchError((e) {
-          debugPrint('Error stopping recorder in cancel: $e');
+          if (kDebugMode) debugPrint('Error stopping recorder in cancel: $e');
           return null;
         });
       } catch (e) {
-        debugPrint('Error stopping recorder: $e');
+        if (kDebugMode) debugPrint('Error stopping recorder: $e');
       }
     }
 
@@ -349,7 +350,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
           await file.delete();
         }
       } catch (e) {
-        debugPrint('Error deleting temp file: $e');
+        if (kDebugMode) debugPrint('Error deleting temp file: $e');
       }
     }
 

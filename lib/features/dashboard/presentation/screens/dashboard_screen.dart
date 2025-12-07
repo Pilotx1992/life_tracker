@@ -140,10 +140,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ],
       ),
-      body: AnimatedBuilder(
-        animation: _gradientController,
-        builder: (context, child) {
-          return Container(
+      body: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _gradientController,
+          builder: (context, child) {
+            return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -210,6 +211,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               ),
             ),
           ),
+        ),
         ),
       ),
     );
@@ -581,12 +583,13 @@ class _PremiumModuleCardState extends State<_PremiumModuleCard>
     final colors =
         widget.isDark ? widget.data.darkGradient : widget.data.gradient;
 
-    return AnimatedBuilder(
-      animation: _hoverController,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Container(
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _hoverController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
               boxShadow: [
@@ -636,6 +639,7 @@ class _PremiumModuleCardState extends State<_PremiumModuleCard>
               ? _buildCompactLayout(theme)
               : _buildFullLayout(theme),
         ),
+      ),
       ),
     );
   }

@@ -41,11 +41,17 @@ class ReminderLocalDataSourceImpl implements ReminderLocalDataSource {
   Future<List<ReminderModel>> getUpcomingReminders() async {
     try {
       final isar = await _databaseService.database;
-      final now = DateTime.now();
+      // Use start of today to include today's reminders
+      final startOfToday = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
       return await isar.reminderModels
           .filter()
           .isCompletedEqualTo(false)
-          .dateTimeGreaterThan(now.subtract(const Duration(seconds: 1)))
+          .dateTimeGreaterThan(
+              startOfToday.subtract(const Duration(seconds: 1)))
           .sortByDateTime()
           .findAll();
     } catch (e) {

@@ -72,6 +72,9 @@ class ExpenseListItem extends StatelessWidget {
                 child: Image.file(
                   file,
                   fit: BoxFit.contain,
+                  // Optimize memory usage - full screen image, cache at 2x resolution
+                  cacheWidth: (MediaQuery.of(context).size.width * 2).round(),
+                  cacheHeight: (MediaQuery.of(context).size.height * 2).round(),
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       padding: const EdgeInsets.all(32),

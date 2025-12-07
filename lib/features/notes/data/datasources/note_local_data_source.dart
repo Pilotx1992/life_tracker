@@ -22,11 +22,11 @@ class NoteLocalDataSourceImpl implements NoteLocalDataSource {
   Future<List<NoteModel>> getAllNotes() async {
     try {
       final isar = await _databaseService.database;
-      final notes = await isar.noteModels.where().findAll();
-      notes.sort(
-        (a, b) => b.updatedAt.compareTo(a.updatedAt),
-      ); // Most recent first
-      return notes;
+      // Use Isar's built-in sorting for better performance
+      return await isar.noteModels
+          .where()
+          .sortByUpdatedAtDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get notes: $e');
     }
@@ -46,10 +46,12 @@ class NoteLocalDataSourceImpl implements NoteLocalDataSource {
   Future<List<NoteModel>> getNotesByColor(String color) async {
     try {
       final isar = await _databaseService.database;
-      final notes =
-          await isar.noteModels.filter().colorEqualTo(color).findAll();
-      notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      return notes;
+      // Use Isar's built-in sorting for better performance
+      return await isar.noteModels
+          .filter()
+          .colorEqualTo(color)
+          .sortByUpdatedAtDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get notes by color: $e');
     }
@@ -60,14 +62,17 @@ class NoteLocalDataSourceImpl implements NoteLocalDataSource {
     try {
       final isar = await _databaseService.database;
       final lowerQuery = query.toLowerCase();
-      final allNotes = await isar.noteModels.where().findAll();
-      final filtered = allNotes.where((note) {
+      // Get all notes sorted by updatedAt (most recent first)
+      final allNotes = await isar.noteModels
+          .where()
+          .sortByUpdatedAtDesc()
+          .findAll();
+      // Filter in memory (Isar doesn't support case-insensitive text search)
+      return allNotes.where((note) {
         return note.title.toLowerCase().contains(lowerQuery) ||
             (note.content != null &&
                 note.content!.toLowerCase().contains(lowerQuery));
       }).toList();
-      filtered.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      return filtered;
     } catch (e) {
       throw CacheException('Failed to search notes: $e');
     }

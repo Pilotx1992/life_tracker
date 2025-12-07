@@ -7,6 +7,7 @@ part 'weight_model.g.dart';
 class WeightModel {
   Id id = Isar.autoIncrement;
   late double weight;
+  @Index()
   late DateTime date;
   String? note;
 

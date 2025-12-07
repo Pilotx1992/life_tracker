@@ -10,7 +10,7 @@ import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/add_income_dialog.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/income_list_item.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart';
+import 'package:life_tracker/shared/widgets/states/error_widget.dart';
 import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
 import 'package:life_tracker/shared/widgets/filters/enhanced_filter_bottom_sheet.dart';
 
@@ -240,6 +240,8 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         physics: const AlwaysScrollableScrollPhysics(),
                         cacheExtent: 500,
+                        addAutomaticKeepAlives: false,
+                        addRepaintBoundaries: true,
                         itemCount: incomes.length,
                         itemBuilder: (context, index) {
                           final income = incomes[index];
@@ -247,7 +249,7 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
                               .where((a) => a.id == income.accountId)
                               .firstOrNull;
                           return Dismissible(
-                            key: Key('income_${income.id}'),
+                            key: ValueKey('income_${income.id}'),
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: AlignmentDirectional.centerEnd,
@@ -308,12 +310,12 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
                   },
                   loading: () => const LoadingWidget(useShimmer: true),
                   error: (error, stack) =>
-                      ErrorDisplayWidget(message: error.toString()),
+                      ErrorStateWidget(message: error.toString()),
                 );
               },
               loading: () => const LoadingWidget(),
               error: (error, stack) =>
-                  ErrorDisplayWidget(message: error.toString()),
+                  ErrorStateWidget(message: error.toString()),
             ),
           ),
         ],

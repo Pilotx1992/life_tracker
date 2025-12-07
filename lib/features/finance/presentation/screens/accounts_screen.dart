@@ -9,7 +9,7 @@ import 'package:life_tracker/features/finance/presentation/widgets/account_card.
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/add_account_dialog.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart';
+import 'package:life_tracker/shared/widgets/states/error_widget.dart';
 import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
 
 class AccountsScreen extends ConsumerWidget {
@@ -417,7 +417,7 @@ class AccountsScreen extends ConsumerWidget {
                 child: LoadingWidget(useShimmer: true),
               ),
               error: (error, stack) => SliverFillRemaining(
-                child: ErrorDisplayWidget(message: error.toString()),
+                child: ErrorStateWidget(message: error.toString()),
               ),
             ),
           ],

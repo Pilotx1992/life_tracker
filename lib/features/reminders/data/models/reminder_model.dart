@@ -9,6 +9,7 @@ class ReminderModel {
 
   late String title;
   String? description;
+  @Index()
   late DateTime dateTime;
   bool isCompleted = false;
   late String priority; // 'Low', 'Medium', 'High'

@@ -29,9 +29,11 @@ class BillLocalDataSourceImpl implements BillLocalDataSource {
   Future<List<RecurringBillModel>> getAllBills() async {
     try {
       final isar = await _databaseService.database;
-      final bills = await isar.recurringBillModels.where().findAll();
-      bills.sort((a, b) => a.nextDueDate.compareTo(b.nextDueDate));
-      return bills;
+      // Use Isar's built-in sorting for better performance
+      return await isar.recurringBillModels
+          .where()
+          .sortByNextDueDate()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get bills: $e');
     }
@@ -41,12 +43,12 @@ class BillLocalDataSourceImpl implements BillLocalDataSource {
   Future<List<RecurringBillModel>> getActiveBills() async {
     try {
       final isar = await _databaseService.database;
-      final bills = await isar.recurringBillModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.recurringBillModels
           .filter()
           .isActiveEqualTo(true)
+          .sortByNextDueDate()
           .findAll();
-      bills.sort((a, b) => a.nextDueDate.compareTo(b.nextDueDate));
-      return bills;
     } catch (e) {
       throw CacheException('Failed to get active bills: $e');
     }
@@ -57,14 +59,14 @@ class BillLocalDataSourceImpl implements BillLocalDataSource {
     try {
       final isar = await _databaseService.database;
       final now = DateTime.now();
-      final bills = await isar.recurringBillModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.recurringBillModels
           .filter()
           .isActiveEqualTo(true)
           .nextDueDateGreaterThan(now.subtract(const Duration(days: 1)))
           .nextDueDateLessThan(endDate.add(const Duration(days: 1)))
+          .sortByNextDueDate()
           .findAll();
-      bills.sort((a, b) => a.nextDueDate.compareTo(b.nextDueDate));
-      return bills;
     } catch (e) {
       throw CacheException('Failed to get upcoming bills: $e');
     }
@@ -75,13 +77,13 @@ class BillLocalDataSourceImpl implements BillLocalDataSource {
     try {
       final isar = await _databaseService.database;
       final now = DateTime.now();
-      final bills = await isar.recurringBillModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.recurringBillModels
           .filter()
           .isActiveEqualTo(true)
           .nextDueDateLessThan(now)
+          .sortByNextDueDate()
           .findAll();
-      bills.sort((a, b) => a.nextDueDate.compareTo(b.nextDueDate));
-      return bills;
     } catch (e) {
       throw CacheException('Failed to get overdue bills: $e');
     }
@@ -147,12 +149,12 @@ class BillLocalDataSourceImpl implements BillLocalDataSource {
   Future<List<BillPaymentModel>> getPaymentsByBill(Id billId) async {
     try {
       final isar = await _databaseService.database;
-      final payments =
-          await isar.billPaymentModels.filter().billIdEqualTo(billId).findAll();
-      payments.sort(
-        (a, b) => b.paidDate.compareTo(a.paidDate),
-      ); // Most recent first
-      return payments;
+      // Use Isar's built-in sorting for better performance
+      return await isar.billPaymentModels
+          .filter()
+          .billIdEqualTo(billId)
+          .sortByPaidDateDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get payments by bill: $e');
     }

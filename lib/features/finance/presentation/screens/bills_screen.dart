@@ -7,7 +7,7 @@ import 'package:life_tracker/features/finance/presentation/widgets/add_bill_dial
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/bill_list_item.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/error_widget.dart' as error_widget;
+import 'package:life_tracker/shared/widgets/states/error_widget.dart' as error_widget;
 import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
 
 /// Bill filter options
@@ -188,7 +188,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
               },
               loading: () => const LoadingWidget(useShimmer: true),
               error: (error, stack) =>
-                  error_widget.ErrorDisplayWidget(message: error.toString()),
+                  error_widget.ErrorStateWidget(message: error.toString()),
             ),
           ),
         ],

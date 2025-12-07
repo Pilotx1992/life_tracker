@@ -32,9 +32,11 @@ class DebtLocalDataSourceImpl implements DebtLocalDataSource {
   Future<List<DebtModel>> getAllDebts() async {
     try {
       final isar = await _databaseService.database;
-      final debts = await isar.debtModels.where().findAll();
-      debts.sort((a, b) => a.dueDate.compareTo(b.dueDate)); // Sort by due date
-      return debts;
+      // Use Isar's built-in sorting for better performance
+      return await isar.debtModels
+          .where()
+          .sortByDueDate()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get debts: $e');
     }
@@ -44,9 +46,12 @@ class DebtLocalDataSourceImpl implements DebtLocalDataSource {
   Future<List<DebtModel>> getDebtsByType(String type) async {
     try {
       final isar = await _databaseService.database;
-      final debts = await isar.debtModels.filter().typeEqualTo(type).findAll();
-      debts.sort((a, b) => a.dueDate.compareTo(b.dueDate)); // Sort by due date
-      return debts;
+      // Use Isar's built-in sorting for better performance
+      return await isar.debtModels
+          .filter()
+          .typeEqualTo(type)
+          .sortByDueDate()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get debts by type: $e');
     }
@@ -67,13 +72,13 @@ class DebtLocalDataSourceImpl implements DebtLocalDataSource {
     try {
       final isar = await _databaseService.database;
       final now = DateTime.now();
-      final debts = await isar.debtModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.debtModels
           .filter()
           .dueDateLessThan(now)
           .isPaidEqualTo(false)
+          .sortByDueDate()
           .findAll();
-      debts.sort((a, b) => a.dueDate.compareTo(b.dueDate));
-      return debts;
     } catch (e) {
       throw CacheException('Failed to get overdue debts: $e');
     }
@@ -152,12 +157,12 @@ class DebtLocalDataSourceImpl implements DebtLocalDataSource {
   Future<List<DebtPaymentModel>> getPaymentsByDebt(Id debtId) async {
     try {
       final isar = await _databaseService.database;
-      final payments =
-          await isar.debtPaymentModels.filter().debtIdEqualTo(debtId).findAll();
-      payments.sort(
-        (a, b) => b.paymentDate.compareTo(a.paymentDate),
-      ); // Sort descending
-      return payments;
+      // Use Isar's built-in sorting for better performance
+      return await isar.debtPaymentModels
+          .filter()
+          .debtIdEqualTo(debtId)
+          .sortByPaymentDateDesc()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get payments: $e');
     }

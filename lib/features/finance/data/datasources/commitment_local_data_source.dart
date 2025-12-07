@@ -34,10 +34,11 @@ class CommitmentLocalDataSourceImpl implements CommitmentLocalDataSource {
   Future<List<FinancialCommitmentModel>> getAllCommitments() async {
     try {
       final isar = await _databaseService.database;
-      final commitments =
-          await isar.financialCommitmentModels.where().findAll();
-      commitments.sort((a, b) => a.deadline.compareTo(b.deadline));
-      return commitments;
+      // Use Isar's built-in sorting for better performance
+      return await isar.financialCommitmentModels
+          .where()
+          .sortByDeadline()
+          .findAll();
     } catch (e) {
       throw CacheException('Failed to get commitments: $e');
     }
@@ -47,12 +48,12 @@ class CommitmentLocalDataSourceImpl implements CommitmentLocalDataSource {
   Future<List<FinancialCommitmentModel>> getActiveCommitments() async {
     try {
       final isar = await _databaseService.database;
-      final commitments = await isar.financialCommitmentModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.financialCommitmentModels
           .filter()
           .isCompletedEqualTo(false)
+          .sortByDeadline()
           .findAll();
-      commitments.sort((a, b) => a.deadline.compareTo(b.deadline));
-      return commitments;
     } catch (e) {
       throw CacheException('Failed to get active commitments: $e');
     }
@@ -144,13 +145,12 @@ class CommitmentLocalDataSourceImpl implements CommitmentLocalDataSource {
   ) async {
     try {
       final isar = await _databaseService.database;
-      final contributions = await isar.commitmentContributionModels
+      // Use Isar's built-in sorting for better performance
+      return await isar.commitmentContributionModels
           .filter()
           .commitmentIdEqualTo(commitmentId)
+          .sortByDateDesc()
           .findAll();
-      contributions
-          .sort((a, b) => b.date.compareTo(a.date)); // Most recent first
-      return contributions;
     } catch (e) {
       throw CacheException('Failed to get contributions by commitment: $e');
     }
