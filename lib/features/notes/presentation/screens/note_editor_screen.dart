@@ -44,6 +44,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Note? _loadedNote; // Note loaded by ID
   bool _isLoading = false;
   bool _isInitialized = false; // Track if note data was loaded
+  bool _unlockInitiated = false; // Prevent multiple unlock dialogs
 
   Note? get _effectiveNote => widget.note ?? _loadedNote;
 
@@ -71,10 +72,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         }
       });
     }
-    // Check if we need to unlock the note
-    if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
+    // Check if we need to unlock the note - only once
+    if (_effectiveNote != null &&
+        _effectiveNote!.isLocked &&
+        !_isUnlocked &&
+        !_unlockInitiated) {
+      _unlockInitiated = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (mounted && !_isUnlocked) {
           _unlockNote(context);
         }
       });
@@ -172,6 +177,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _unlockNote(BuildContext context) async {
+    // Guard against multiple calls
+    if (_isUnlocked) return;
+
     // Check if PIN is set
     final hasPIN = await _encryptionService.hasPIN();
     if (!context.mounted) return;
