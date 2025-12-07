@@ -67,40 +67,58 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet> {
   }
 
   Future<void> _pickReceipt() async {
-    final XFile? image = await _imagePicker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 80,
-    );
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
 
-    if (image != null) {
-      // Save to app documents directory
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final file = File('${directory.path}/$fileName');
-      await image.saveTo(file.path);
+      if (image != null && mounted) {
+        // Save to app documents directory using copy instead of saveTo
+        final directory = await getApplicationDocumentsDirectory();
+        final fileName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final destinationPath = '${directory.path}/$fileName';
 
-      setState(() {
-        _receiptPath = file.path;
-      });
+        // Copy the file instead of using saveTo
+        final sourceFile = File(image.path);
+        await sourceFile.copy(destinationPath);
+
+        setState(() {
+          _receiptPath = destinationPath;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        FeedbackService.showError(context, 'Failed to capture image: $e');
+      }
     }
   }
 
   Future<void> _pickReceiptFromGallery() async {
-    final XFile? image = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
 
-    if (image != null) {
-      // Save to app documents directory
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final file = File('${directory.path}/$fileName');
-      await image.saveTo(file.path);
+      if (image != null && mounted) {
+        // Save to app documents directory using copy instead of saveTo
+        final directory = await getApplicationDocumentsDirectory();
+        final fileName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final destinationPath = '${directory.path}/$fileName';
 
-      setState(() {
-        _receiptPath = file.path;
-      });
+        // Copy the file instead of using saveTo
+        final sourceFile = File(image.path);
+        await sourceFile.copy(destinationPath);
+
+        setState(() {
+          _receiptPath = destinationPath;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        FeedbackService.showError(context, 'Failed to pick image: $e');
+      }
     }
   }
 
@@ -286,269 +304,282 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      isEditing ? 'Edit Expense' : 'Add Expense',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Amount
-                        AppTextField(
-                          controller: _amountController,
-                          label: 'Amount',
-                          hint: '0.00',
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isEditing ? 'Edit Expense' : 'Add Expense',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Amount
+                          AppTextField(
+                            controller: _amountController,
+                            label: 'Amount',
+                            hint: '0.00',
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              ThousandsSeparatorInputFormatter()
+                            ],
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter amount';
+                              }
+                              // Strip commas before parsing
+                              final cleanValue = value.replaceAll(',', '');
+                              final amount = double.tryParse(cleanValue);
+                              if (amount == null || amount <= 0) {
+                                return 'Please enter a valid amount';
+                              }
+                              return null;
+                            },
                           ),
-                          inputFormatters: [ThousandsSeparatorInputFormatter()],
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter amount';
-                            }
-                            // Strip commas before parsing
-                            final cleanValue = value.replaceAll(',', '');
-                            final amount = double.tryParse(cleanValue);
-                            if (amount == null || amount <= 0) {
-                              return 'Please enter a valid amount';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        // Currency
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedCurrency,
-                          decoration: const InputDecoration(
-                            labelText: 'Currency',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _currencies.map((currency) {
-                            return DropdownMenuItem(
-                              value: currency,
-                              child: Text(currency),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _selectedCurrency = value);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        // Category Dropdown
-                        categoriesAsync.when(
-                          data: (categories) {
-                            if (categories.isEmpty) {
-                              return const Text(
-                                'No categories available. Please add a category first.',
+                          const SizedBox(height: 16),
+                          // Currency
+                          DropdownButtonFormField<String>(
+                            initialValue: _selectedCurrency,
+                            decoration: const InputDecoration(
+                              labelText: 'Currency',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: _currencies.map((currency) {
+                              return DropdownMenuItem(
+                                value: currency,
+                                child: Text(currency),
                               );
-                            }
-
-                            // Auto-select first category if none selected
-                            if (_selectedCategoryId == null &&
-                                categories.isNotEmpty) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (mounted && _selectedCategoryId == null) {
-                                  setState(() {
-                                    _selectedCategoryId =
-                                        categories.first.id.toString();
-                                  });
-                                }
-                              });
-                            }
-
-                            return DropdownButtonFormField<String>(
-                              initialValue: _selectedCategoryId ??
-                                  categories.first.id.toString(),
-                              decoration: const InputDecoration(
-                                labelText: 'Category',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: categories.map((category) {
-                                return DropdownMenuItem(
-                                  value: category.id.toString(),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        _getCategoryIcon(category.icon),
-                                        color:
-                                            _getCategoryColor(category.color),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(category.name),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _selectedCategoryId = value;
-                                  });
-                                }
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please select a category';
-                                }
-                                return null;
-                              },
-                            );
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stack) =>
-                              Text('Error loading categories: $error'),
-                        ),
-                        const SizedBox(height: 16),
-                        // Account Selector
-                        Text(
-                          'Account',
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        accountsAsync.when(
-                          data: (accounts) {
-                            if (accounts.isEmpty) {
-                              return const Text(
-                                'No accounts available. Please add an account first.',
-                              );
-                            }
-
-                            // Auto-select first account if none selected
-                            if (_selectedAccountId == null &&
-                                accounts.isNotEmpty) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (mounted && _selectedAccountId == null) {
-                                  setState(() {
-                                    _selectedAccountId =
-                                        accounts.first.id.toString();
-                                  });
-                                }
-                              });
-                            }
-
-                            return DropdownButtonFormField<String>(
-                              initialValue: _selectedAccountId ??
-                                  accounts.first.id.toString(),
-                              decoration: const InputDecoration(
-                                labelText: 'Select Account',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: accounts.map((account) {
-                                return DropdownMenuItem(
-                                  value: account.id.toString(),
-                                  child: Text(account.name),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() => _selectedAccountId = value);
-                                }
-                              },
-                            );
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stack) =>
-                              Text('Error loading accounts: $error'),
-                        ),
-                        const SizedBox(height: 16),
-                        // Date Picker
-                        ListTile(
-                          title: const Text('Date'),
-                          subtitle: Text(
-                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() => _selectedCurrency = value);
+                              }
+                            },
                           ),
-                          trailing: const Icon(Icons.calendar_today),
-                          onTap: _selectDate,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(
-                              color: Theme.of(context).dividerColor,
+                          const SizedBox(height: 16),
+                          // Category Dropdown
+                          categoriesAsync.when(
+                            data: (categories) {
+                              if (categories.isEmpty) {
+                                return const Text(
+                                  'No categories available. Please add a category first.',
+                                );
+                              }
+
+                              // Auto-select first category if none selected
+                              if (_selectedCategoryId == null &&
+                                  categories.isNotEmpty) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  if (mounted && _selectedCategoryId == null) {
+                                    setState(() {
+                                      _selectedCategoryId =
+                                          categories.first.id.toString();
+                                    });
+                                  }
+                                });
+                              }
+
+                              return DropdownButtonFormField<String>(
+                                initialValue: _selectedCategoryId ??
+                                    categories.first.id.toString(),
+                                decoration: const InputDecoration(
+                                  labelText: 'Category',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: categories.map((category) {
+                                  return DropdownMenuItem(
+                                    value: category.id.toString(),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _getCategoryIcon(category.icon),
+                                          color:
+                                              _getCategoryColor(category.color),
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(category.name),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _selectedCategoryId = value;
+                                    });
+                                  }
+                                },
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please select a category';
+                                  }
+                                  return null;
+                                },
+                              );
+                            },
+                            loading: () => const CircularProgressIndicator(),
+                            error: (error, stack) =>
+                                Text('Error loading categories: $error'),
+                          ),
+                          const SizedBox(height: 16),
+                          // Account Selector
+                          Text(
+                            'Account',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          accountsAsync.when(
+                            data: (accounts) {
+                              if (accounts.isEmpty) {
+                                return const Text(
+                                  'No accounts available. Please add an account first.',
+                                );
+                              }
+
+                              // Auto-select first account if none selected
+                              if (_selectedAccountId == null &&
+                                  accounts.isNotEmpty) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  if (mounted && _selectedAccountId == null) {
+                                    setState(() {
+                                      _selectedAccountId =
+                                          accounts.first.id.toString();
+                                    });
+                                  }
+                                });
+                              }
+
+                              return DropdownButtonFormField<String>(
+                                initialValue: _selectedAccountId ??
+                                    accounts.first.id.toString(),
+                                decoration: const InputDecoration(
+                                  labelText: 'Select Account',
+                                  border: OutlineInputBorder(),
+                                ),
+                                items: accounts.map((account) {
+                                  return DropdownMenuItem(
+                                    value: account.id.toString(),
+                                    child: Text(account.name),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => _selectedAccountId = value);
+                                  }
+                                },
+                              );
+                            },
+                            loading: () => const CircularProgressIndicator(),
+                            error: (error, stack) =>
+                                Text('Error loading accounts: $error'),
+                          ),
+                          const SizedBox(height: 16),
+                          // Date Picker
+                          ListTile(
+                            title: const Text('Date'),
+                            subtitle: Text(
+                              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                            ),
+                            trailing: const Icon(Icons.calendar_today),
+                            onTap: _selectDate,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(
+                                color: Theme.of(context).dividerColor,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Note
-                        AppTextField(
-                          controller: _noteController,
-                          label: 'Note (Optional)',
-                          hint: 'Add a note...',
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 16),
-                        // Receipt
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: _pickReceiptFromGallery,
-                                icon: const Icon(Icons.photo_library),
-                                label: const Text('Add Receipt'),
+                          const SizedBox(height: 16),
+                          // Note
+                          AppTextField(
+                            controller: _noteController,
+                            label: 'Note (Optional)',
+                            hint: 'Add a note...',
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 16),
+                          // Receipt
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _pickReceiptFromGallery,
+                                  icon: const Icon(Icons.photo_library),
+                                  label: const Text('Add Receipt'),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            OutlinedButton.icon(
-                              onPressed: _pickReceipt,
-                              icon: const Icon(Icons.camera_alt),
-                              label: const Text('Camera'),
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                onPressed: _pickReceipt,
+                                icon: const Icon(Icons.camera_alt),
+                                label: const Text('Camera'),
+                              ),
+                            ],
+                          ),
+                          if (_receiptPath != null) ...[
+                            const SizedBox(height: 8),
+                            ListTile(
+                              leading: const Icon(Icons.receipt),
+                              title: const Text('Receipt attached'),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () {
+                                  setState(() {
+                                    _receiptPath = null;
+                                  });
+                                },
+                              ),
                             ),
                           ],
-                        ),
-                        if (_receiptPath != null) ...[
-                          const SizedBox(height: 8),
-                          ListTile(
-                            leading: const Icon(Icons.receipt),
-                            title: const Text('Receipt attached'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                setState(() {
-                                  _receiptPath = null;
-                                });
-                              },
-                            ),
-                          ),
+                          // Extra space at bottom for keyboard
+                          const SizedBox(height: 80),
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Save Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveExpense,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                  const SizedBox(height: 16),
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _saveExpense,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(isEditing ? 'Update Expense' : 'Add Expense'),
                     ),
-                    child: Text(isEditing ? 'Update Expense' : 'Add Expense'),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

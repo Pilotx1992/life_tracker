@@ -9,7 +9,6 @@ import 'package:life_tracker/features/finance/presentation/providers/account_pro
 import 'package:life_tracker/features/finance/presentation/providers/bill_provider.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/providers/category_provider.dart';
-import 'package:life_tracker/shared/widgets/fields/app_text_field.dart';
 
 class AddBillDialog extends ConsumerStatefulWidget {
   final RecurringBill? bill;
@@ -146,11 +145,16 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               // Bill Name
-              AppTextField(
+              TextFormField(
                 controller: _nameController,
-                label: 'Bill Name',
-                hint: 'e.g., Rent, Internet, Gym',
+                decoration: const InputDecoration(
+                  labelText: 'Bill Name',
+                  hintText: 'e.g., Rent, Internet, Gym',
+                  border: OutlineInputBorder(),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter a bill name';
@@ -160,30 +164,28 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
               ),
               const SizedBox(height: 16),
               // Amount
-              Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      controller: _amountController,
-                      label: 'Amount',
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [ThousandsSeparatorInputFormatter()],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an amount';
-                        }
-                        // Strip commas before parsing
-                        final cleanValue = value.replaceAll(',', '');
-                        if (double.tryParse(cleanValue) == null ||
-                            double.parse(cleanValue) <= 0) {
-                          return 'Please enter a valid amount';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
+              TextFormField(
+                controller: _amountController,
+                decoration: const InputDecoration(
+                  labelText: 'Amount',
+                  border: OutlineInputBorder(),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [ThousandsSeparatorInputFormatter()],
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter an amount';
+                  }
+                  // Strip commas before parsing
+                  final cleanValue = value.replaceAll(',', '');
+                  if (double.tryParse(cleanValue) == null ||
+                      double.parse(cleanValue) <= 0) {
+                    return 'Please enter a valid amount';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               // Frequency
@@ -337,10 +339,13 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
               ),
               const SizedBox(height: 16),
               // Reminder Days Before
-              AppTextField(
+              TextFormField(
                 controller: _reminderDaysController,
-                label: 'Reminder Days Before',
-                hint: '3',
+                decoration: const InputDecoration(
+                  labelText: 'Reminder Days Before',
+                  hintText: '3',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -355,10 +360,13 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
               ),
               const SizedBox(height: 16),
               // Note
-              AppTextField(
+              TextFormField(
                 controller: _noteController,
-                label: 'Note (Optional)',
-                hint: 'Additional notes',
+                decoration: const InputDecoration(
+                  labelText: 'Note (Optional)',
+                  hintText: 'Additional notes',
+                  border: OutlineInputBorder(),
+                ),
                 maxLines: 2,
               ),
               const SizedBox(height: 16),

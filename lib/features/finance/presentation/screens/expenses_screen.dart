@@ -15,6 +15,7 @@ import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
 import 'package:life_tracker/shared/widgets/error_widget.dart';
 import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
 import 'package:life_tracker/shared/widgets/filters/enhanced_filter_bottom_sheet.dart';
+import 'package:life_tracker/features/finance/presentation/widgets/expense_detail_bottom_sheet.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -267,9 +268,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                   expense: expense,
                                   category: category,
                                   account: account,
-                                  onTap: () => _showEditExpenseBottomSheet(
+                                  onTap: () => ExpenseDetailBottomSheet.show(
                                     context,
-                                    expense,
+                                    expense: expense,
+                                    category: category,
+                                    account: account,
                                   ),
                                 ),
                               );
@@ -550,17 +553,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       error: (error, stack) {
         FeedbackService.showError(context, 'Error loading accounts: $error');
       },
-    );
-  }
-
-  void _showEditExpenseBottomSheet(BuildContext context, Expense expense) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => AddExpenseBottomSheet(expense: expense),
     );
   }
 

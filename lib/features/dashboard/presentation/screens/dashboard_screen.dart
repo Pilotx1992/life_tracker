@@ -224,7 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         subtitle: 'Track wellness & vitals',
         gradient: const [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
         darkGradient: const [Color(0xFFD64545), Color(0xFFAF3D3D)],
-        route: AppRoutes.weight,
+        route: AppRoutes.health,
         delay: 0,
       ),
       _ModuleData(

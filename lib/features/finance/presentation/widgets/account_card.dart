@@ -49,8 +49,7 @@ class AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat =
-        NumberFormat.currency(symbol: _getCurrencySymbol(account.currency));
+    final currencyFormat = NumberFormat.currency(symbol: '');
 
     final accountColor = _getAccountColor(account.type, context);
     final isCreditCard = account.type.toLowerCase() == 'credit card';
@@ -166,7 +165,7 @@ class AccountCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    currencyFormat.format(account.balance),
+                    '${account.balance >= 0 ? '+' : ''}${currencyFormat.format(account.balance)}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: isCreditCard
@@ -203,16 +202,5 @@ class AccountCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getCurrencySymbol(String currency) {
-    switch (currency.toUpperCase()) {
-      case 'USD':
-        return '\$';
-      case 'EGP':
-        return 'E£';
-      default:
-        return currency;
-    }
   }
 }
