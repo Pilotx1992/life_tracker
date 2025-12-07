@@ -181,6 +181,15 @@ class ReminderCard extends ConsumerWidget {
                           size: 16,
                           color: priorityColor,
                         ),
+                        // Alarm icon
+                        if (reminder.hasAlarm) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.alarm,
+                            size: 16,
+                            color: colorScheme.primary,
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 4),

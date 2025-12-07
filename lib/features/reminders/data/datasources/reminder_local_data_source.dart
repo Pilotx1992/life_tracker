@@ -43,11 +43,12 @@ class ReminderLocalDataSourceImpl implements ReminderLocalDataSource {
     try {
       final isar = await _databaseService.database;
       final now = DateTime.now();
-      // Only show reminders that are in the future (time hasn't come yet)
+      // Show reminders that are not completed and dateTime is >= now
+      // Use subtract 1 second to include reminders at the current moment
       return await isar.reminderModels
           .filter()
           .isCompletedEqualTo(false)
-          .dateTimeGreaterThan(now)
+          .dateTimeGreaterThan(now.subtract(const Duration(seconds: 1)))
           .sortByDateTime()
           .findAll();
     } catch (e) {
@@ -59,11 +60,19 @@ class ReminderLocalDataSourceImpl implements ReminderLocalDataSource {
   Future<List<ReminderModel>> getCompletedReminders() async {
     try {
       final isar = await _databaseService.database;
-      return await isar.reminderModels
+      // Use distinctBy to ensure unique results
+      final reminders = await isar.reminderModels
           .filter()
           .isCompletedEqualTo(true)
           .sortByDateTimeDesc()
           .findAll();
+      // Remove duplicates by ID (safety check)
+      final seenIds = <Id>{};
+      return reminders.where((reminder) {
+        if (seenIds.contains(reminder.id)) return false;
+        seenIds.add(reminder.id);
+        return true;
+      }).toList();
     } catch (e) {
       throw CacheException('Failed to get completed reminders: $e');
     }

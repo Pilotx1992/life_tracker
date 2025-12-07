@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
+import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/reminders/domain/entities/reminder.dart';
 import 'package:life_tracker/features/reminders/presentation/providers/reminder_provider.dart';
 import 'package:life_tracker/features/reminders/presentation/widgets/add_reminder_dialog.dart';
@@ -23,11 +23,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    // Delay refresh until after widget tree is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshReminders();
-    });
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -37,7 +33,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
   }
 
   Future<void> _refreshReminders() async {
-    await ref.read(reminderNotifierProvider.notifier).loadReminders();
+    await ref.read(reminderListProvider.notifier).refresh();
   }
 
   void _showAddReminderDialog({Reminder? reminder}) {
@@ -47,31 +43,8 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
     );
   }
 
-  void _deleteReminder(Id id) async {
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Reminder?'),
-        content: const Text('Are you sure you want to delete this reminder?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await ref.read(reminderNotifierProvider.notifier).deleteReminderEntry(id);
-    }
-  }
-
-  List<Reminder> _groupReminders(List<Reminder> reminders) {
+  /// Group reminders by time period for better UX
+  List<Reminder> _sortRemindersByPeriod(List<Reminder> reminders) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
@@ -110,9 +83,12 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final allRemindersAsync = ref.watch(reminderNotifierProvider);
-    final upcomingRemindersAsync = ref.watch(upcomingRemindersProvider);
-    final completedRemindersAsync = ref.watch(completedRemindersProvider);
+    // Watch the main provider for loading/error states
+    final remindersAsync = ref.watch(reminderListProvider);
+
+    // Watch derived providers for filtered lists
+    final upcomingReminders = ref.watch(upcomingRemindersProvider);
+    final completedReminders = ref.watch(completedRemindersProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -122,29 +98,30 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
           tabs: const [
             Tab(text: 'Upcoming'),
             Tab(text: 'Completed'),
-            Tab(text: 'All'),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildReminderList(
-            upcomingRemindersAsync,
-            'No upcoming reminders. Tap + to add one!',
-            'Upcoming',
-          ),
-          _buildReminderList(
-            completedRemindersAsync,
-            'No completed reminders yet.',
-            'Completed',
-          ),
-          _buildReminderList(
-            allRemindersAsync,
-            'No reminders added yet. Tap + to add your first reminder!',
-            'All',
-          ),
-        ],
+      body: remindersAsync.when(
+        loading: () => SkeletonList.cards(itemCount: 6),
+        error: (error, stack) => ErrorStateWidget(
+          message: error.toString(),
+          onRetry: _refreshReminders,
+        ),
+        data: (_) => TabBarView(
+          controller: _tabController,
+          children: [
+            _buildReminderList(
+              _sortRemindersByPeriod(upcomingReminders),
+              'No upcoming reminders. Tap + to add one!',
+              isCompleted: false,
+            ),
+            _buildReminderList(
+              completedReminders,
+              'No completed reminders yet.',
+              isCompleted: true,
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddReminderDialog(),
@@ -154,95 +131,117 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
   }
 
   Widget _buildReminderList(
-    AsyncValue<List<Reminder>> remindersAsync,
-    String emptyMessage,
-    String sectionTitle,
-  ) {
+    List<Reminder> reminders,
+    String emptyMessage, {
+    required bool isCompleted,
+  }) {
+    if (reminders.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _refreshReminders,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: EmptyStateWidget(
+                title: emptyMessage,
+                icon: Icons.notifications_none,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: _refreshReminders,
-      child: remindersAsync.when(
-        loading: () => SkeletonList.cards(itemCount: 6),
-        error: (error, stack) => ErrorStateWidget(message: error.toString()),
-        data: (reminders) {
-          if (reminders.isEmpty) {
-            return EmptyStateWidget(
-              title: emptyMessage,
-              icon: Icons.notifications_none,
-            );
-          }
-
-          // Group reminders for "Upcoming" and "All" tabs
-          final groupedReminders = sectionTitle == 'Completed'
-              ? reminders
-              : _groupReminders(reminders);
-
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            physics: const AlwaysScrollableScrollPhysics(),
-            cacheExtent: 500,
-            addAutomaticKeepAlives: false,
-            addRepaintBoundaries: true,
-            itemCount: groupedReminders.length,
-            itemBuilder: (context, index) {
-              final reminder = groupedReminders[index];
-              return Dismissible(
-                key: ValueKey('reminder_${reminder.id}'),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: AlignmentDirectional.centerEnd,
-                  padding: const EdgeInsetsDirectional.only(end: 20),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.delete,
-                    color: Theme.of(context).colorScheme.onError,
-                    size: 32,
-                  ),
-                ),
-                confirmDismiss: (direction) async {
-                  return await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Delete Reminder'),
-                          content: Text(
-                            'Are you sure you want to delete "${reminder.title}"?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              style: TextButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.error,
-                              ),
-                              child: const Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      ) ??
-                      false;
-                },
-                onDismissed: (direction) {
-                  _deleteReminder(reminder.id!);
-                },
-                child: ReminderCard(
-                  reminder: reminder,
-                  onTap: () => _showAddReminderDialog(reminder: reminder),
-                  onMarkDone: reminder.isCompleted
-                      ? null
-                      : () => ref
-                          .read(reminderNotifierProvider.notifier)
-                          .markReminderAsCompleted(reminder.id!),
-                ),
-              );
-            },
-          );
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        physics: const AlwaysScrollableScrollPhysics(),
+        cacheExtent: 500,
+        addAutomaticKeepAlives: false,
+        addRepaintBoundaries: true,
+        itemCount: reminders.length,
+        itemBuilder: (context, index) {
+          final reminder = reminders[index];
+          return _buildReminderItem(reminder, isCompleted);
         },
+      ),
+    );
+  }
+
+  Widget _buildReminderItem(Reminder reminder, bool isCompleted) {
+    return Dismissible(
+      key: ValueKey('reminder_${reminder.id}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: AlignmentDirectional.centerEnd,
+        padding: const EdgeInsetsDirectional.only(end: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.error,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          Icons.delete,
+          color: Theme.of(context).colorScheme.onError,
+          size: 32,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Delete Reminder'),
+                content: Text(
+                  'Are you sure you want to delete "${reminder.title}"?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
+            ) ??
+            false;
+      },
+      onDismissed: (direction) async {
+        final reminderId = reminder.id;
+        if (reminderId != null) {
+          final success = await ref
+              .read(reminderListProvider.notifier)
+              .deleteReminder(reminderId);
+
+          if (!success && mounted) {
+            FeedbackService.showError(context, 'Failed to delete reminder');
+          }
+        }
+      },
+      child: ReminderCard(
+        reminder: reminder,
+        onTap: () => _showAddReminderDialog(reminder: reminder),
+        onMarkDone: isCompleted
+            ? null
+            : () async {
+                final success = await ref
+                    .read(reminderListProvider.notifier)
+                    .markAsCompleted(reminder.id!);
+
+                if (success && mounted) {
+                  FeedbackService.showSuccess(context, 'Reminder completed!');
+                } else if (mounted) {
+                  FeedbackService.showError(
+                      context, 'Failed to complete reminder');
+                }
+              },
       ),
     );
   }

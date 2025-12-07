@@ -6,7 +6,9 @@ class HealthSummaryCard extends StatelessWidget {
   final String title;
   final String value;
   final String unit;
-  final IconData icon;
+  final IconData? icon;
+  final String?
+      iconAsset; // Path to custom icon asset (e.g., 'assets/icons/BMI.png')
   final Color iconColor;
   final String? trend; // "+X", "-X", or null
   final VoidCallback? onTap;
@@ -17,12 +19,14 @@ class HealthSummaryCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.unit,
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.iconColor,
     this.trend,
     this.onTap,
     required this.theme,
-  });
+  }) : assert(icon != null || iconAsset != null,
+            'Either icon or iconAsset must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +77,14 @@ class HealthSummaryCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Icon(icon, color: iconColor, size: 20),
+                  child: iconAsset != null
+                      ? Image.asset(
+                          iconAsset!,
+                          width: 20,
+                          height: 20,
+                          color: iconColor,
+                        )
+                      : Icon(icon, color: iconColor, size: 20),
                 ),
                 const Expanded(child: SizedBox()),
                 if (trend != null)

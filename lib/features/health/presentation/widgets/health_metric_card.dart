@@ -61,45 +61,43 @@ class HealthMetricCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        iconColor.withValues(alpha: 0.2),
-                        iconColor.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 20),
+            // Icon row
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    iconColor.withValues(alpha: 0.2),
+                    iconColor.withValues(alpha: 0.1),
+                  ],
                 ),
-                const Spacer(),
-              ],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
+            const SizedBox(height: 8),
+            // Value - takes available space
+            Expanded(
+              child: Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
-            if (unit.isNotEmpty) ...[
-              const SizedBox(height: 2),
+            // Unit (optional)
+            if (unit.isNotEmpty)
               Text(
                 unit,
                 style: TextStyle(
@@ -109,8 +107,8 @@ class HealthMetricCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            ],
-            const Spacer(),
+            const SizedBox(height: 4),
+            // Title at bottom
             Text(
               title,
               style: TextStyle(
@@ -121,8 +119,9 @@ class HealthMetricCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            // Progress bar (optional)
             if (progress != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(

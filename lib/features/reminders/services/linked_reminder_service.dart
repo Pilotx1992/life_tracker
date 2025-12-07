@@ -18,7 +18,7 @@ class LinkedReminderService {
     if (medication.id == null) return;
 
     try {
-      final reminderNotifier = _ref.read(reminderNotifierProvider.notifier);
+      final reminderNotifier = _ref.read(reminderListProvider.notifier);
 
       for (var i = 0; i < medication.times.length; i++) {
         final timeDateTime = medication.times[i];
@@ -38,7 +38,7 @@ class LinkedReminderService {
           updatedAt: DateTime.now(),
         );
 
-        await reminderNotifier.addReminderEntry(reminder);
+        await reminderNotifier.addReminder(reminder);
       }
 
       if (kDebugMode) {
@@ -58,7 +58,7 @@ class LinkedReminderService {
     if (bill.id == null || !bill.isActive) return;
 
     try {
-      final reminderNotifier = _ref.read(reminderNotifierProvider.notifier);
+      final reminderNotifier = _ref.read(reminderListProvider.notifier);
 
       // Create reminder for bill due date
       final reminder = Reminder(
@@ -74,7 +74,7 @@ class LinkedReminderService {
         updatedAt: DateTime.now(),
       );
 
-      await reminderNotifier.addReminderEntry(reminder);
+      await reminderNotifier.addReminder(reminder);
 
       if (kDebugMode) {
         debugPrint('Created reminder for bill ${bill.id}');
@@ -89,8 +89,8 @@ class LinkedReminderService {
   /// Delete reminders linked to a specific item
   Future<void> deleteLinkedReminders(String linkedType, Id linkedId) async {
     try {
-      final reminderNotifier = _ref.read(reminderNotifierProvider.notifier);
-      final allReminders = await reminderNotifier.getUpcomingRemindersList();
+      final reminderNotifier = _ref.read(reminderListProvider.notifier);
+      final allReminders = _ref.read(upcomingRemindersProvider);
 
       final linkedReminders = allReminders
           .where((r) => r.linkedType == linkedType && r.linkedId == linkedId)
@@ -98,7 +98,7 @@ class LinkedReminderService {
 
       for (final reminder in linkedReminders) {
         if (reminder.id != null) {
-          await reminderNotifier.deleteReminderEntry(reminder.id!);
+          await reminderNotifier.deleteReminder(reminder.id!);
         }
       }
 

@@ -43,12 +43,20 @@ dependencies:
   riverpod_annotation: ^2.3.5
   shared_preferences: ^2.5.3
   timezone: ^0.9.3
+  flutter_timezone: ^3.0.1
   url_launcher: ^6.3.2
   uuid: ^4.4.1
 
   # Audio recording
   open_filex: ^4.5.0
   flutter_sound: ^9.16.3  # For voice recording
+  
+  # Alarm system
+  vibration: ^3.1.4  # For vibration support
+  just_audio: ^0.9.40  # For better audio control
+
+  # Step counting from device sensor
+  pedometer: ^4.0.1
 
 dev_dependencies:
   # Dev dependencies (sorted alphabetically)
@@ -69,10 +77,8 @@ flutter:
   uses-material-design: true
 
   # Assets
-  # No assets for now - will add when needed
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+  assets:
+    - assets/icons/
 
   # Fonts - using Google Fonts package instead of local fonts
   # fonts:

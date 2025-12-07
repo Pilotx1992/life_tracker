@@ -23,6 +23,13 @@ class ReminderModel {
   String? linkedType; // 'medication', 'bill', 'note', etc.
   int? linkedId; // ID of the linked item
 
+  // Alarm properties
+  bool hasAlarm = false; // Whether reminder has alarm enabled
+  String? alarmSound; // Path to alarm sound file
+  bool vibrate = true; // Whether to vibrate
+  int snoozeDuration = 5; // Snooze duration in minutes (default: 5)
+  int repeatCount = -1; // How many times to repeat alarm sound (-1 for infinite)
+
   late DateTime createdAt;
   late DateTime updatedAt;
 
@@ -43,6 +50,11 @@ class ReminderModel {
       nextOccurrence: nextOccurrence,
       linkedType: linkedType,
       linkedId: linkedId,
+      hasAlarm: hasAlarm,
+      alarmSound: alarmSound,
+      vibrate: vibrate,
+      snoozeDuration: snoozeDuration,
+      repeatCount: repeatCount,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -62,6 +74,11 @@ class ReminderModel {
       ..nextOccurrence = entity.nextOccurrence
       ..linkedType = entity.linkedType
       ..linkedId = entity.linkedId
+      ..hasAlarm = entity.hasAlarm
+      ..alarmSound = entity.alarmSound
+      ..vibrate = entity.vibrate
+      ..snoozeDuration = entity.snoozeDuration
+      ..repeatCount = entity.repeatCount
       ..createdAt = entity.createdAt
       ..updatedAt = entity.updatedAt;
     if (entity.id != null) {
@@ -84,6 +101,11 @@ class ReminderModel {
     DateTime? nextOccurrence,
     String? linkedType,
     int? linkedId,
+    bool? hasAlarm,
+    String? alarmSound,
+    bool? vibrate,
+    int? snoozeDuration,
+    int? repeatCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -100,6 +122,11 @@ class ReminderModel {
       ..nextOccurrence = nextOccurrence ?? this.nextOccurrence
       ..linkedType = linkedType ?? this.linkedType
       ..linkedId = linkedId ?? this.linkedId
+      ..hasAlarm = hasAlarm ?? this.hasAlarm
+      ..alarmSound = alarmSound ?? this.alarmSound
+      ..vibrate = vibrate ?? this.vibrate
+      ..snoozeDuration = snoozeDuration ?? this.snoozeDuration
+      ..repeatCount = repeatCount ?? this.repeatCount
       ..createdAt = createdAt ?? this.createdAt
       ..updatedAt = updatedAt ?? this.updatedAt;
     if (id != null) {

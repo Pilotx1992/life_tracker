@@ -233,8 +233,8 @@ class NotificationActionHandler {
   Future<void> _handleReminderDone(Id reminderId) async {
     try {
       await _ref
-          .read(reminderNotifierProvider.notifier)
-          .markReminderAsCompleted(reminderId);
+          .read(reminderListProvider.notifier)
+          .markAsCompleted(reminderId);
       if (kDebugMode) {
         debugPrint('Reminder marked as done: $reminderId');
       }
@@ -270,8 +270,8 @@ class NotificationActionHandler {
       );
 
       await _ref
-          .read(reminderNotifierProvider.notifier)
-          .updateReminderEntry(updatedReminder);
+          .read(reminderListProvider.notifier)
+          .updateReminder(updatedReminder);
 
       if (kDebugMode) {
         debugPrint('Reminder snoozed: $reminderId until $snoozedDateTime');

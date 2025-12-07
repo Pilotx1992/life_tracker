@@ -35,6 +35,7 @@ import 'package:life_tracker/features/health/presentation/screens/devices_screen
 
 // Reminders Screens
 import 'package:life_tracker/features/reminders/presentation/screens/reminders_screen.dart';
+import 'package:life_tracker/features/reminders/presentation/widgets/alarm_ringing_screen.dart';
 
 // Settings Screens
 import 'package:life_tracker/features/settings/presentation/screens/settings_screen.dart';
@@ -48,6 +49,7 @@ class AppRoutes {
   static const String finance = '/finance';
   static const String notes = '/notes';
   static const String reminders = '/reminders';
+  static const String alarmRinging = '/reminders/alarm';
   static const String settings = '/settings';
   static const String profileSetup = '/profile/setup';
   static const String notificationTest = '/dev/notifications';
@@ -216,6 +218,21 @@ final appRouter = GoRouter(
       path: AppRoutes.reminders,
       name: 'reminders',
       builder: (context, state) => const RemindersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.alarmRinging,
+      name: 'alarm_ringing',
+      builder: (context, state) {
+        final reminderId = state.uri.queryParameters['id'];
+        if (reminderId == null) {
+          return const Scaffold(
+            body: Center(child: Text('Invalid alarm ID')),
+          );
+        }
+        return AlarmRingingScreen(
+          reminderId: int.parse(reminderId),
+        );
+      },
     ),
     // Settings Module
     GoRoute(

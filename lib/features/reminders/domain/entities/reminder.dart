@@ -19,6 +19,13 @@ class Reminder extends Equatable {
   final String? linkedType; // 'medication', 'bill', 'note', etc.
   final Id? linkedId; // ID of the linked item
 
+  // Alarm properties
+  final bool hasAlarm; // Whether reminder has alarm enabled
+  final String? alarmSound; // Path to alarm sound file
+  final bool vibrate; // Whether to vibrate
+  final int snoozeDuration; // Snooze duration in minutes (default: 5)
+  final int repeatCount; // How many times to repeat alarm sound (-1 for infinite)
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -36,6 +43,11 @@ class Reminder extends Equatable {
     this.nextOccurrence,
     this.linkedType,
     this.linkedId,
+    this.hasAlarm = false,
+    this.alarmSound,
+    this.vibrate = true,
+    this.snoozeDuration = 5,
+    this.repeatCount = -1, // -1 means infinite
     required this.createdAt,
     required this.updatedAt,
   });
@@ -84,6 +96,11 @@ class Reminder extends Equatable {
         nextOccurrence,
         linkedType,
         linkedId,
+        hasAlarm,
+        alarmSound,
+        vibrate,
+        snoozeDuration,
+        repeatCount,
         createdAt,
         updatedAt,
       ];
@@ -102,6 +119,11 @@ class Reminder extends Equatable {
     DateTime? nextOccurrence,
     String? linkedType,
     Id? linkedId,
+    bool? hasAlarm,
+    String? alarmSound,
+    bool? vibrate,
+    int? snoozeDuration,
+    int? repeatCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -119,6 +141,11 @@ class Reminder extends Equatable {
       nextOccurrence: nextOccurrence ?? this.nextOccurrence,
       linkedType: linkedType ?? this.linkedType,
       linkedId: linkedId ?? this.linkedId,
+      hasAlarm: hasAlarm ?? this.hasAlarm,
+      alarmSound: alarmSound ?? this.alarmSound,
+      vibrate: vibrate ?? this.vibrate,
+      snoozeDuration: snoozeDuration ?? this.snoozeDuration,
+      repeatCount: repeatCount ?? this.repeatCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

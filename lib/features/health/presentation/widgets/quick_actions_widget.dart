@@ -15,13 +15,14 @@ class QuickActionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = theme.colorScheme;
+    // Golden orange color for unified look
+    const sunsetColor = Color.fromARGB(253, 238, 157, 28);
 
     final actions = [
       _QuickAction(
         icon: Icons.add_chart,
         label: 'Add Weight',
-        color: colorScheme.primary,
+        color: sunsetColor,
         onTap: () {
           showDialog(
             context: context,
@@ -32,7 +33,7 @@ class QuickActionsWidget extends StatelessWidget {
       _QuickAction(
         icon: Icons.fitness_center,
         label: 'Start Workout',
-        color: colorScheme.tertiary,
+        color: sunsetColor,
         onTap: () {
           // TODO: Navigate to workout screen
           FeedbackService.showInfo(context, 'Workout tracking coming soon!');
@@ -41,7 +42,7 @@ class QuickActionsWidget extends StatelessWidget {
       _QuickAction(
         icon: Icons.bedtime,
         label: 'Log Sleep',
-        color: colorScheme.secondary,
+        color: sunsetColor,
         onTap: () {
           // TODO: Navigate to sleep logging
           FeedbackService.showInfo(context, 'Sleep tracking coming soon!');
@@ -50,7 +51,7 @@ class QuickActionsWidget extends StatelessWidget {
       _QuickAction(
         icon: Icons.medication,
         label: 'Add Medication',
-        color: colorScheme.inversePrimary,
+        color: sunsetColor,
         onTap: () {
           showDialog(
             context: context,
@@ -84,64 +85,53 @@ class QuickActionsWidget extends StatelessWidget {
             itemCount: actions.length,
             itemBuilder: (context, index) {
               final action = actions[index];
-              return Container(
-                width: 90,
-                margin: const EdgeInsetsDirectional.only(end: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      action.color.withValues(alpha: 0.2),
-                      action.color.withValues(alpha: 0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: action.color.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: action.color.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
+              return Padding(
+                padding: const EdgeInsetsDirectional.only(end: 12),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: action.onTap,
                     borderRadius: BorderRadius.circular(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: action.color.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
+                    child: SizedBox(
+                      width: 80,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Icon with 3D shadow effect
+                          Stack(
+                            children: [
+                              // Shadow layer for 3D effect
+                              Icon(
+                                action.icon,
+                                color: action.color.withValues(alpha: 0.3),
+                                size: 36,
+                              ),
+                              // Main icon
+                              Positioned(
+                                left: 0,
+                                top: -2,
+                                child: Icon(
+                                  action.icon,
+                                  color: action.color,
+                                  size: 36,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Icon(
-                            action.icon,
-                            color: action.color,
-                            size: 28,
+                          const SizedBox(height: 8),
+                          Text(
+                            action.label,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          action.label,
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

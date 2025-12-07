@@ -28,6 +28,12 @@ class _AddReminderDialogState extends ConsumerState<AddReminderDialog> {
   int? _recurringInterval;
   DateTime? _recurringEndDate;
 
+  // Alarm settings
+  bool _hasAlarm = false;
+  bool _vibrate = true;
+  int _snoozeDuration = 5;
+  int _repeatCount = -1; // -1 means infinite
+
   final List<String> _priorities = ['Low', 'Medium', 'High'];
   final List<String> _recurringPatterns = [
     'Daily',
@@ -50,6 +56,10 @@ class _AddReminderDialogState extends ConsumerState<AddReminderDialog> {
       _selectedRecurringPattern = reminder.recurringPattern;
       _recurringInterval = reminder.recurringInterval;
       _recurringEndDate = reminder.recurringEndDate;
+      _hasAlarm = reminder.hasAlarm;
+      _vibrate = reminder.vibrate;
+      _snoozeDuration = reminder.snoozeDuration;
+      _repeatCount = reminder.repeatCount;
     }
   }
 
@@ -145,21 +155,33 @@ class _AddReminderDialogState extends ConsumerState<AddReminderDialog> {
         nextOccurrence: nextOccurrence,
         linkedType: widget.reminder?.linkedType,
         linkedId: widget.reminder?.linkedId,
+        hasAlarm: _hasAlarm,
+        vibrate: _vibrate,
+        snoozeDuration: _snoozeDuration,
+        repeatCount: _repeatCount,
         createdAt: widget.reminder?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
+      bool success;
       if (widget.reminder == null) {
-        await ref
-            .read(reminderNotifierProvider.notifier)
-            .addReminderEntry(reminder);
+        success =
+            await ref.read(reminderListProvider.notifier).addReminder(reminder);
       } else {
-        await ref
-            .read(reminderNotifierProvider.notifier)
-            .updateReminderEntry(reminder);
+        success = await ref
+            .read(reminderListProvider.notifier)
+            .updateReminder(reminder);
       }
 
       if (mounted) {
+        if (success) {
+          final message = widget.reminder == null
+              ? 'Reminder added successfully!'
+              : 'Reminder updated successfully!';
+          FeedbackService.showSuccess(context, message);
+        } else {
+          FeedbackService.showError(context, 'Failed to save reminder');
+        }
         Navigator.of(context).pop();
       }
     }
@@ -319,6 +341,68 @@ class _AddReminderDialogState extends ConsumerState<AddReminderDialog> {
                           : 'No end date',
                     ),
                   ),
+                ),
+              ],
+              // Alarm Settings
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.alarm),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Alarm Settings',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text('Enable Alarm'),
+                subtitle:
+                    const Text('Play sound and vibrate when reminder is due'),
+                value: _hasAlarm,
+                onChanged: (value) {
+                  setState(() {
+                    _hasAlarm = value;
+                  });
+                },
+              ),
+              if (_hasAlarm) ...[
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('Vibrate'),
+                  subtitle: const Text('Vibrate device when alarm rings'),
+                  value: _vibrate,
+                  onChanged: (value) {
+                    setState(() {
+                      _vibrate = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _snoozeDuration,
+                  decoration: const InputDecoration(
+                    labelText: 'Snooze Duration',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [5, 10, 15, 30]
+                      .map(
+                        (minutes) => DropdownMenuItem(
+                          value: minutes,
+                          child: Text('$minutes minutes'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _snoozeDuration = value;
+                      });
+                    }
+                  },
                 ),
               ],
             ],

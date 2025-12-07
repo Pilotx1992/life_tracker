@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/providers/health_provider.dart';
+import 'package:life_tracker/core/providers/pedometer_provider.dart';
 
 /// Activity data model
 class ActivityData {
@@ -28,39 +29,42 @@ class ActivityData {
 }
 
 /// Provider for Activity Rings data
+/// Combines data from Pedometer (real-time) and Health Connect
 final activityDataProvider = Provider<ActivityData>((ref) {
   final healthState = ref.watch(healthConnectProvider);
+  final pedometerSteps = ref.watch(currentPedometerStepsProvider);
+
   final today = DateTime.now();
   final todayStart = DateTime(today.year, today.month, today.day);
   final todayEnd = todayStart.add(const Duration(days: 1));
 
-  // Calculate today's steps
-  int todaySteps = 0;
+  // Calculate today's steps from Health Connect
+  int healthConnectSteps = 0;
   if (healthState.stepsData.isNotEmpty) {
     final todayStepsData = healthState.stepsData.where((step) {
       return step.date.isAfter(todayStart) && step.date.isBefore(todayEnd);
     }).toList();
-    todaySteps = todayStepsData.fold<int>(
+    healthConnectSteps = todayStepsData.fold<int>(
       0,
       (sum, step) => sum + step.steps,
     );
   }
 
+  // Use the higher value between pedometer and Health Connect
+  // Pedometer gives real-time updates, Health Connect syncs periodically
+  final todaySteps =
+      pedometerSteps > healthConnectSteps ? pedometerSteps : healthConnectSteps;
+
   // Calculate Move (Active calories)
-  // For now, we'll estimate based on steps (rough calculation)
   // 1 step ≈ 0.04 kcal for average person
-  // TODO: Get real active calories from Health Connect if available
   final moveCurrent = todaySteps * 0.04;
 
   // Calculate Exercise minutes
-  // TODO: Get real exercise minutes from Health Connect
-  // For now, we'll use a mock value or calculate from steps
   // If user has > 5000 steps, consider some exercise time
   final exerciseCurrent = todaySteps > 5000 ? (todaySteps / 1000) * 2 : 0.0;
 
   // Calculate Stand hours
-  // TODO: Get real stand hours from Health Connect
-  // For now, estimate based on steps (if > 100 steps/hour, consider standing)
+  // Estimate based on steps
   final standHours = todaySteps > 0 ? (todaySteps / 100).clamp(0.0, 12.0) : 0.0;
 
   return ActivityData(

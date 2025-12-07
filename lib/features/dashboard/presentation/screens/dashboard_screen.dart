@@ -44,10 +44,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _cardController,
-      curve: Curves.easeOutCubic,
-    ),);
+    ).animate(
+      CurvedAnimation(
+        parent: _cardController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _cardController.forward();
   }
@@ -145,80 +147,83 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           animation: _gradientController,
           builder: (context, child) {
             return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? [
-                        const Color(0xFF0D1B2A),
-                        const Color(0xFF1B263B),
-                        const Color(0xFF0D1B2A),
-                      ]
-                    : [
-                        Color.lerp(
-                          const Color(0xFFF8FAFF),
-                          const Color(0xFFE8F4FF),
-                          _gradientController.value,
-                        )!,
-                        Color.lerp(
-                          const Color(0xFFFFE8F5),
-                          const Color(0xFFF0E8FF),
-                          _gradientController.value,
-                        )!,
-                        Color.lerp(
-                          const Color(0xFFE8FFEF),
-                          const Color(0xFFFFF8E8),
-                          _gradientController.value,
-                        )!,
-                      ],
-                stops: const [0.0, 0.5, 1.0],
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          const Color(0xFF0D1B2A),
+                          const Color(0xFF1B263B),
+                          const Color(0xFF0D1B2A),
+                        ]
+                      : [
+                          Color.lerp(
+                            const Color(0xFFF8FAFF),
+                            const Color(0xFFE8F4FF),
+                            _gradientController.value,
+                          )!,
+                          Color.lerp(
+                            const Color(0xFFFFE8F5),
+                            const Color(0xFFF0E8FF),
+                            _gradientController.value,
+                          )!,
+                          Color.lerp(
+                            const Color(0xFFE8FFEF),
+                            const Color(0xFFFFF8E8),
+                            _gradientController.value,
+                          )!,
+                        ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
               ),
-            ),
-            child: child,
-          );
-        },
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(
-              left: AppDesignTokens.space16,
-              right: AppDesignTokens.space16,
-              bottom: AppDesignTokens.space32,
-              top: AppDesignTokens.space16,
-            ),
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Greeting Section with animated gradient text
-                    _GreetingSection(
-                      greeting: _getGreeting(),
-                      emoji: _getGreetingEmoji(),
-                    ),
-                    const SizedBox(height: AppDesignTokens.space24),
+              child: child,
+            );
+          },
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: AppDesignTokens.space16,
+                right: AppDesignTokens.space16,
+                bottom: AppDesignTokens.space32,
+                top: AppDesignTokens.space16,
+              ),
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Greeting Section with animated gradient text
+                      _GreetingSection(
+                        greeting: _getGreeting(),
+                        emoji: _getGreetingEmoji(),
+                      ),
+                      const SizedBox(height: AppDesignTokens.space24),
 
-                    // Module Cards with staggered animation
-                    _buildModuleSection(context, theme, isDark),
-                    const SizedBox(height: AppDesignTokens.space32),
+                      // Module Cards with staggered animation
+                      _buildModuleSection(context, theme, isDark),
+                      const SizedBox(height: AppDesignTokens.space32),
 
-                    // Quick Stats Section
-                    _buildQuickStats(context, theme, isDark),
-                  ],
+                      // Quick Stats Section
+                      _buildQuickStats(context, theme, isDark),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );
   }
 
   Widget _buildModuleSection(
-      BuildContext context, ThemeData theme, bool isDark,) {
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     final modules = [
       const _ModuleData(
         icon: Icons.favorite_rounded,
@@ -557,18 +562,22 @@ class _PremiumModuleCardState extends State<_PremiumModuleCard>
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 0.98,
-    ).animate(CurvedAnimation(
-      parent: _hoverController,
-      curve: Curves.easeInOut,
-    ),);
+    ).animate(
+      CurvedAnimation(
+        parent: _hoverController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _glowAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _hoverController,
-      curve: Curves.easeInOut,
-    ),);
+    ).animate(
+      CurvedAnimation(
+        parent: _hoverController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
@@ -590,56 +599,57 @@ class _PremiumModuleCardState extends State<_PremiumModuleCard>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
-              boxShadow: [
-                BoxShadow(
-                  color: colors[0].withValues(
-                    alpha: 0.3 + (_glowAnimation.value * 0.2),
+              decoration: BoxDecoration(
+                borderRadius:
+                    BorderRadius.circular(AppDesignTokens.radiusLarge),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors[0].withValues(
+                      alpha: 0.3 + (_glowAnimation.value * 0.2),
+                    ),
+                    blurRadius: 12 + (_glowAnimation.value * 8),
+                    offset: const Offset(0, 4),
                   ),
-                  blurRadius: 12 + (_glowAnimation.value * 8),
-                  offset: const Offset(0, 4),
-                ),
-              ],
+                ],
+              ),
+              child: child,
             ),
-            child: child,
-          ),
-        );
-      },
-      child: GestureDetector(
-        onTapDown: (_) {
-          setState(() => _isPressed = true);
-          _hoverController.forward();
+          );
         },
-        onTapUp: (_) {
-          setState(() => _isPressed = false);
-          _hoverController.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () {
-          setState(() => _isPressed = false);
-          _hoverController.reverse();
-        },
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(
-            widget.isCompact
-                ? AppDesignTokens.space16
-                : AppDesignTokens.space20,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: colors,
+        child: GestureDetector(
+          onTapDown: (_) {
+            setState(() => _isPressed = true);
+            _hoverController.forward();
+          },
+          onTapUp: (_) {
+            setState(() => _isPressed = false);
+            _hoverController.reverse();
+            widget.onTap();
+          },
+          onTapCancel: () {
+            setState(() => _isPressed = false);
+            _hoverController.reverse();
+          },
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(
+              widget.isCompact
+                  ? AppDesignTokens.space16
+                  : AppDesignTokens.space20,
             ),
-            borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors,
+              ),
+              borderRadius: BorderRadius.circular(AppDesignTokens.radiusLarge),
+            ),
+            child: widget.isCompact
+                ? _buildCompactLayout(theme)
+                : _buildFullLayout(theme),
           ),
-          child: widget.isCompact
-              ? _buildCompactLayout(theme)
-              : _buildFullLayout(theme),
         ),
-      ),
       ),
     );
   }

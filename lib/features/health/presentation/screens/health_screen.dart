@@ -175,7 +175,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
   ) {
     final healthState = ref.watch(healthConnectProvider);
     final latestWeightAsync = ref.watch(latestWeightProvider);
-    final profileAsync = ref.watch(userProfileProvider);
 
     // Get latest heart rate
     HeartRateDataPoint? latestHeartRate;
@@ -271,56 +270,14 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: profileAsync.when(
-            data: (profile) {
-              return latestWeightAsync.when(
-                data: (weightEntry) {
-                  if (profile == null ||
-                      weightEntry == null ||
-                      profile.heightInCm == null ||
-                      profile.heightInCm! == 0) {
-                    return HealthSummaryCard(
-                      title: 'BMI',
-                      value: '--',
-                      unit: '',
-                      icon: Icons.height,
-                      iconColor: Colors.green,
-                      theme: theme,
-                    );
-                  }
-                  final heightInMeters = profile.heightInCm! / 100;
-                  final bmi =
-                      weightEntry.weight / (heightInMeters * heightInMeters);
-                  return HealthSummaryCard(
-                    title: 'BMI',
-                    value: bmi.toStringAsFixed(1),
-                    unit: '',
-                    icon: Icons.height,
-                    iconColor: Colors.green,
-                    theme: theme,
-                    onTap: () => context.push(AppRoutes.weight),
-                  );
-                },
-                loading: () => const StatCardSkeleton(),
-                error: (_, __) => HealthSummaryCard(
-                  title: 'BMI',
-                  value: '--',
-                  unit: '',
-                  icon: Icons.height,
-                  iconColor: Colors.green,
-                  theme: theme,
-                ),
-              );
-            },
-            loading: () => const StatCardSkeleton(),
-            error: (_, __) => HealthSummaryCard(
-              title: 'BMI',
-              value: '--',
-              unit: '',
-              icon: Icons.height,
-              iconColor: Colors.green,
-              theme: theme,
-            ),
+          child: HealthSummaryCard(
+            title: 'Calories',
+            value:
+                ref.watch(activityDataProvider).moveCurrent.toStringAsFixed(0),
+            unit: 'kcal',
+            icon: Icons.local_fire_department,
+            iconColor: Colors.orange,
+            theme: theme,
           ),
         ),
       ],
@@ -337,9 +294,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
 
     // Calculate distance from steps (average step length ≈ 0.7m)
     final distanceKm = (activityData.steps * 0.7) / 1000;
-
-    // Calculate calories (rough estimate: 1 step ≈ 0.04 kcal)
-    final calories = activityData.moveCurrent;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -403,16 +357,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                 theme: theme,
                 // TODO: Add sleep data when implemented
               ),
-              HealthMetricCard(
-                title: 'Calories',
-                value: calories.toStringAsFixed(0),
-                unit: 'kcal',
-                icon: Icons.local_fire_department,
-                iconColor: Colors.orange,
-                progress: (calories / 2000)
-                    .clamp(0.0, 1.0), // Assuming 2000 kcal goal
-                theme: theme,
-              ),
+              _buildBmiCard(context, ref, theme),
               HealthMetricCard(
                 title: 'Distance',
                 value: distanceKm.toStringAsFixed(1),
@@ -428,5 +373,72 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildBmiCard(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+  ) {
+    final latestWeightAsync = ref.watch(latestWeightProvider);
+    final profileAsync = ref.watch(userProfileProvider);
+
+    return profileAsync.when(
+      data: (profile) {
+        return latestWeightAsync.when(
+          data: (weightEntry) {
+            if (profile == null ||
+                weightEntry == null ||
+                profile.heightInCm == null ||
+                profile.heightInCm! == 0) {
+              return HealthMetricCard(
+                title: 'BMI',
+                value: '--',
+                unit: '',
+                icon: Icons.monitor_weight_outlined,
+                iconColor: Colors.green,
+                theme: theme,
+              );
+            }
+            final heightInMeters = profile.heightInCm! / 100;
+            final bmi = weightEntry.weight / (heightInMeters * heightInMeters);
+            return HealthMetricCard(
+              title: 'BMI',
+              value: bmi.toStringAsFixed(1),
+              unit: _getBmiCategory(bmi),
+              icon: Icons.monitor_weight_outlined,
+              iconColor: Colors.green,
+              theme: theme,
+              onTap: () => context.push(AppRoutes.weight),
+            );
+          },
+          loading: () => const GridCardSkeleton(height: null),
+          error: (_, __) => HealthMetricCard(
+            title: 'BMI',
+            value: '--',
+            unit: '',
+            icon: Icons.monitor_weight_outlined,
+            iconColor: Colors.green,
+            theme: theme,
+          ),
+        );
+      },
+      loading: () => const GridCardSkeleton(height: null),
+      error: (_, __) => HealthMetricCard(
+        title: 'BMI',
+        value: '--',
+        unit: '',
+        icon: Icons.monitor_weight_outlined,
+        iconColor: Colors.green,
+        theme: theme,
+      ),
+    );
+  }
+
+  String _getBmiCategory(double bmi) {
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi < 25) return 'Normal';
+    if (bmi < 30) return 'Overweight';
+    return 'Obese';
   }
 }
