@@ -43,43 +43,54 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   bool _isUnlocked = true; // Track if locked note is currently unlocked
   Note? _loadedNote; // Note loaded by ID
   bool _isLoading = false;
+  bool _isInitialized = false; // Track if note data was loaded
 
   Note? get _effectiveNote => widget.note ?? _loadedNote;
 
   @override
   void initState() {
     super.initState();
-    _initializeNote();
-  }
-
-  Future<void> _initializeNote() async {
-    // If we have a note, use it directly
+    // Only populate from widget.note in initState (no ref access)
     if (widget.note != null) {
       _populateFromNote(widget.note!);
-      return;
+      _isInitialized = true;
     }
-
-    // If we have a noteId, load the note from database
-    if (widget.noteId != null) {
-      setState(() => _isLoading = true);
-      try {
-        final notes = ref.read(noteNotifierProvider).valueOrNull ?? [];
-        final note = notes.firstWhere(
-          (n) => n.id == widget.noteId,
-          orElse: () => throw Exception('Note not found'),
-        );
-        _loadedNote = note;
-        _populateFromNote(note);
-      } catch (e) {
-        debugPrint('Error loading note by ID: $e');
-        // Will show as new note if not found
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
-    }
-
     _titleController.addListener(_onChanged);
     _contentController.addListener(_onChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Load note by ID here (where ref is safe to use)
+    if (!_isInitialized && widget.noteId != null) {
+      _loadNoteById();
+    }
+    // Check if we need to unlock the note
+    if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
+      _unlockNote(context);
+    }
+  }
+
+  Future<void> _loadNoteById() async {
+    if (_isInitialized) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final notes = ref.read(noteNotifierProvider).valueOrNull ?? [];
+      final note = notes.firstWhere(
+        (n) => n.id == widget.noteId,
+        orElse: () => throw Exception('Note not found'),
+      );
+      _loadedNote = note;
+      _populateFromNote(note);
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('Error loading note by ID: $e');
+      _isInitialized = true; // Mark as initialized even on error
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _populateFromNote(Note note) {
@@ -148,15 +159,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       }
 
       Navigator.of(context).pop();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Check if we need to unlock the note
-    if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
-      _unlockNote(context);
     }
   }
 
