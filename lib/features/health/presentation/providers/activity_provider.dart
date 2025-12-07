@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/providers/health_provider.dart';
 import 'package:life_tracker/core/providers/pedometer_provider.dart';
+import 'package:life_tracker/features/health/presentation/providers/weight_providers.dart';
 
 /// Activity data model
 class ActivityData {
@@ -33,6 +34,7 @@ class ActivityData {
 final activityDataProvider = Provider<ActivityData>((ref) {
   final healthState = ref.watch(healthConnectProvider);
   final pedometerSteps = ref.watch(currentPedometerStepsProvider);
+  final latestWeightAsync = ref.watch(latestWeightProvider);
 
   final today = DateTime.now();
   final todayStart = DateTime(today.year, today.month, today.day);
@@ -51,27 +53,52 @@ final activityDataProvider = Provider<ActivityData>((ref) {
   }
 
   // Use the higher value between pedometer and Health Connect
-  // Pedometer gives real-time updates, Health Connect syncs periodically
   final todaySteps =
       pedometerSteps > healthConnectSteps ? pedometerSteps : healthConnectSteps;
 
-  // Calculate Move (Active calories)
-  // 1 step ≈ 0.04 kcal for average person
-  final moveCurrent = todaySteps * 0.04;
+  // === IMPROVED CALORIE CALCULATION ===
+  // Base formula: calories = steps × MET × weight(kg) / 1000
+  // Walking MET ≈ 3.5, average step = 0.0005 km
+  // Simplified: calories ≈ steps × 0.04 × (weight/70)
+  double userWeight = 70.0; // Default weight if not available
+  final weightEntry = latestWeightAsync;
+  if (weightEntry != null) {
+    userWeight = weightEntry.weight;
+  }
 
-  // Calculate Exercise minutes
-  // If user has > 5000 steps, consider some exercise time
-  final exerciseCurrent = todaySteps > 5000 ? (todaySteps / 1000) * 2 : 0.0;
+  // Calorie calculation adjusted for user's weight
+  // Formula: steps × 0.04 × (weight / 70)
+  // This gives higher calories for heavier people
+  final calorieMultiplier = userWeight / 70.0;
+  final moveCurrent = todaySteps * 0.04 * calorieMultiplier;
 
-  // Calculate Stand hours
-  // Estimate based on steps
-  final standHours = todaySteps > 0 ? (todaySteps / 100).clamp(0.0, 12.0) : 0.0;
+  // === EXERCISE MINUTES ===
+  // Exercise counts only for intentional physical activity
+  // Threshold: at least 3000 steps to start counting exercise
+  // (casual walking throughout the day doesn't count as exercise)
+  double exerciseCurrent = 0.0;
+  if (todaySteps >= 3000) {
+    // Every 150 steps above 3000 = 1 minute of exercise
+    // This is more conservative and realistic
+    exerciseCurrent = ((todaySteps - 3000) / 150).clamp(0.0, 120.0);
+  }
+
+  // === STAND HOURS ===
+  // Simple calculation: 1 stand hour per 500 steps
+  // Maximum: number of hours elapsed since midnight
+  final hoursElapsedToday = today.hour + (today.minute / 60);
+  double standHours = 0.0;
+
+  if (todaySteps > 0) {
+    // 1 stand hour per 500 steps, capped at hours elapsed
+    standHours = (todaySteps / 500).clamp(0.0, hoursElapsedToday);
+  }
 
   return ActivityData(
     moveCurrent: moveCurrent,
     moveGoal: 270.0,
     exerciseCurrent: exerciseCurrent,
-    exerciseGoal: 25.0,
+    exerciseGoal: 30.0, // WHO recommendation
     standCurrent: standHours,
     standGoal: 12.0,
     steps: todaySteps,
