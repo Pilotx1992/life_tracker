@@ -11,6 +11,8 @@ import 'package:life_tracker/features/notes/presentation/providers/note_provider
 import 'package:life_tracker/features/notes/presentation/widgets/attachment_widget.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/audio_player_widget.dart';
 import 'package:life_tracker/features/notes/services/attachment_service.dart';
+import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
+import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
 
 class NoteDetailScreen extends ConsumerWidget {
   final Note note;
@@ -366,11 +368,57 @@ class NoteDetailScreen extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      // If note is locked, verify PIN before deleting
+      if (note.isLocked) {
+        final verified = await _verifyPINForDelete(context);
+        if (!verified) return;
+      }
+
       await ref.read(noteNotifierProvider.notifier).deleteNoteEntry(note.id!);
       if (context.mounted) {
         Navigator.of(context).pop();
         FeedbackService.showSuccess(context, 'Note deleted');
       }
     }
+  }
+
+  Future<bool> _verifyPINForDelete(BuildContext context) async {
+    final encryptionService = NoteEncryptionService();
+    final hasPIN = await encryptionService.hasPIN();
+
+    if (!hasPIN) {
+      // No PIN set, allow delete
+      return true;
+    }
+
+    if (!context.mounted) return false;
+
+    // Show PIN dialog
+    final pin = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const PINInputDialog(
+        title: 'Delete Locked Note',
+        message: 'Enter your PIN to delete this locked note',
+      ),
+    );
+
+    if (pin == null) {
+      if (context.mounted) {
+        FeedbackService.showInfo(context, 'Delete cancelled');
+      }
+      return false;
+    }
+
+    // Verify PIN
+    final isValid = await encryptionService.verifyPIN(pin);
+    if (!isValid) {
+      if (context.mounted) {
+        FeedbackService.showError(context, 'Incorrect PIN');
+      }
+      return false;
+    }
+
+    return true;
   }
 }
