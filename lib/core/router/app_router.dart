@@ -23,6 +23,9 @@ import 'package:life_tracker/features/finance/domain/entities/financial_commitme
 
 // Notes Screens
 import 'package:life_tracker/features/notes/presentation/screens/notes_screen.dart';
+import 'package:life_tracker/features/notes/presentation/screens/note_editor_screen.dart';
+import 'package:life_tracker/features/notes/presentation/screens/note_detail_screen.dart';
+import 'package:life_tracker/features/notes/domain/entities/note.dart';
 
 // Health Screens
 import 'package:life_tracker/features/health/presentation/screens/health_screen.dart';
@@ -177,6 +180,24 @@ final appRouter = GoRouter(
       path: AppRoutes.notes,
       name: 'notes',
       builder: (context, state) => const NotesScreen(),
+      routes: [
+        GoRoute(
+          path: 'editor', // /notes/editor
+          name: 'note_editor',
+          builder: (context, state) {
+            final note = state.extra as Note?;
+            return NoteEditorScreen(note: note);
+          },
+        ),
+        GoRoute(
+          path: 'detail', // /notes/detail
+          name: 'note_detail',
+          builder: (context, state) {
+            final note = state.extra as Note;
+            return NoteDetailScreen(note: note);
+          },
+        ),
+      ],
     ),
     // Reminders Module
     GoRoute(

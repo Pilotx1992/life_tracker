@@ -34,6 +34,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   List<ChecklistItem> _checklistItems = [];
   List<String> _attachmentPaths = [];
   String? _voiceNotePath;
+  String? _voiceNoteName;
   String? _encryptedContent;
   final AttachmentService _attachmentService = AttachmentService();
   final NoteEncryptionService _encryptionService = NoteEncryptionService();
@@ -51,6 +52,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       _checklistItems = List<ChecklistItem>.from(note.checklistItems);
       _attachmentPaths = List<String>.from(note.attachmentPaths);
       _voiceNotePath = note.voiceNotePath;
+      _voiceNoteName = note.voiceNoteName;
       _encryptedContent = note.encryptedContent;
 
       // If note is locked, require PIN to unlock
@@ -96,6 +98,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         color: _selectedColor,
         attachmentPaths: _attachmentPaths,
         voiceNotePath: _voiceNotePath,
+        voiceNoteName: _voiceNoteName,
         checklistItems: _checklistItems,
         isLocked: _encryptedContent != null,
         createdAt: widget.note?.createdAt ?? now,
@@ -501,6 +504,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   const SizedBox(height: 8),
                   AudioPlayerWidget(
                     audioPath: _voiceNotePath!,
+                    displayName: _voiceNoteName,
                     attachmentService: _attachmentService,
                     onDelete: _removeVoiceNote,
                   ),
@@ -573,38 +577,81 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
-  void _removeAttachment(String path) {
+  Future<void> _removeAttachment(String path) async {
     setState(() {
       _attachmentPaths.remove(path);
       _hasChanges = true;
     });
     // Delete file from storage
-    _attachmentService.deleteAttachment(path);
+    try {
+      await _attachmentService.deleteAttachment(path);
+    } catch (e) {
+      debugPrint('Error deleting attachment: $e');
+      // State already updated, so continue
+    }
   }
 
   Future<void> _recordVoiceNote(BuildContext context) async {
     // Import and use the voice recorder bottom sheet
     final result = await showVoiceRecorderSheet(context);
 
-    if (result != null && mounted) {
-      setState(() {
-        _voiceNotePath = result.path;
-        _hasChanges = true;
-      });
-      if (mounted) {
-        final name = result.name ?? 'Voice note';
-        FeedbackService.showSuccess(context, '$name saved successfully');
-      }
-    }
+    if (result == null || !mounted) return;
+    
+    final name = result.name ?? 'Voice note';
+    
+    setState(() {
+      _voiceNotePath = result.path;
+      _voiceNoteName = result.name;
+      _hasChanges = true;
+    });
+    
+    // Check mounted again after setState before using context
+    if (!mounted) return;
+    // ignore: use_build_context_synchronously
+    FeedbackService.showSuccess(context, '$name saved successfully');
   }
 
-  void _removeVoiceNote() {
-    if (_voiceNotePath != null) {
-      _attachmentService.deleteAttachment(_voiceNotePath!);
+  Future<void> _removeVoiceNote() async {
+    if (_voiceNotePath == null) return;
+    
+    final pathToDelete = _voiceNotePath!;
+    debugPrint('Attempting to delete voice note: $pathToDelete');
+    
+    try {
+      // Delete the file first
+      final deleted = await _attachmentService.deleteAttachment(pathToDelete);
+      debugPrint('Voice note deletion result: $deleted');
+      
+      if (!mounted) return;
+      
+      // Always clear the state, regardless of deletion result
       setState(() {
         _voiceNotePath = null;
+        _voiceNoteName = null;
         _hasChanges = true;
       });
+      
+      if (deleted) {
+        FeedbackService.showSuccess(context, 'Voice note deleted');
+      } else {
+        // File might not exist, but we still cleared the state
+        debugPrint('Voice note file not found or already deleted: $pathToDelete');
+        FeedbackService.showInfo(context, 'Voice note removed');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Error deleting voice note: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      if (!mounted) return;
+      
+      // Even if deletion fails, clear the state
+      setState(() {
+        _voiceNotePath = null;
+        _voiceNoteName = null;
+        _hasChanges = true;
+      });
+      
+      FeedbackService.showError(context, 'Failed to delete voice note: ${e.toString()}');
     }
   }
 }

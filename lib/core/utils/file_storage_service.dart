@@ -70,8 +70,17 @@ class FileStorageService {
     try {
       final file = await getFile(relativePath);
       if (file != null) {
-        await file.delete();
-        return true;
+        if (await file.exists()) {
+          await file.delete();
+          // Verify deletion
+          if (await file.exists()) {
+            return false; // File still exists after deletion attempt
+          }
+          return true;
+        } else {
+          // File doesn't exist, consider it already deleted
+          return true;
+        }
       }
       return false;
     } catch (e) {

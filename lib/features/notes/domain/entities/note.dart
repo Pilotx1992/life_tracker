@@ -10,6 +10,7 @@ class Note extends Equatable {
   final String color; // Hex color code
   final List<String> attachmentPaths; // File paths to attachments
   final String? voiceNotePath; // Path to voice note audio file
+  final String? voiceNoteName; // Custom name for voice note
   final List<ChecklistItem> checklistItems; // Checklist items
   final bool isLocked;
   final DateTime createdAt;
@@ -23,6 +24,7 @@ class Note extends Equatable {
     required this.color,
     this.attachmentPaths = const [],
     this.voiceNotePath,
+    this.voiceNoteName,
     this.checklistItems = const [],
     this.isLocked = false,
     required this.createdAt,
@@ -51,6 +53,7 @@ class Note extends Equatable {
         color,
         attachmentPaths,
         voiceNotePath,
+        voiceNoteName,
         checklistItems,
         isLocked,
         createdAt,
@@ -65,6 +68,7 @@ class Note extends Equatable {
     String? color,
     List<String>? attachmentPaths,
     String? voiceNotePath,
+    String? voiceNoteName,
     List<ChecklistItem>? checklistItems,
     bool? isLocked,
     DateTime? createdAt,
@@ -78,6 +82,7 @@ class Note extends Equatable {
       color: color ?? this.color,
       attachmentPaths: attachmentPaths ?? this.attachmentPaths,
       voiceNotePath: voiceNotePath ?? this.voiceNotePath,
+      voiceNoteName: voiceNoteName ?? this.voiceNoteName,
       checklistItems: checklistItems ?? this.checklistItems,
       isLocked: isLocked ?? this.isLocked,
       createdAt: createdAt ?? this.createdAt,

@@ -5,7 +5,7 @@ import 'package:life_tracker/features/notes/services/attachment_service.dart';
 
 class AttachmentWidget extends StatelessWidget {
   final String attachmentPath;
-  final VoidCallback? onDelete;
+  final Future<void> Function()? onDelete;
   final AttachmentService _attachmentService = AttachmentService();
 
   AttachmentWidget({
@@ -80,7 +80,9 @@ class AttachmentWidget extends StatelessWidget {
                 radius: 16,
                 child: IconButton(
                   icon: const Icon(Icons.close, size: 18, color: Colors.white),
-                  onPressed: onDelete,
+                  onPressed: () async {
+                    await onDelete!();
+                  },
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -123,7 +125,9 @@ class AttachmentWidget extends StatelessWidget {
         trailing: onDelete != null
             ? IconButton(
                 icon: const Icon(Icons.delete_outline),
-                onPressed: onDelete,
+                onPressed: () async {
+                  await onDelete!();
+                },
                 color: Theme.of(context).colorScheme.error,
               )
             : null,

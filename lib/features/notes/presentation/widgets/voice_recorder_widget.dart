@@ -39,6 +39,8 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
 
   bool _isRecorderInitialized = false;
   bool _hasPermission = false;
+  bool _isDisposing = false;
+  bool _isInitializing = false;
   RecordingState _recordingState = RecordingState.idle;
   String? _tempRecordingPath;
   Timer? _timer;
@@ -57,7 +59,12 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
   void initState() {
     super.initState();
     _initAnimations();
-    _initRecorder();
+    // Add delay to ensure any previous recorder is fully closed
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted && !_isDisposing) {
+        _initRecorder();
+      }
+    });
   }
 
   void _initAnimations() {
@@ -71,35 +78,95 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
   }
 
   Future<void> _initRecorder() async {
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      setState(() {
-        _hasPermission = false;
-        _isRecorderInitialized = true;
-      });
-      return;
+    if (_isInitializing || _isDisposing) return;
+    
+    _isInitializing = true;
+    
+    try {
+      final status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        if (mounted && !_isDisposing) {
+          setState(() {
+            _hasPermission = false;
+            _isRecorderInitialized = true;
+            _isInitializing = false;
+          });
+        }
+        return;
+      }
+
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _hasPermission = true;
+        });
+      }
+
+      await _recorder.openRecorder();
+      
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _isRecorderInitialized = true;
+          _isInitializing = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error opening recorder: $e');
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _isRecorderInitialized = true;
+          _hasPermission = false;
+          _isInitializing = false;
+        });
+      }
     }
-
-    setState(() {
-      _hasPermission = true;
-    });
-
-    await _recorder.openRecorder();
-    setState(() {
-      _isRecorderInitialized = true;
-    });
   }
 
   @override
   void dispose() {
+    _isDisposing = true;
     _timer?.cancel();
     _pulseController.dispose();
     _nameController.dispose();
     _nameFocusNode.dispose();
+    
+    // Close recorder safely
     if (_isRecorderInitialized) {
-      _recorder.closeRecorder();
+      _closeRecorderSafely();
     }
+    
     super.dispose();
+  }
+  
+  Future<void> _closeRecorderSafely() async {
+    try {
+      // Stop recording if still recording
+      if (_recordingState == RecordingState.recording) {
+        await _recorder.stopRecorder().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {
+            debugPrint('Timeout stopping recorder');
+            return null;
+          },
+        ).catchError((e) {
+          debugPrint('Error stopping recorder: $e');
+          return null;
+        });
+      }
+      
+      // Close recorder
+      await _recorder.closeRecorder().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () {
+          debugPrint('Timeout closing recorder');
+          return null;
+        },
+      ).catchError((e) {
+        debugPrint('Error closing recorder: $e');
+        return null;
+      });
+    } catch (e) {
+      debugPrint('Error in _closeRecorderSafely: $e');
+    }
   }
 
   void _updateWaveform() {
@@ -113,7 +180,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
   }
 
   Future<void> _startRecording() async {
-    if (!_isRecorderInitialized || !_hasPermission) return;
+    if (!_isRecorderInitialized || !_hasPermission || _isDisposing) return;
 
     try {
       final tempDir = await getTemporaryDirectory();
@@ -125,24 +192,30 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
         codec: Codec.aacADTS,
       );
 
-      setState(() {
-        _recordingState = RecordingState.recording;
-        _recordDuration = 0;
-      });
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _recordingState = RecordingState.recording;
+          _recordDuration = 0;
+        });
 
-      _pulseController.repeat(reverse: true);
+        _pulseController.repeat(reverse: true);
 
-      _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        if (timer.tick % 10 == 0) {
-          setState(() {
-            _recordDuration++;
-          });
-        }
-        _updateWaveform();
-      });
+        _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+          if (_isDisposing || !mounted) {
+            timer.cancel();
+            return;
+          }
+          if (timer.tick % 10 == 0) {
+            setState(() {
+              _recordDuration++;
+            });
+          }
+          _updateWaveform();
+        });
+      }
     } catch (e) {
       debugPrint('Error starting recording: $e');
-      if (mounted) {
+      if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to start recording: $e'),
@@ -154,7 +227,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
   }
 
   Future<void> _stopRecording() async {
-    if (!_isRecorderInitialized) return;
+    if (!_isRecorderInitialized || _isDisposing) return;
 
     _timer?.cancel();
     _pulseController.stop();
@@ -163,27 +236,29 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
     try {
       await _recorder.stopRecorder();
 
-      setState(() {
-        _recordingState = RecordingState.recorded;
-        _finalDuration = _recordDuration;
-        // Generate default name
-        _nameController.text =
-            'Voice Note ${DateTime.now().day}/${DateTime.now().month}';
-      });
+      if (mounted && !_isDisposing) {
+        setState(() {
+          _recordingState = RecordingState.recorded;
+          _finalDuration = _recordDuration;
+          // Generate default name
+          _nameController.text =
+              'Voice Note ${DateTime.now().day}/${DateTime.now().month}';
+        });
 
-      // Focus the name field
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          _nameFocusNode.requestFocus();
-          _nameController.selection = TextSelection(
-            baseOffset: 0,
-            extentOffset: _nameController.text.length,
-          );
-        }
-      });
+        // Focus the name field
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted && !_isDisposing) {
+            _nameFocusNode.requestFocus();
+            _nameController.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: _nameController.text.length,
+            );
+          }
+        });
+      }
     } catch (e) {
       debugPrint('Error stopping recording: $e');
-      if (mounted) {
+      if (mounted && !_isDisposing) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to stop recording: $e'),
@@ -242,34 +317,55 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
   }
 
   Future<void> _cancelRecording() async {
-    if (_recordingState == RecordingState.recording) {
-      _timer?.cancel();
-      _pulseController.stop();
-      _pulseController.reset();
+    if (_isDisposing) return;
+    
+    _timer?.cancel();
+    _pulseController.stop();
+    _pulseController.reset();
+
+    // Stop recording if still recording
+    if (_recordingState == RecordingState.recording && _isRecorderInitialized) {
       try {
-        await _recorder.stopRecorder();
+        await _recorder.stopRecorder().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {
+            debugPrint('Timeout stopping recorder in cancel');
+            return null;
+          },
+        ).catchError((e) {
+          debugPrint('Error stopping recorder in cancel: $e');
+          return null;
+        });
       } catch (e) {
-        debugPrint('Error canceling recording: $e');
+        debugPrint('Error stopping recorder: $e');
       }
     }
 
     // Delete temp file if exists
     if (_tempRecordingPath != null) {
-      final file = File(_tempRecordingPath!);
-      if (await file.exists()) {
-        await file.delete();
+      try {
+        final file = File(_tempRecordingPath!);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      } catch (e) {
+        debugPrint('Error deleting temp file: $e');
       }
     }
 
-    setState(() {
-      _recordingState = RecordingState.idle;
-      _recordDuration = 0;
-      _nameController.clear();
-      for (int i = 0; i < _waveformData.length; i++) {
-        _waveformData[i] = 0.1;
-      }
-    });
+    if (mounted && !_isDisposing) {
+      setState(() {
+        _recordingState = RecordingState.idle;
+        _recordDuration = 0;
+        _nameController.clear();
+        for (int i = 0; i < _waveformData.length; i++) {
+          _waveformData[i] = 0.1;
+        }
+        _tempRecordingPath = null;
+      });
+    }
 
+    // Call onCancel after cleanup
     widget.onCancel?.call();
   }
 
@@ -815,7 +911,7 @@ class _VoiceRecorderWidgetState extends State<VoiceRecorderWidget>
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.onCancel,
+                  onPressed: () => _cancelRecording(),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -893,8 +989,20 @@ Future<VoiceRecordingResult?> showVoiceRecorderSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black54,
-    builder: (context) => Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    isDismissible: true,
+    enableDrag: true,
+    builder: (context) => PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        // Give more time for recorder to close properly
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(28),
@@ -911,50 +1019,53 @@ Future<VoiceRecordingResult?> showVoiceRecorderSheet(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
 
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Voice Note',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                // Title
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Voice Note',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
                 ),
-              ),
 
-              // Voice recorder widget
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: VoiceRecorderWidget(
-                  onRecordingComplete: (path, name) {
-                    result = (path: path, name: name);
-                    Navigator.of(context).pop();
-                  },
-                  onCancel: () {
-                    Navigator.of(context).pop();
-                  },
+                // Voice recorder widget
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: VoiceRecorderWidget(
+                    onRecordingComplete: (path, name) {
+                      result = (path: path, name: name);
+                      Navigator.of(context).pop();
+                    },
+                    onCancel: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
       ),
     ),
   );

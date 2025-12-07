@@ -14,6 +14,7 @@ class NoteModel {
   late String color; // Hex color code
   List<String> attachmentPaths = []; // File paths to attachments
   String? voiceNotePath; // Path to voice note audio file
+  String? voiceNoteName; // Custom name for voice note
   List<ChecklistItemModel> checklistItems = []; // Embedded checklist items
   bool isLocked = false;
   @Index()
@@ -32,6 +33,7 @@ class NoteModel {
       color: color,
       attachmentPaths: attachmentPaths,
       voiceNotePath: voiceNotePath,
+      voiceNoteName: voiceNoteName,
       checklistItems: checklistItems.map((item) => item.toEntity()).toList(),
       isLocked: isLocked,
       createdAt: createdAt,
@@ -47,6 +49,7 @@ class NoteModel {
       ..color = entity.color
       ..attachmentPaths = List<String>.from(entity.attachmentPaths)
       ..voiceNotePath = entity.voiceNotePath
+      ..voiceNoteName = entity.voiceNoteName
       ..checklistItems = entity.checklistItems
           .map((item) => ChecklistItemModel.fromEntity(item))
           .toList()
@@ -67,6 +70,7 @@ class NoteModel {
     String? color,
     List<String>? attachmentPaths,
     String? voiceNotePath,
+    String? voiceNoteName,
     List<ChecklistItemModel>? checklistItems,
     bool? isLocked,
     DateTime? createdAt,
@@ -80,6 +84,7 @@ class NoteModel {
       ..attachmentPaths =
           attachmentPaths ?? List<String>.from(this.attachmentPaths)
       ..voiceNotePath = voiceNotePath ?? this.voiceNotePath
+      ..voiceNoteName = voiceNoteName ?? this.voiceNoteName
       ..checklistItems =
           checklistItems ?? List<ChecklistItemModel>.from(this.checklistItems)
       ..isLocked = isLocked ?? this.isLocked

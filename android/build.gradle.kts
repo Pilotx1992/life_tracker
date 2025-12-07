@@ -25,7 +25,7 @@ subprojects {
     plugins.withId("com.android.library") {
         if (name == "isar_flutter_libs") {
             extensions.configure<BaseExtension>("android") {
-                namespace = "com.isar.flutter.libs"
+                namespace = "dev.isar.isar_flutter_libs"
             }
         }
     }

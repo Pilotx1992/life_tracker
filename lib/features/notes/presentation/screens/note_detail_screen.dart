@@ -240,6 +240,7 @@ class NoteDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     AudioPlayerWidget(
                       audioPath: note.voiceNotePath!,
+                      displayName: note.voiceNoteName,
                       attachmentService: attachmentService,
                       onDelete: null, // Read-only in detail view
                     ),

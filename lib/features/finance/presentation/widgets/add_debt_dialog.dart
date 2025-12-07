@@ -103,6 +103,7 @@ class _AddDebtDialogState extends ConsumerState<AddDebtDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 8),
               // Debt Type
               DropdownButtonFormField<String>(
                 initialValue: _selectedType,
@@ -163,16 +164,23 @@ class _AddDebtDialogState extends ConsumerState<AddDebtDialog> {
               ),
               const SizedBox(height: 16),
               // Due Date
-              ListTile(
-                title: const Text('Due Date'),
-                subtitle: Text(
-                  DateFormat('MMM dd, yyyy').format(_selectedDueDate),
-                ),
-                trailing: const Icon(Icons.calendar_today),
+              InkWell(
                 onTap: _selectDueDate,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Theme.of(context).dividerColor),
+                borderRadius: BorderRadius.circular(8),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Due Date',
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        DateFormat('MMM dd, yyyy').format(_selectedDueDate),
+                      ),
+                      const Icon(Icons.calendar_today, size: 20),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

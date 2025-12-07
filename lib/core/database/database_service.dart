@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,8 +8,31 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import 'package:life_tracker/features/health/data/models/weight_entry.dart';
 // import 'package:life_tracker/features/finance/data/models/transaction.dart';
 
-import 'package:life_tracker/features/finance/data/models/account_model.dart';
+// Health models
 import 'package:life_tracker/features/health/data/models/user_profile_model.dart';
+import 'package:life_tracker/features/health/data/models/weight_model.dart';
+import 'package:life_tracker/features/health/data/models/medication_model.dart';
+import 'package:life_tracker/features/health/data/models/medication_intake_model.dart';
+
+// Finance models
+import 'package:life_tracker/features/finance/data/models/account_model.dart';
+import 'package:life_tracker/features/finance/data/models/category_model.dart';
+import 'package:life_tracker/features/finance/data/models/expense_model.dart';
+import 'package:life_tracker/features/finance/data/models/income_model.dart';
+import 'package:life_tracker/features/finance/data/models/debt_model.dart';
+import 'package:life_tracker/features/finance/data/models/debt_payment_model.dart';
+import 'package:life_tracker/features/finance/data/models/bill_payment_model.dart';
+import 'package:life_tracker/features/finance/data/models/recurring_bill_model.dart';
+import 'package:life_tracker/features/finance/data/models/financial_commitment_model.dart';
+import 'package:life_tracker/features/finance/data/models/commitment_contribution_model.dart';
+import 'package:life_tracker/features/finance/data/models/transfer_model.dart';
+
+// Notes models
+import 'package:life_tracker/features/notes/data/models/note_model.dart';
+// Note: ChecklistItemModel is embedded, not a separate collection
+
+// Reminders models
+import 'package:life_tracker/features/reminders/data/models/reminder_model.dart';
 
 // A singleton service to manage the Isar database instance.
 class DatabaseService {
@@ -49,13 +73,63 @@ class DatabaseService {
     } catch (_) {
       // If secure storage is unavailable, ignore and continue opening DB.
     }
-    // Note: encryption configuration can be added here when Isar API allows it.
-    // Open the Isar instance with all your collection schemas.
-    // As you create feature models (e.g., WeightEntry), add their schemas here.
-    return Isar.open(
-      [UserProfileModelSchema, AccountModelSchema], // e.g., [WeightEntrySchema, TransactionSchema],
-      directory: dir.path,
-      inspector: true, // Useful for debugging
-    );
+    
+    final schemas = [
+      // Health schemas
+      UserProfileModelSchema,
+      WeightModelSchema,
+      MedicationModelSchema,
+      MedicationIntakeModelSchema,
+      // Finance schemas
+      AccountModelSchema,
+      CategoryModelSchema,
+      ExpenseModelSchema,
+      IncomeModelSchema,
+      DebtModelSchema,
+      DebtPaymentModelSchema,
+      BillPaymentModelSchema,
+      RecurringBillModelSchema,
+      FinancialCommitmentModelSchema,
+      CommitmentContributionModelSchema,
+      TransferModelSchema,
+      // Notes schemas
+      NoteModelSchema,
+      // Note: ChecklistItemModel is embedded, not a separate collection
+      // Reminders schemas
+      ReminderModelSchema,
+    ];
+    
+    // Try to open the database
+    try {
+      return await Isar.open(
+        schemas,
+        directory: dir.path,
+        inspector: true, // Useful for debugging
+      );
+    } catch (e) {
+      // If opening fails (e.g., schema mismatch), delete old database and recreate
+      // Try to delete database files manually
+      final dbPath = '${dir.path}/default.isar';
+      final lockPath = '${dir.path}/default.isar.lock';
+      try {
+        final dbFile = File(dbPath);
+        if (await dbFile.exists()) {
+          await dbFile.delete();
+        }
+        final lockFile = File(lockPath);
+        if (await lockFile.exists()) {
+          await lockFile.delete();
+        }
+      } catch (_) {
+        // Ignore file deletion errors
+      }
+      
+      // Now try to open again with a fresh database
+      return await Isar.open(
+        schemas,
+        directory: dir.path,
+        inspector: true,
+      );
+    }
   }
 }

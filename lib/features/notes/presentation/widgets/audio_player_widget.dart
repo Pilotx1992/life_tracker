@@ -4,12 +4,14 @@ import 'package:life_tracker/features/notes/services/attachment_service.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioPath;
+  final String? displayName;
   final AttachmentService attachmentService;
-  final VoidCallback? onDelete;
+  final Future<void> Function()? onDelete;
 
   const AudioPlayerWidget({
     super.key,
     required this.audioPath,
+    this.displayName,
     required this.attachmentService,
     this.onDelete,
   });
@@ -112,7 +114,10 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 color: Theme.of(context).colorScheme.secondary,
               ),
             ),
-            title: Text(widget.attachmentService.getFileName(widget.audioPath)),
+            title: Text(
+              widget.displayName ?? 
+              widget.attachmentService.getFileName(widget.audioPath),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -129,7 +134,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 if (widget.onDelete != null)
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    onPressed: widget.onDelete,
+                    onPressed: () async {
+                      await widget.onDelete!();
+                    },
                     color: Theme.of(context).colorScheme.error,
                   ),
               ],
