@@ -165,7 +165,8 @@ class NoteListItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
+              leading: Icon(Icons.delete,
+                  color: Theme.of(context).colorScheme.error),
               title: const Text('Delete Note'),
               onTap: () {
                 Navigator.of(context).pop();

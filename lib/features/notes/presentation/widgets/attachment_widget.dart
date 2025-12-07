@@ -65,7 +65,7 @@ class AttachmentWidget extends StatelessWidget {
                 return Container(
                   width: double.infinity,
                   height: 200,
-                  color: Colors.grey[300],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   child: const Icon(Icons.broken_image),
                 );
               },
@@ -76,10 +76,14 @@ class AttachmentWidget extends StatelessWidget {
               top: 8,
               right: 8,
               child: CircleAvatar(
-                backgroundColor: Colors.black54,
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.54),
                 radius: 16,
                 child: IconButton(
-                  icon: const Icon(Icons.close, size: 18, color: Colors.white),
+                  icon: Icon(Icons.close,
+                      size: 18, color: Theme.of(context).colorScheme.surface),
                   onPressed: () async {
                     await onDelete!();
                   },

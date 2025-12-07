@@ -24,13 +24,13 @@ final updateMedicationUseCaseProvider =
 final deleteMedicationUseCaseProvider =
     Provider((ref) => DeleteMedication(ref.read(medicationRepositoryProvider)));
 final markMedicationTakenUseCaseProvider = Provider(
-    (ref) => MarkMedicationTaken(ref.read(medicationRepositoryProvider)));
+    (ref) => MarkMedicationTaken(ref.read(medicationRepositoryProvider)),);
 final snoozeMedicationUseCaseProvider =
     Provider((ref) => SnoozeMedication(ref.read(medicationRepositoryProvider)));
 final calculateAdherenceUseCaseProvider = Provider(
-    (ref) => CalculateAdherence(ref.read(medicationRepositoryProvider)));
+    (ref) => CalculateAdherence(ref.read(medicationRepositoryProvider)),);
 final getMedicationIntakesUseCaseProvider = Provider(
-    (ref) => GetMedicationIntakes(ref.read(medicationRepositoryProvider)));
+    (ref) => GetMedicationIntakes(ref.read(medicationRepositoryProvider)),);
 
 // Notification service provider
 final medicationNotificationServiceProvider =
@@ -149,7 +149,7 @@ class MedicationNotifier extends StateNotifier<AsyncValue<List<Medication>>> {
   }
 
   Future<void> snoozeMedicationIntake(
-      MedicationIntake intake, DateTime newScheduledTime) async {
+      MedicationIntake intake, DateTime newScheduledTime,) async {
     final result = await _snoozeMedication(
       SnoozeMedicationParams(
         intakeId: intake.id!,
@@ -173,7 +173,7 @@ class MedicationNotifier extends StateNotifier<AsyncValue<List<Medication>>> {
 
   Future<List<MedicationIntake>> getIntakes(Id medicationId) async {
     final result = await _getMedicationIntakes(
-        GetMedicationIntakesParams(medicationId: medicationId));
+        GetMedicationIntakesParams(medicationId: medicationId),);
     return result.fold(
       (failure) => [],
       (intakes) => intakes,

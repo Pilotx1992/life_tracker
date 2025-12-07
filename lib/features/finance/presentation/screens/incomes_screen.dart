@@ -58,7 +58,7 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
                 id: a.id ?? 0,
                 name: a.name,
                 type: a.type,
-              ))
+              ),)
           .toList();
     });
 
@@ -354,7 +354,7 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
     if (_currentFilter.accountId != null) {
       final account = accounts.firstWhere(
         (a) => a.id == _currentFilter.accountId,
-        orElse: () => AccountFilterOption(id: 0, name: 'Unknown'),
+        orElse: () => const AccountFilterOption(id: 0, name: 'Unknown'),
       );
       chips.add(
         Chip(
@@ -442,7 +442,7 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
     if (_currentFilter.startDate != null && _currentFilter.endDate != null) {
       filtered = filtered.where((i) {
         return i.date.isAfter(
-                _currentFilter.startDate!.subtract(const Duration(days: 1))) &&
+                _currentFilter.startDate!.subtract(const Duration(days: 1)),) &&
             i.date
                 .isBefore(_currentFilter.endDate!.add(const Duration(days: 1)));
       }).toList();

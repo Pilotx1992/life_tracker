@@ -164,7 +164,7 @@ class CommitmentLocalDataSourceImpl implements CommitmentLocalDataSource {
         await isar.commitmentContributionModels.put(contribution);
         // Recalculate commitment amount (within same transaction)
         await _recalculateCommitmentAmountInternal(
-            isar, contribution.commitmentId);
+            isar, contribution.commitmentId,);
       });
       return contribution.id;
     } catch (e) {
@@ -182,7 +182,7 @@ class CommitmentLocalDataSourceImpl implements CommitmentLocalDataSource {
         await isar.commitmentContributionModels.put(contribution);
         // Recalculate commitment amount (within same transaction)
         await _recalculateCommitmentAmountInternal(
-            isar, contribution.commitmentId);
+            isar, contribution.commitmentId,);
       });
       return true;
     } catch (e) {
@@ -224,7 +224,7 @@ class CommitmentLocalDataSourceImpl implements CommitmentLocalDataSource {
   /// Internal method to recalculate commitment amount without starting a new transaction.
   /// This should be called from within an existing writeTxn.
   Future<void> _recalculateCommitmentAmountInternal(
-      Isar isar, Id commitmentId) async {
+      Isar isar, Id commitmentId,) async {
     final commitment = await isar.financialCommitmentModels.get(commitmentId);
     if (commitment != null) {
       // Sum all contributions

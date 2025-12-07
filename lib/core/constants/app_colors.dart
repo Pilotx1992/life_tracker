@@ -85,10 +85,17 @@ class AppColors {
   static const Color bmiOverweight = Color(0xFFFFC107);
   static const Color bmiObese = Color(0xFFF44336);
 
-  // Status Colors
   static const Color statusActive = Color(0xFF4CAF50);
   static const Color statusInactive = Color(0xFF9E9E9E);
   static const Color statusPending = Color(0xFFFFC107);
   static const Color statusOverdue = Color(0xFFF44336);
   static const Color statusPaid = Color(0xFF4CAF50);
+
+  // Finance Semantic Colors (for consistent income/expense theming)
+  static const Color income = Color(0xFF4CAF50); // Green - money in
+  static const Color incomeLight = Color(0xFFE8F5E9);
+  static const Color expense = Color(0xFFF44336); // Red - money out
+  static const Color expenseLight = Color(0xFFFFEBEE);
+  static const Color iOwe = Color(0xFFF44336); // Debt I owe
+  static const Color owedToMe = Color(0xFF4CAF50); // Debt owed to me
 }

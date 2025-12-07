@@ -252,7 +252,7 @@ class AccountsScreen extends ConsumerWidget {
                                             const SizedBox(height: 6),
                                             Text(
                                               NumberFormat.currency(
-                                                      symbol: 'EGP ')
+                                                      symbol: 'EGP ',)
                                                   .format(creditTotal),
                                               style: Theme.of(context)
                                                   .textTheme

@@ -304,7 +304,7 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
             .where((item) => widget
                 .itemLabel(item)
                 .toLowerCase()
-                .contains(query.toLowerCase()))
+                .contains(query.toLowerCase()),)
             .toList();
       }
     });

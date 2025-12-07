@@ -62,7 +62,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 id: c.id ?? 0,
                 name: c.name,
                 // Note: Category entity stores icon as String, so we skip it for filter options
-              ))
+              ),)
           .toList();
     });
 
@@ -73,7 +73,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 id: a.id ?? 0,
                 name: a.name,
                 type: a.type,
-              ))
+              ),)
           .toList();
     });
 
@@ -336,7 +336,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     if (_currentFilter.categoryId != null) {
       final category = categories.firstWhere(
         (c) => c.id == _currentFilter.categoryId,
-        orElse: () => CategoryFilterOption(id: 0, name: 'Unknown'),
+        orElse: () => const CategoryFilterOption(id: 0, name: 'Unknown'),
       );
       chips.add(
         Chip(
@@ -357,7 +357,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     if (_currentFilter.accountId != null) {
       final account = accounts.firstWhere(
         (a) => a.id == _currentFilter.accountId,
-        orElse: () => AccountFilterOption(id: 0, name: 'Unknown'),
+        orElse: () => const AccountFilterOption(id: 0, name: 'Unknown'),
       );
       chips.add(
         Chip(
@@ -430,7 +430,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     if (_currentFilter.startDate != null && _currentFilter.endDate != null) {
       filtered = filtered.where((e) {
         return e.date.isAfter(
-                _currentFilter.startDate!.subtract(const Duration(days: 1))) &&
+                _currentFilter.startDate!.subtract(const Duration(days: 1)),) &&
             e.date
                 .isBefore(_currentFilter.endDate!.add(const Duration(days: 1)));
       }).toList();

@@ -699,7 +699,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       } else {
         // File might not exist, but we still cleared the state
         debugPrint(
-            'Voice note file not found or already deleted: $pathToDelete');
+            'Voice note file not found or already deleted: $pathToDelete',);
         FeedbackService.showInfo(context, 'Voice note removed');
       }
     } catch (e, stackTrace) {
@@ -716,7 +716,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       });
 
       FeedbackService.showError(
-          context, 'Failed to delete voice note: ${e.toString()}');
+          context, 'Failed to delete voice note: ${e.toString()}',);
     }
   }
 }

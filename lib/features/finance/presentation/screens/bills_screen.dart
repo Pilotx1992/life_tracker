@@ -108,7 +108,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
                               b.nextDueDate.month,
                               b.nextDueDate.day,
                             ) ==
-                            today)
+                            today,)
                     .toList();
                 final upcomingBills = filteredBills
                     .where((b) => b.isActive && b.nextDueDate.isAfter(today))
@@ -330,7 +330,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     if (_selectedFrequency != null) {
       filtered = filtered
           .where((b) =>
-              b.frequency.toLowerCase() == _selectedFrequency!.toLowerCase())
+              b.frequency.toLowerCase() == _selectedFrequency!.toLowerCase(),)
           .toList();
     }
 
@@ -355,7 +355,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
                       b.nextDueDate.month,
                       b.nextDueDate.day,
                     ) ==
-                    today)
+                    today,)
             .toList();
         break;
       case BillFilterType.upcoming:

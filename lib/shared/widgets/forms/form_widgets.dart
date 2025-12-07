@@ -203,7 +203,7 @@ class _UnsavedChangesWrapperState extends State<UnsavedChangesWrapper> {
           builder: (context) => AlertDialog(
             title: Text(widget.title ?? 'Discard Changes?'),
             content: Text(widget.message ??
-                'You have unsaved changes. Are you sure you want to leave?'),
+                'You have unsaved changes. Are you sure you want to leave?',),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -417,7 +417,7 @@ class FormValidators {
 
   /// Combines multiple validators
   static String? Function(String?) combine(
-      List<String? Function(String?)> validators) {
+      List<String? Function(String?)> validators,) {
     return (String? value) {
       for (final validator in validators) {
         final result = validator(value);

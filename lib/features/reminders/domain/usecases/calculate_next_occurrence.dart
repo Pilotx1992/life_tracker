@@ -67,7 +67,7 @@ class CalculateNextOccurrence
       if (params.recurringEndDate != null &&
           nextOccurrence.isAfter(params.recurringEndDate!)) {
         return const Left(
-            ValidationFailure('Next occurrence exceeds end date'));
+            ValidationFailure('Next occurrence exceeds end date'),);
       }
 
       return Right(nextOccurrence);

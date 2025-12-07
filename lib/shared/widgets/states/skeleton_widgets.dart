@@ -190,8 +190,8 @@ class ListTileSkeleton extends StatelessWidget {
             const ShimmerBox(width: 40, height: 40, circular: true),
             const SizedBox(width: AppDesignTokens.space16),
           ],
-          Expanded(
-            child: const Column(
+          const Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ShimmerBox(height: 14, borderRadius: 4),
@@ -286,15 +286,15 @@ class ProfileHeaderSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return const Padding(
       padding: AppDesignTokens.pagePadding,
-      child: const Column(
+      child: Column(
         children: [
-          const ShimmerBox(width: 80, height: 80, circular: true),
-          const SizedBox(height: AppDesignTokens.space16),
-          const ShimmerBox(width: 150, height: 20, borderRadius: 4),
-          const SizedBox(height: AppDesignTokens.space8),
-          const ShimmerBox(width: 200, height: 14, borderRadius: 4),
+          ShimmerBox(width: 80, height: 80, circular: true),
+          SizedBox(height: AppDesignTokens.space16),
+          ShimmerBox(width: 150, height: 20, borderRadius: 4),
+          SizedBox(height: AppDesignTokens.space8),
+          ShimmerBox(width: 200, height: 14, borderRadius: 4),
         ],
       ),
     );
@@ -417,9 +417,9 @@ class PageSkeleton extends StatelessWidget {
       case PageSkeletonType.grid:
         return const SkeletonGrid();
       case PageSkeletonType.detail:
-        return SingleChildScrollView(
+        return const SingleChildScrollView(
           padding: AppDesignTokens.pagePadding,
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ProfileHeaderSkeleton(),

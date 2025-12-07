@@ -21,11 +21,11 @@ class SplashScreen extends ConsumerWidget {
       error: (e, st) {},
     );
 
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             FlutterLogo(size: 96),
             SizedBox(height: 16),
             CircularProgressIndicator(),

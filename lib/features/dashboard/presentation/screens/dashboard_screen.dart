@@ -47,7 +47,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ).animate(CurvedAnimation(
       parent: _cardController,
       curve: Curves.easeOutCubic,
-    ));
+    ),);
 
     _cardController.forward();
   }
@@ -216,41 +216,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   Widget _buildModuleSection(
-      BuildContext context, ThemeData theme, bool isDark) {
+      BuildContext context, ThemeData theme, bool isDark,) {
     final modules = [
-      _ModuleData(
+      const _ModuleData(
         icon: Icons.favorite_rounded,
         title: 'Health',
         subtitle: 'Track wellness & vitals',
-        gradient: const [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
-        darkGradient: const [Color(0xFFD64545), Color(0xFFAF3D3D)],
+        gradient: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+        darkGradient: [Color(0xFFD64545), Color(0xFFAF3D3D)],
         route: AppRoutes.health,
         delay: 0,
       ),
-      _ModuleData(
+      const _ModuleData(
         icon: Icons.account_balance_wallet_rounded,
         title: 'Finance',
         subtitle: 'Manage your money',
-        gradient: const [Color(0xFF4ECDC4), Color(0xFF6EE7DE)],
-        darkGradient: const [Color(0xFF2A9D8F), Color(0xFF238A7F)],
+        gradient: [Color(0xFF4ECDC4), Color(0xFF6EE7DE)],
+        darkGradient: [Color(0xFF2A9D8F), Color(0xFF238A7F)],
         route: AppRoutes.finance,
         delay: 100,
       ),
-      _ModuleData(
+      const _ModuleData(
         icon: Icons.edit_note_rounded,
         title: 'Notes',
         subtitle: 'Capture your thoughts',
-        gradient: const [Color(0xFFFFD93D), Color(0xFFFFE66D)],
-        darkGradient: const [Color(0xFFE6B800), Color(0xFFCC9900)],
+        gradient: [Color(0xFFFFD93D), Color(0xFFFFE66D)],
+        darkGradient: [Color(0xFFE6B800), Color(0xFFCC9900)],
         route: AppRoutes.notes,
         delay: 200,
       ),
-      _ModuleData(
+      const _ModuleData(
         icon: Icons.notifications_active_rounded,
         title: 'Reminders',
         subtitle: 'Never miss a thing',
-        gradient: const [Color(0xFF9B59B6), Color(0xFFBB77D4)],
-        darkGradient: const [Color(0xFF7B2D8E), Color(0xFF5E2270)],
+        gradient: [Color(0xFF9B59B6), Color(0xFFBB77D4)],
+        darkGradient: [Color(0xFF7B2D8E), Color(0xFF5E2270)],
         route: AppRoutes.reminders,
         delay: 300,
       ),
@@ -558,7 +558,7 @@ class _PremiumModuleCardState extends State<_PremiumModuleCard>
     ).animate(CurvedAnimation(
       parent: _hoverController,
       curve: Curves.easeInOut,
-    ));
+    ),);
 
     _glowAnimation = Tween<double>(
       begin: 0.0,
@@ -566,7 +566,7 @@ class _PremiumModuleCardState extends State<_PremiumModuleCard>
     ).animate(CurvedAnimation(
       parent: _hoverController,
       curve: Curves.easeInOut,
-    ));
+    ),);
   }
 
   @override

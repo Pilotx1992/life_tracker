@@ -68,7 +68,7 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 messenger.showSnackBar(
                   SnackBar(
                       content: Text(
-                          'Scheduled daily at ${nextMinute.hour}:${nextMinute.minute.toString().padLeft(2, '0')}')),
+                          'Scheduled daily at ${nextMinute.hour}:${nextMinute.minute.toString().padLeft(2, '0')}',),),
                 );
               },
               child: const Text('Schedule daily (next minute)'),
@@ -80,7 +80,7 @@ class _NotificationTestScreenState extends ConsumerState<NotificationTestScreen>
                 await ns.cancelAllNotifications();
                 if (!mounted) return;
                 messenger.showSnackBar(
-                    const SnackBar(content: Text('Canceled all notifications')));
+                    const SnackBar(content: Text('Canceled all notifications')),);
               },
               child: const Text('Cancel all'),
             ),

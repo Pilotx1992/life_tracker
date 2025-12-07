@@ -47,7 +47,10 @@ class ColorPicker extends StatelessWidget {
                     border: Border.all(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.grey.withValues(alpha: 0.3),
+                          : Theme.of(context)
+                              .colorScheme
+                              .outline
+                              .withValues(alpha: 0.3),
                       width: isSelected ? 3 : 1,
                     ),
                   ),
@@ -77,6 +80,6 @@ class ColorPicker extends StatelessWidget {
     // Calculate luminance to determine if we need dark or light icon
     // Using new color.r, color.g, color.b (normalized 0.0-1.0 values)
     final luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
-    return luminance > 0.5 ? Colors.black : Colors.white;
+    return luminance > 0.5 ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
   }
 }

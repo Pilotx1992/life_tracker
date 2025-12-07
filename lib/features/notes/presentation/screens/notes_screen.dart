@@ -627,7 +627,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                         ),
                       ),
                     ),
-                    label: Text(''),
+                    label: const Text(''),
                     selected: _selectedColor == color,
                     onSelected: (selected) {
                       setState(() {

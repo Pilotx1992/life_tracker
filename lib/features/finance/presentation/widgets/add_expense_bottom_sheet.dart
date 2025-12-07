@@ -347,7 +347,7 @@ class _AddExpenseBottomSheetState extends ConsumerState<AddExpenseBottomSheet> {
                               decimal: true,
                             ),
                             inputFormatters: [
-                              ThousandsSeparatorInputFormatter()
+                              ThousandsSeparatorInputFormatter(),
                             ],
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
