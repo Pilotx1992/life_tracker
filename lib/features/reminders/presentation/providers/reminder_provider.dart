@@ -225,7 +225,19 @@ final reminderNotifierProvider =
 final upcomingRemindersProvider = FutureProvider<List<Reminder>>((ref) async {
   // First, auto-complete any expired reminders
   final repository = ref.read(reminderRepositoryProvider);
-  await repository.autoCompleteExpiredReminders();
+  final result = await repository.autoCompleteExpiredReminders();
+
+  // If any reminders were auto-completed, invalidate the completed provider
+  result.fold(
+    (failure) => null,
+    (count) {
+      if (count > 0) {
+        ref.invalidate(completedRemindersProvider);
+        // Also reload the main notifier state
+        ref.read(reminderNotifierProvider.notifier).loadReminders();
+      }
+    },
+  );
 
   // Then get the upcoming reminders
   return ref
