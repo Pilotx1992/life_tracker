@@ -63,12 +63,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Load note by ID here (where ref is safe to use)
+    // Use post frame callback to avoid calling async methods during build
     if (!_isInitialized && widget.noteId != null) {
-      _loadNoteById();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_isInitialized) {
+          _loadNoteById();
+        }
+      });
     }
     // Check if we need to unlock the note
     if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
-      _unlockNote(context);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _unlockNote(context);
+        }
+      });
     }
   }
 
