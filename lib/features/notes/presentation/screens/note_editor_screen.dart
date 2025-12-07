@@ -18,8 +18,9 @@ import 'package:life_tracker/shared/widgets/fields/app_text_field.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   final Note? note;
+  final int? noteId; // Used when Activity is recreated
 
-  const NoteEditorScreen({super.key, this.note});
+  const NoteEditorScreen({super.key, this.note, this.noteId});
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -40,26 +41,61 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   final NoteEncryptionService _encryptionService = NoteEncryptionService();
   bool _hasChanges = false;
   bool _isUnlocked = true; // Track if locked note is currently unlocked
+  Note? _loadedNote; // Note loaded by ID
+  bool _isLoading = false;
+
+  Note? get _effectiveNote => widget.note ?? _loadedNote;
 
   @override
   void initState() {
     super.initState();
-    if (widget.note != null) {
-      final note = widget.note!;
-      _titleController.text = note.title;
-      _contentController.text = note.content ?? '';
-      _selectedColor = note.color;
-      _checklistItems = List<ChecklistItem>.from(note.checklistItems);
-      _attachmentPaths = List<String>.from(note.attachmentPaths);
-      _voiceNotePath = note.voiceNotePath;
-      _voiceNoteName = note.voiceNoteName;
-      _encryptedContent = note.encryptedContent;
+    _initializeNote();
+  }
 
-      // If note is locked, require PIN to unlock
-      if (note.isLocked && note.encryptedContent != null) {
-        _isUnlocked = false;
-        _contentController.text = ''; // Don't show content until unlocked
+  Future<void> _initializeNote() async {
+    // If we have a note, use it directly
+    if (widget.note != null) {
+      _populateFromNote(widget.note!);
+      return;
+    }
+
+    // If we have a noteId, load the note from database
+    if (widget.noteId != null) {
+      setState(() => _isLoading = true);
+      try {
+        final notes = ref.read(noteNotifierProvider).valueOrNull ?? [];
+        final note = notes.firstWhere(
+          (n) => n.id == widget.noteId,
+          orElse: () => throw Exception('Note not found'),
+        );
+        _loadedNote = note;
+        _populateFromNote(note);
+      } catch (e) {
+        debugPrint('Error loading note by ID: $e');
+        // Will show as new note if not found
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
+    }
+
+    _titleController.addListener(_onChanged);
+    _contentController.addListener(_onChanged);
+  }
+
+  void _populateFromNote(Note note) {
+    _titleController.text = note.title;
+    _contentController.text = note.content ?? '';
+    _selectedColor = note.color;
+    _checklistItems = List<ChecklistItem>.from(note.checklistItems);
+    _attachmentPaths = List<String>.from(note.attachmentPaths);
+    _voiceNotePath = note.voiceNotePath;
+    _voiceNoteName = note.voiceNoteName;
+    _encryptedContent = note.encryptedContent;
+
+    // If note is locked, require PIN to unlock
+    if (note.isLocked && note.encryptedContent != null) {
+      _isUnlocked = false;
+      _contentController.text = ''; // Don't show content until unlocked
     }
 
     _titleController.addListener(_onChanged);
@@ -87,7 +123,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       // When saving a locked note, content should be null and encryptedContent should be set
       // When saving an unlocked note, content should be set and encryptedContent should be null
       final note = Note(
-        id: widget.note?.id,
+        id: _effectiveNote?.id,
         title: _titleController.text.trim(),
         content: _encryptedContent != null
             ? null
@@ -101,11 +137,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         voiceNoteName: _voiceNoteName,
         checklistItems: _checklistItems,
         isLocked: _encryptedContent != null,
-        createdAt: widget.note?.createdAt ?? now,
+        createdAt: _effectiveNote?.createdAt ?? now,
         updatedAt: now,
       );
 
-      if (widget.note == null) {
+      if (_effectiveNote == null) {
         ref.read(noteNotifierProvider.notifier).addNoteEntry(note);
       } else {
         ref.read(noteNotifierProvider.notifier).updateNoteEntry(note);
@@ -119,7 +155,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Check if we need to unlock the note
-    if (widget.note != null && widget.note!.isLocked && !_isUnlocked) {
+    if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
       _unlockNote(context);
     }
   }
@@ -184,9 +220,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _decryptNoteContent(String pin) async {
-    if (widget.note?.encryptedContent != null) {
+    if (_effectiveNote?.encryptedContent != null) {
       final decrypted = await _encryptionService.decryptContent(
-        widget.note!.encryptedContent!,
+        _effectiveNote!.encryptedContent!,
         pin,
       );
       if (!mounted) return;
@@ -275,11 +311,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator while loading note by ID
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Loading...')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     // If note is locked and not unlocked, show lock screen
-    if (widget.note != null && widget.note!.isLocked && !_isUnlocked) {
+    if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(widget.note == null ? 'New Note' : 'Locked Note'),
+          title: Text(_effectiveNote == null ? 'New Note' : 'Locked Note'),
         ),
         body: Center(
           child: Column(
@@ -344,26 +388,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.note == null ? 'New Note' : 'Edit Note'),
+          title: Text(_effectiveNote == null ? 'New Note' : 'Edit Note'),
           actions: [
             // Lock/Unlock button
-            if (widget.note != null)
+            if (_effectiveNote != null)
               IconButton(
                 icon: Icon(
-                  widget.note!.isLocked && _isUnlocked
+                  _effectiveNote!.isLocked && _isUnlocked
                       ? Icons.lock_open
-                      : widget.note!.isLocked
+                      : _effectiveNote!.isLocked
                           ? Icons.lock
                           : Icons.lock_outline,
                 ),
-                onPressed: widget.note!.isLocked && _isUnlocked
+                onPressed: _effectiveNote!.isLocked && _isUnlocked
                     ? _lockNote
-                    : widget.note!.isLocked
+                    : _effectiveNote!.isLocked
                         ? _unlockNoteForEditing
                         : _lockNote,
-                tooltip: widget.note!.isLocked && _isUnlocked
+                tooltip: _effectiveNote!.isLocked && _isUnlocked
                     ? 'Lock Note'
-                    : widget.note!.isLocked
+                    : _effectiveNote!.isLocked
                         ? 'Unlock Note'
                         : 'Lock Note',
               ),
@@ -398,11 +442,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 AppTextField(
                   controller: _contentController,
                   label: 'Content',
-                  hint: widget.note?.isLocked == true && !_isUnlocked
+                  hint: _effectiveNote?.isLocked == true && !_isUnlocked
                       ? 'Note is locked'
                       : 'Note content',
                   maxLines: 10,
-                  enabled: !(widget.note?.isLocked == true && !_isUnlocked),
+                  enabled: !(_effectiveNote?.isLocked == true && !_isUnlocked),
                 ),
                 const SizedBox(height: 24),
                 // Color Picker
@@ -511,7 +555,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 ],
                 const SizedBox(height: 24),
                 // Link to Reminder (only for existing notes)
-                if (widget.note != null && widget.note!.id != null) ...[
+                if (_effectiveNote != null && _effectiveNote!.id != null) ...[
                   Text(
                     'Reminder',
                     style: Theme.of(context).textTheme.titleMedium,
@@ -536,18 +580,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _createReminderFromNote(BuildContext context) async {
-    if (widget.note == null || widget.note!.id == null) return;
+    if (_effectiveNote == null || _effectiveNote!.id == null) return;
 
     // Show dialog to create reminder
     showDialog(
       context: context,
       builder: (context) => AddReminderDialog(
         reminder: Reminder(
-          title: widget.note!.title,
-          description: widget.note!.content,
+          title: _effectiveNote!.title,
+          description: _effectiveNote!.content,
           dateTime: DateTime.now().add(const Duration(hours: 1)),
           linkedType: 'note',
-          linkedId: widget.note!.id,
+          linkedId: _effectiveNote!.id,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         ),
@@ -596,15 +640,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final result = await showVoiceRecorderSheet(context);
 
     if (result == null || !mounted) return;
-    
+
     final name = result.name ?? 'Voice note';
-    
+
     setState(() {
       _voiceNotePath = result.path;
       _voiceNoteName = result.name;
       _hasChanges = true;
     });
-    
+
     // Check mounted again after setState before using context
     if (!mounted) return;
     // ignore: use_build_context_synchronously
@@ -613,45 +657,47 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   Future<void> _removeVoiceNote() async {
     if (_voiceNotePath == null) return;
-    
+
     final pathToDelete = _voiceNotePath!;
     debugPrint('Attempting to delete voice note: $pathToDelete');
-    
+
     try {
       // Delete the file first
       final deleted = await _attachmentService.deleteAttachment(pathToDelete);
       debugPrint('Voice note deletion result: $deleted');
-      
+
       if (!mounted) return;
-      
+
       // Always clear the state, regardless of deletion result
       setState(() {
         _voiceNotePath = null;
         _voiceNoteName = null;
         _hasChanges = true;
       });
-      
+
       if (deleted) {
         FeedbackService.showSuccess(context, 'Voice note deleted');
       } else {
         // File might not exist, but we still cleared the state
-        debugPrint('Voice note file not found or already deleted: $pathToDelete');
+        debugPrint(
+            'Voice note file not found or already deleted: $pathToDelete');
         FeedbackService.showInfo(context, 'Voice note removed');
       }
     } catch (e, stackTrace) {
       debugPrint('Error deleting voice note: $e');
       debugPrint('Stack trace: $stackTrace');
-      
+
       if (!mounted) return;
-      
+
       // Even if deletion fails, clear the state
       setState(() {
         _voiceNotePath = null;
         _voiceNoteName = null;
         _hasChanges = true;
       });
-      
-      FeedbackService.showError(context, 'Failed to delete voice note: ${e.toString()}');
+
+      FeedbackService.showError(
+          context, 'Failed to delete voice note: ${e.toString()}');
     }
   }
 }

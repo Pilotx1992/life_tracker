@@ -653,10 +653,11 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
   }
 
   void _navigateToEditor(BuildContext context, Note? note) {
-    context.push(
-      AppRoutes.noteEditor,
-      extra: note,
-    );
+    // Use query parameter for note ID to survive Activity recreation
+    final path = note?.id != null
+        ? '${AppRoutes.noteEditor}?id=${note!.id}'
+        : AppRoutes.noteEditor;
+    context.push(path, extra: note);
   }
 
   Future<void> _handleDelete(BuildContext context, Note note) async {

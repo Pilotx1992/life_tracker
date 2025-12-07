@@ -182,11 +182,23 @@ final appRouter = GoRouter(
       builder: (context, state) => const NotesScreen(),
       routes: [
         GoRoute(
-          path: 'editor', // /notes/editor
+          path: 'editor', // /notes/editor?id=123
           name: 'note_editor',
           builder: (context, state) {
-            final note = state.extra as Note?;
-            return NoteEditorScreen(note: note);
+            // First check for extra (backward compatibility)
+            final extraNote = state.extra as Note?;
+            if (extraNote != null) {
+              return NoteEditorScreen(note: extraNote);
+            }
+            // If no extra, check for query param
+            final noteIdStr = state.uri.queryParameters['id'];
+            if (noteIdStr != null) {
+              final noteId = int.tryParse(noteIdStr);
+              if (noteId != null) {
+                return NoteEditorScreen(noteId: noteId);
+              }
+            }
+            return const NoteEditorScreen();
           },
         ),
         GoRoute(
