@@ -120,4 +120,14 @@ class ReminderRepositoryImpl implements ReminderRepository {
       return Left(CacheFailure(e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, int>> autoCompleteExpiredReminders() async {
+    try {
+      final count = await localDataSource.autoCompleteExpiredReminders();
+      return Right(count);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
+    }
+  }
 }

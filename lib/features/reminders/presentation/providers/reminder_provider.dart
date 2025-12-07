@@ -36,7 +36,8 @@ final calculateNextOccurrenceUseCaseProvider =
     Provider((ref) => CalculateNextOccurrence());
 
 // Notification service provider
-final reminderNotificationServiceProvider = Provider<ReminderNotificationService>((ref) {
+final reminderNotificationServiceProvider =
+    Provider<ReminderNotificationService>((ref) {
   final notificationService = ref.read(notificationServiceProvider);
   return ReminderNotificationService(notificationService);
 });
@@ -222,6 +223,11 @@ final reminderNotifierProvider =
 });
 
 final upcomingRemindersProvider = FutureProvider<List<Reminder>>((ref) async {
+  // First, auto-complete any expired reminders
+  final repository = ref.read(reminderRepositoryProvider);
+  await repository.autoCompleteExpiredReminders();
+
+  // Then get the upcoming reminders
   return ref
       .watch(reminderNotifierProvider.notifier)
       .getUpcomingRemindersList();

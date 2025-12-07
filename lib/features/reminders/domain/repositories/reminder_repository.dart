@@ -20,4 +20,5 @@ abstract class ReminderRepository {
   Future<Either<Failure, bool>> updateReminder(Reminder reminder);
   Future<Either<Failure, bool>> deleteReminder(Id id);
   Future<Either<Failure, bool>> markReminderAsCompleted(Id id);
+  Future<Either<Failure, int>> autoCompleteExpiredReminders();
 }

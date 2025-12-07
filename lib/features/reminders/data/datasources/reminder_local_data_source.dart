@@ -20,6 +20,7 @@ abstract class ReminderLocalDataSource {
   Future<bool> updateReminder(ReminderModel reminder);
   Future<bool> deleteReminder(Id id);
   Future<bool> markReminderAsCompleted(Id id);
+  Future<int> autoCompleteExpiredReminders();
 }
 
 class ReminderLocalDataSourceImpl implements ReminderLocalDataSource {
@@ -41,17 +42,12 @@ class ReminderLocalDataSourceImpl implements ReminderLocalDataSource {
   Future<List<ReminderModel>> getUpcomingReminders() async {
     try {
       final isar = await _databaseService.database;
-      // Use start of today to include today's reminders
-      final startOfToday = DateTime(
-        DateTime.now().year,
-        DateTime.now().month,
-        DateTime.now().day,
-      );
+      final now = DateTime.now();
+      // Only show reminders that are in the future (time hasn't come yet)
       return await isar.reminderModels
           .filter()
           .isCompletedEqualTo(false)
-          .dateTimeGreaterThan(
-              startOfToday.subtract(const Duration(seconds: 1)))
+          .dateTimeGreaterThan(now)
           .sortByDateTime()
           .findAll();
     } catch (e) {
@@ -171,6 +167,40 @@ class ReminderLocalDataSourceImpl implements ReminderLocalDataSource {
       });
     } catch (e) {
       throw CacheException('Failed to mark reminder as completed: $e');
+    }
+  }
+
+  @override
+  Future<int> autoCompleteExpiredReminders() async {
+    try {
+      final isar = await _databaseService.database;
+      final now = DateTime.now();
+
+      // Find all non-completed reminders with dateTime in the past
+      final expiredReminders = await isar.reminderModels
+          .filter()
+          .isCompletedEqualTo(false)
+          .dateTimeLessThan(now)
+          .findAll();
+
+      if (expiredReminders.isEmpty) return 0;
+
+      // Mark them as completed
+      return await isar.writeTxn(() async {
+        int count = 0;
+        for (final reminder in expiredReminders) {
+          final updated = reminder.copyWith(
+            isCompleted: true,
+            updatedAt: DateTime.now(),
+          );
+          if (await isar.reminderModels.put(updated) > 0) {
+            count++;
+          }
+        }
+        return count;
+      });
+    } catch (e) {
+      throw CacheException('Failed to auto-complete expired reminders: $e');
     }
   }
 }
