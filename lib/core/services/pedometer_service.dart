@@ -70,12 +70,18 @@ class PedometerService {
     // Cancel existing subscription if any
     _stepCountSubscription?.cancel();
 
-    // Listen to step count stream
-    _stepCountSubscription = Pedometer.stepCountStream.listen(
-      _onStepCount,
-      onError: _onStepCountError,
-      cancelOnError: false,
-    );
+    try {
+      // Listen to step count stream
+      _stepCountSubscription = Pedometer.stepCountStream.listen(
+        _onStepCount,
+        onError: _onStepCountError,
+        cancelOnError: false,
+      );
+    } catch (e) {
+      // Step counting not available on this device (e.g., emulators)
+      // Emit 0 steps so the app continues to work
+      _todayStepsController.add(0);
+    }
   }
 
   /// Handle step count updates
@@ -92,8 +98,9 @@ class PedometerService {
 
   /// Handle step count errors
   void _onStepCountError(Object error) {
-    // Log error but don't crash - just emit last known value
-    _todayStepsController.addError(error);
+    // Step counting not available - fall back to 0 steps gracefully
+    // This happens on emulators and devices without step counting hardware
+    _todayStepsController.add(0);
   }
 
   /// Manually set the step count (for syncing with Health Connect)

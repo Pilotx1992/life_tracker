@@ -40,21 +40,17 @@ class CalorieCalculator {
 
   /// Get MET value based on cadence (steps per minute)
   ///
-  /// MET values are based on the Compendium of Physical Activities:
-  /// - Sedentary: 1.0-1.5 MET
-  /// - Light walking: 2.0-3.0 MET
-  /// - Moderate walking: 3.0-4.5 MET
-  /// - Vigorous walking/jogging: 5.0-8.0 MET
-  /// - Running: 8.0+ MET
+  /// MET thresholds from PRD:
+  /// - Sedentary/Standing: Cadence < 70 -> MET 1.2
+  /// - Slow Walk: Cadence 70-100 -> MET 3.0
+  /// - Brisk Walk: Cadence 100-125 -> MET 4.0
+  /// - Run: Cadence > 130 -> MET 8.0+
   static double getMETValue(double cadence) {
-    if (cadence < 30) return 1.0; // Sedentary
-    if (cadence < 70) return 1.5; // Standing/Light movement
-    if (cadence < 100) return 2.5; // Slow Walk
-    if (cadence < 120) return 3.5; // Normal Walk
-    if (cadence < 140) return 4.5; // Brisk Walk
-    if (cadence < 160) return 5.5; // Fast Walk
-    if (cadence < 180) return 7.0; // Jogging
-    return 9.0; // Running
+    if (cadence < 70) return 1.2;
+    if (cadence <= 100) return 3.0;
+    if (cadence <= 125) return 4.0;
+    if (cadence <= 130) return 6.0; // Interpolation gap (Fast walk)
+    return 8.0; // Run
   }
 
   /// Get activity description based on cadence

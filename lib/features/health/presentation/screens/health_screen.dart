@@ -105,6 +105,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
             children: [
               // Activity Rings Section
               _buildActivityRings(context, ref, theme),
+              const SizedBox(height: 8),
+              _buildSourceLabel(context, ref, theme),
               const SizedBox(height: 20),
 
               // Today's Summary Cards Row
@@ -292,8 +294,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     final activityData = ref.watch(activityDataProvider);
     final medicationsAsync = ref.watch(medicationListProvider);
 
-    // Calculate distance from steps (average step length ≈ 0.7m)
-    final distanceKm = (activityData.steps * 0.7) / 1000;
+    // Use distance from ActivityData (Smart Engine)
+    final distanceKm = activityData.distance;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -440,5 +442,41 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     if (bmi < 25) return 'Normal';
     if (bmi < 30) return 'Overweight';
     return 'Obese';
+  }
+
+  Widget _buildSourceLabel(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+  ) {
+    final activityData = ref.watch(activityDataProvider);
+    final isWatch = activityData.source == DataSource.healthConnect;
+
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isWatch ? Icons.watch : Icons.smartphone,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isWatch ? 'Source: Huawei Watch' : 'Source: Phone Sensor',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

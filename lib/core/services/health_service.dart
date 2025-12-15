@@ -47,6 +47,8 @@ class HealthService {
         HealthDataType.WEIGHT,
         HealthDataType.STEPS,
         HealthDataType.HEART_RATE,
+        HealthDataType.ACTIVE_ENERGY_BURNED,
+        HealthDataType.DISTANCE_DELTA,
       ];
 
       // Request permissions
@@ -220,6 +222,78 @@ class HealthService {
     }
   }
 
+  /// Read active energy data from Health Connect
+  Future<List<ActiveEnergyDataPoint>> readActiveEnergyData({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (_health == null) await initialize();
+    if (!_isAuthorized) {
+      if (!await hasPermissions())
+        throw Exception('Health permissions not granted');
+    }
+
+    try {
+      final types = [HealthDataType.ACTIVE_ENERGY_BURNED];
+      final healthData = await _health!.getHealthDataFromTypes(
+        types: types,
+        startTime: startDate,
+        endTime: endDate,
+      );
+
+      final energyData = healthData
+          .where((data) => data.type == HealthDataType.ACTIVE_ENERGY_BURNED)
+          .map((data) => ActiveEnergyDataPoint(
+                calories:
+                    (data.value as NumericHealthValue).numericValue.toDouble(),
+                date: data.dateFrom,
+                source: data.sourceName,
+              ))
+          .toList();
+
+      energyData.sort((a, b) => b.date.compareTo(a.date));
+      return energyData;
+    } catch (e) {
+      throw Exception('Failed to read active energy data: $e');
+    }
+  }
+
+  /// Read distance data from Health Connect
+  Future<List<DistanceDataPoint>> readDistanceData({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (_health == null) await initialize();
+    if (!_isAuthorized) {
+      if (!await hasPermissions())
+        throw Exception('Health permissions not granted');
+    }
+
+    try {
+      final types = [HealthDataType.DISTANCE_DELTA];
+      final healthData = await _health!.getHealthDataFromTypes(
+        types: types,
+        startTime: startDate,
+        endTime: endDate,
+      );
+
+      final distanceData = healthData
+          .where((data) => data.type == HealthDataType.DISTANCE_DELTA)
+          .map((data) => DistanceDataPoint(
+                distance:
+                    (data.value as NumericHealthValue).numericValue.toDouble(),
+                date: data.dateFrom,
+                source: data.sourceName,
+              ))
+          .toList();
+
+      distanceData.sort((a, b) => b.date.compareTo(a.date));
+      return distanceData;
+    } catch (e) {
+      throw Exception('Failed to read distance data: $e');
+    }
+  }
+
   /// Sync all health data
   Future<void> syncAllData({
     required DateTime startDate,
@@ -229,6 +303,8 @@ class HealthService {
       HealthDataType.WEIGHT,
       HealthDataType.STEPS,
       HealthDataType.HEART_RATE,
+      HealthDataType.ACTIVE_ENERGY_BURNED,
+      HealthDataType.DISTANCE_DELTA,
     ];
 
     try {
@@ -284,6 +360,32 @@ class HeartRateDataPoint {
 
   HeartRateDataPoint({
     required this.heartRate,
+    required this.date,
+    required this.source,
+  });
+}
+
+/// Data class for active energy (calories)
+class ActiveEnergyDataPoint {
+  final double calories; // kcal
+  final DateTime date;
+  final String source;
+
+  ActiveEnergyDataPoint({
+    required this.calories,
+    required this.date,
+    required this.source,
+  });
+}
+
+/// Data class for distance
+class DistanceDataPoint {
+  final double distance; // meters
+  final DateTime date;
+  final String source;
+
+  DistanceDataPoint({
+    required this.distance,
     required this.date,
     required this.source,
   });

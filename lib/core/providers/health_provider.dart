@@ -13,6 +13,8 @@ class HealthConnectState {
   final List<WeightDataPoint> weightData;
   final List<StepsDataPoint> stepsData;
   final List<HeartRateDataPoint> heartRateData;
+  final List<ActiveEnergyDataPoint> activeEnergyData;
+  final List<DistanceDataPoint> distanceData;
   final String? error;
 
   HealthConnectState({
@@ -22,6 +24,8 @@ class HealthConnectState {
     this.weightData = const [],
     this.stepsData = const [],
     this.heartRateData = const [],
+    this.activeEnergyData = const [],
+    this.distanceData = const [],
     this.error,
   });
 
@@ -32,6 +36,8 @@ class HealthConnectState {
     List<WeightDataPoint>? weightData,
     List<StepsDataPoint>? stepsData,
     List<HeartRateDataPoint>? heartRateData,
+    List<ActiveEnergyDataPoint>? activeEnergyData,
+    List<DistanceDataPoint>? distanceData,
     String? error,
   }) {
     return HealthConnectState(
@@ -41,6 +47,8 @@ class HealthConnectState {
       weightData: weightData ?? this.weightData,
       stepsData: stepsData ?? this.stepsData,
       heartRateData: heartRateData ?? this.heartRateData,
+      activeEnergyData: activeEnergyData ?? this.activeEnergyData,
+      distanceData: distanceData ?? this.distanceData,
       error: error ?? this.error,
     );
   }
@@ -205,23 +213,47 @@ class HealthConnectNotifier extends StateNotifier<HealthConnectState> {
           startDate ?? DateTime.now().subtract(const Duration(days: 30));
       final end = endDate ?? DateTime.now();
 
-      // Sync all data types concurrently
-      final results = await Future.wait([
+      // Sync core data types (required)
+      final coreResults = await Future.wait([
         _healthService.readWeightData(startDate: start, endDate: end),
         _healthService.readStepsData(startDate: start, endDate: end),
         _healthService.readHeartRateData(startDate: start, endDate: end),
       ]);
 
+      // Sync optional data types (may not be supported on all devices)
+      List<ActiveEnergyDataPoint> activeEnergyData = [];
+      List<DistanceDataPoint> distanceData = [];
+
+      try {
+        activeEnergyData = await _healthService.readActiveEnergyData(
+          startDate: start,
+          endDate: end,
+        );
+      } catch (_) {
+        // Active energy not supported or failed - continue with empty list
+      }
+
+      try {
+        distanceData = await _healthService.readDistanceData(
+          startDate: start,
+          endDate: end,
+        );
+      } catch (_) {
+        // Distance not supported or failed - continue with empty list
+      }
+
       state = state.copyWith(
         isSyncing: false,
-        weightData: results[0] as List<WeightDataPoint>,
-        stepsData: results[1] as List<StepsDataPoint>,
-        heartRateData: results[2] as List<HeartRateDataPoint>,
+        weightData: coreResults[0] as List<WeightDataPoint>,
+        stepsData: coreResults[1] as List<StepsDataPoint>,
+        heartRateData: coreResults[2] as List<HeartRateDataPoint>,
+        activeEnergyData: activeEnergyData,
+        distanceData: distanceData,
         lastSyncTime: DateTime.now(),
       );
 
       // Auto-save weight data to local database
-      await _saveWeightDataToLocalDB(results[0] as List<WeightDataPoint>);
+      await _saveWeightDataToLocalDB(coreResults[0] as List<WeightDataPoint>);
     } catch (e) {
       state = state.copyWith(
         isSyncing: false,
