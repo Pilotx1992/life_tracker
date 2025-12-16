@@ -24,6 +24,15 @@ class RecurringBillModel {
   bool isActive = true; // Whether this bill is currently active
   late DateTime createdAt;
 
+  // ✨ Installment-specific fields
+  @Index()
+  @Enumerated(EnumType.name)
+  BillType type = BillType.recurring;
+  double totalAmount = 0; // Total amount for installments
+  int totalInstallments = 0; // Total number of installments
+  int paidInstallments = 0; // Number of paid installments
+  double paidAmount = 0; // Total amount paid so far
+
   RecurringBillModel();
 
   RecurringBill toEntity() {
@@ -41,6 +50,11 @@ class RecurringBillModel {
       note: note,
       isActive: isActive,
       createdAt: createdAt,
+      type: type,
+      totalAmount: totalAmount,
+      totalInstallments: totalInstallments,
+      paidInstallments: paidInstallments,
+      paidAmount: paidAmount,
     );
   }
 
@@ -57,7 +71,12 @@ class RecurringBillModel {
       ..reminderDaysBefore = entity.reminderDaysBefore
       ..note = entity.note
       ..isActive = entity.isActive
-      ..createdAt = entity.createdAt;
+      ..createdAt = entity.createdAt
+      ..type = entity.type
+      ..totalAmount = entity.totalAmount
+      ..totalInstallments = entity.totalInstallments
+      ..paidInstallments = entity.paidInstallments
+      ..paidAmount = entity.paidAmount;
     if (entity.id != null) {
       model.id = entity.id!;
     }
@@ -78,6 +97,11 @@ class RecurringBillModel {
     String? note,
     bool? isActive,
     DateTime? createdAt,
+    BillType? type,
+    double? totalAmount,
+    int? totalInstallments,
+    int? paidInstallments,
+    double? paidAmount,
   }) {
     final model = RecurringBillModel()
       ..name = name ?? this.name
@@ -91,7 +115,12 @@ class RecurringBillModel {
       ..reminderDaysBefore = reminderDaysBefore ?? this.reminderDaysBefore
       ..note = note ?? this.note
       ..isActive = isActive ?? this.isActive
-      ..createdAt = createdAt ?? this.createdAt;
+      ..createdAt = createdAt ?? this.createdAt
+      ..type = type ?? this.type
+      ..totalAmount = totalAmount ?? this.totalAmount
+      ..totalInstallments = totalInstallments ?? this.totalInstallments
+      ..paidInstallments = paidInstallments ?? this.paidInstallments
+      ..paidAmount = paidAmount ?? this.paidAmount;
     if (id != null) {
       model.id = id;
     }

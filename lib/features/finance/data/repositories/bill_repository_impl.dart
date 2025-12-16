@@ -157,4 +157,106 @@ class BillRepositoryImpl implements BillRepository {
       return Left(CacheFailure('Unexpected error: $e'));
     }
   }
+
+  // ✨ Installment-specific methods
+
+  @override
+  Future<Either<Failure, List<RecurringBill>>> getInstallments() async {
+    try {
+      final billModels = await localDataSource.getAllBills();
+      final installments = billModels
+          .where((model) => model.type == BillType.installment)
+          .map((model) => model.toEntity())
+          .toList();
+      return Right(installments);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.toString()));
+    } catch (e) {
+      return Left(CacheFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RecurringBill>>> getActiveInstallments() async {
+    try {
+      final billModels = await localDataSource.getAllBills();
+      final activeInstallments = billModels
+          .where((model) =>
+              model.type == BillType.installment &&
+              model.isActive &&
+              model.paidAmount < model.totalAmount)
+          .map((model) => model.toEntity())
+          .toList();
+      return Right(activeInstallments);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.toString()));
+    } catch (e) {
+      return Left(CacheFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, double>> getTotalRemainingInstallments() async {
+    try {
+      final billModels = await localDataSource.getAllBills();
+      final totalRemaining = billModels
+          .where((model) =>
+              model.type == BillType.installment &&
+              model.isActive &&
+              model.paidAmount < model.totalAmount)
+          .fold<double>(0.0,
+              (sum, model) => sum + (model.totalAmount - model.paidAmount));
+      return Right(totalRemaining);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.toString()));
+    } catch (e) {
+      return Left(CacheFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> makeInstallmentPayment({
+    required Id billId,
+    required double amount,
+    required DateTime paidDate,
+    String? note,
+    Id? expenseId,
+  }) async {
+    try {
+      // Get the bill
+      final billModel = await localDataSource.getBillById(billId);
+      if (billModel == null) {
+        return const Left(CacheFailure('Bill not found'));
+      }
+
+      // Create payment record
+      final paymentModel = BillPaymentModel()
+        ..billId = billId
+        ..paidDate = paidDate
+        ..amount = amount
+        ..note = note
+        ..expenseId = expenseId;
+
+      await localDataSource.addPayment(paymentModel);
+
+      // Update the bill's paid amount and installment count
+      final updatedBill = billModel.copyWith(
+        paidAmount: billModel.paidAmount + amount,
+        paidInstallments: billModel.paidInstallments + 1,
+      );
+
+      // If fully paid, mark as inactive
+      if (updatedBill.paidAmount >= updatedBill.totalAmount) {
+        updatedBill.isActive = false;
+      }
+
+      await localDataSource.updateBill(updatedBill);
+
+      return const Right(true);
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.toString()));
+    } catch (e) {
+      return Left(CacheFailure('Unexpected error: $e'));
+    }
+  }
 }

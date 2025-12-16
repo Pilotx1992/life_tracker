@@ -4,11 +4,17 @@ import 'package:intl/intl.dart';
 import 'package:life_tracker/features/finance/domain/entities/recurring_bill.dart';
 import 'package:life_tracker/features/finance/presentation/providers/bill_provider.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/add_bill_dialog.dart';
+import 'package:life_tracker/features/finance/presentation/widgets/add_installment_dialog.dart';
+import 'package:life_tracker/features/finance/presentation/widgets/installment_list_item.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/bill_list_item.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/states/error_widget.dart' as error_widget;
+import 'package:life_tracker/shared/widgets/states/error_widget.dart'
+    as error_widget;
 import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
+
+/// Bill/Installment view types
+enum BillViewType { all, bills, installments }
 
 /// Bill filter options
 enum BillFilterType { all, overdue, dueToday, upcoming, inactive }
@@ -20,17 +26,40 @@ class BillsScreen extends ConsumerStatefulWidget {
   ConsumerState<BillsScreen> createState() => _BillsScreenState();
 }
 
-class _BillsScreenState extends ConsumerState<BillsScreen> {
+class _BillsScreenState extends ConsumerState<BillsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   BillFilterType _selectedFilter = BillFilterType.all;
-  String? _selectedFrequency; // 'Monthly', 'Weekly', 'Yearly'
+  String? _selectedFrequency;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final billsAsync = ref.watch(billNotifierProvider);
+    final totalRemaining = ref.watch(totalRemainingInstallmentsProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recurring Bills'),
+        title: const Text('Bills & Installments'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'All'),
+            Tab(text: 'Bills'),
+            Tab(text: 'Installments'),
+          ],
+        ),
         actions: [
           // Filter button with active indicator
           Stack(
@@ -58,144 +87,376 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          // Quick Filter Chips
-          _buildQuickFilterChips(),
+          // All Tab
+          _buildBillsList(billsAsync, BillViewType.all, totalRemaining),
+          // Bills Tab
+          _buildBillsList(billsAsync, BillViewType.bills, totalRemaining),
+          // Installments Tab
+          _buildInstallmentsList(billsAsync, totalRemaining),
+        ],
+      ),
+      floatingActionButton: AnimatedBuilder(
+        animation: _tabController,
+        builder: (context, child) {
+          // Hide FAB on "All" tab (index 0)
+          if (_tabController.index == 0) return const SizedBox.shrink();
 
-          // Bills List
-          Expanded(
-            child: billsAsync.when(
-              data: (bills) {
-                final filteredBills = _applyFilters(bills);
+          return FloatingActionButton.extended(
+            onPressed: () {
+              if (_tabController.index == 2) {
+                showAddInstallmentDialog(context);
+              } else {
+                _showAddBillDialog(context);
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: Text(
+                _tabController.index == 2 ? 'Add Installment' : 'Add Bill'),
+          );
+        },
+      ),
+    );
+  }
 
-                if (filteredBills.isEmpty) {
-                  return RefreshIndicator(
-                    onRefresh: () =>
-                        ref.read(billNotifierProvider.notifier).loadBills(),
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: SizedBox(
-                        height: 400,
-                        child: EmptyStateWidget(
-                          icon: Icons.receipt_long,
-                          title: _hasActiveFilters
-                              ? 'No bills match your filters'
-                              : 'No Recurring Bills',
-                          subtitle: _hasActiveFilters
-                              ? null
-                              : 'Add your first recurring bill to start tracking',
-                          actionLabel:
-                              _hasActiveFilters ? 'Clear Filters' : null,
-                          onAction: _hasActiveFilters ? _clearAllFilters : null,
-                        ),
-                      ),
-                    ),
-                  );
-                }
+  /// Build bills list based on view type
+  Widget _buildBillsList(
+    AsyncValue<List<RecurringBill>> billsAsync,
+    BillViewType viewType,
+    double totalRemaining,
+  ) {
+    return billsAsync.when(
+      data: (bills) {
+        // Filter by type
+        List<RecurringBill> typedBills;
+        switch (viewType) {
+          case BillViewType.all:
+            typedBills = bills;
+            break;
+          case BillViewType.bills:
+            typedBills = bills.where((b) => !b.isInstallment).toList();
+            break;
+          case BillViewType.installments:
+            typedBills = bills.where((b) => b.isInstallment).toList();
+            break;
+        }
 
-                // Separate bills into categories
-                final now = DateTime.now();
-                final today = DateTime(now.year, now.month, now.day);
-                final overdueBills = filteredBills
-                    .where((b) => b.isActive && b.nextDueDate.isBefore(today))
-                    .toList();
-                final dueTodayBills = filteredBills
-                    .where((b) =>
-                        b.isActive &&
-                        DateTime(
-                              b.nextDueDate.year,
-                              b.nextDueDate.month,
-                              b.nextDueDate.day,
-                            ) ==
-                            today,)
-                    .toList();
-                final upcomingBills = filteredBills
-                    .where((b) => b.isActive && b.nextDueDate.isAfter(today))
-                    .toList();
-                final inactiveBills =
-                    filteredBills.where((b) => !b.isActive).toList();
+        final filteredBills = _applyFilters(typedBills);
 
-                return RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(billNotifierProvider.notifier).loadBills(),
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      // Summary Card
-                      _buildSummaryCard(context, bills),
-                      const SizedBox(height: 16),
-
-                      // Active Filters Display
-                      if (_hasActiveFilters) ...[
-                        _buildActiveFiltersChips(),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Overdue Section
-                      if (overdueBills.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          'Overdue',
-                          overdueBills.length,
-                          Colors.red,
-                        ),
-                        const SizedBox(height: 8),
-                        ...overdueBills
-                            .map((bill) => _buildBillItem(context, bill)),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Due Today Section
-                      if (dueTodayBills.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          'Due Today',
-                          dueTodayBills.length,
-                          Colors.orange,
-                        ),
-                        const SizedBox(height: 8),
-                        ...dueTodayBills
-                            .map((bill) => _buildBillItem(context, bill)),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Upcoming Section
-                      if (upcomingBills.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          'Upcoming',
-                          upcomingBills.length,
-                          Colors.blue,
-                        ),
-                        const SizedBox(height: 8),
-                        ...upcomingBills
-                            .map((bill) => _buildBillItem(context, bill)),
-                        const SizedBox(height: 16),
-                      ],
-
-                      // Inactive Section
-                      if (inactiveBills.isNotEmpty) ...[
-                        _buildSectionHeader(
-                          'Inactive',
-                          inactiveBills.length,
-                          Colors.grey,
-                        ),
-                        const SizedBox(height: 8),
-                        ...inactiveBills
-                            .map((bill) => _buildBillItem(context, bill)),
-                      ],
-                    ],
-                  ),
-                );
-              },
-              loading: () => const LoadingWidget(useShimmer: true),
-              error: (error, stack) =>
-                  error_widget.ErrorStateWidget(message: error.toString()),
+        if (filteredBills.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: () =>
+                ref.read(billNotifierProvider.notifier).loadBills(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: 400,
+                child: EmptyStateWidget(
+                  icon: Icons.receipt_long,
+                  title: _hasActiveFilters
+                      ? 'No bills match your filters'
+                      : viewType == BillViewType.bills
+                          ? 'No Recurring Bills'
+                          : 'No Bills or Installments',
+                  subtitle: _hasActiveFilters
+                      ? null
+                      : 'Add your first bill to start tracking',
+                  actionLabel: _hasActiveFilters ? 'Clear Filters' : null,
+                  onAction: _hasActiveFilters ? _clearAllFilters : null,
+                ),
+              ),
             ),
+          );
+        }
+
+        // Separate bills into categories
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final overdueBills = filteredBills
+            .where((b) => b.isActive && b.nextDueDate.isBefore(today))
+            .toList();
+        final dueTodayBills = filteredBills
+            .where(
+              (b) =>
+                  b.isActive &&
+                  DateTime(
+                        b.nextDueDate.year,
+                        b.nextDueDate.month,
+                        b.nextDueDate.day,
+                      ) ==
+                      today,
+            )
+            .toList();
+        final upcomingBills = filteredBills
+            .where((b) => b.isActive && b.nextDueDate.isAfter(today))
+            .toList();
+        final inactiveBills = filteredBills.where((b) => !b.isActive).toList();
+
+        return RefreshIndicator(
+          onRefresh: () => ref.read(billNotifierProvider.notifier).loadBills(),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Summary Card
+              _buildSummaryCard(context, bills),
+              const SizedBox(height: 16),
+
+              // Quick Filter Chips
+              _buildQuickFilterChips(),
+              const SizedBox(height: 8),
+
+              // Active Filters Display
+              if (_hasActiveFilters) ...[
+                _buildActiveFiltersChips(),
+                const SizedBox(height: 16),
+              ],
+
+              // Overdue Section
+              if (overdueBills.isNotEmpty) ...[
+                _buildSectionHeader(
+                  'Overdue',
+                  overdueBills.length,
+                  Colors.red,
+                ),
+                const SizedBox(height: 8),
+                ...overdueBills.map((bill) => _buildBillItem(context, bill)),
+                const SizedBox(height: 16),
+              ],
+
+              // Due Today Section
+              if (dueTodayBills.isNotEmpty) ...[
+                _buildSectionHeader(
+                  'Due Today',
+                  dueTodayBills.length,
+                  Colors.orange,
+                ),
+                const SizedBox(height: 8),
+                ...dueTodayBills.map((bill) => _buildBillItem(context, bill)),
+                const SizedBox(height: 16),
+              ],
+
+              // Upcoming Section
+              if (upcomingBills.isNotEmpty) ...[
+                _buildSectionHeader(
+                  'Upcoming',
+                  upcomingBills.length,
+                  Colors.blue,
+                ),
+                const SizedBox(height: 8),
+                ...upcomingBills.map((bill) => _buildBillItem(context, bill)),
+                const SizedBox(height: 16),
+              ],
+
+              // Inactive Section
+              if (inactiveBills.isNotEmpty) ...[
+                _buildSectionHeader(
+                  'Inactive',
+                  inactiveBills.length,
+                  Colors.grey,
+                ),
+                const SizedBox(height: 8),
+                ...inactiveBills.map((bill) => _buildBillItem(context, bill)),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const LoadingWidget(useShimmer: true),
+      error: (error, stack) =>
+          error_widget.ErrorStateWidget(message: error.toString()),
+    );
+  }
+
+  /// Build installments list with progress bars
+  Widget _buildInstallmentsList(
+    AsyncValue<List<RecurringBill>> billsAsync,
+    double totalRemaining,
+  ) {
+    return billsAsync.when(
+      data: (bills) {
+        final installments = bills.where((b) => b.isInstallment).toList();
+        final activeInstallments =
+            installments.where((b) => b.isActive && !b.isFullyPaid).toList();
+        final completedInstallments =
+            installments.where((b) => b.isFullyPaid || !b.isActive).toList();
+
+        if (installments.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: () =>
+                ref.read(billNotifierProvider.notifier).loadBills(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: 400,
+                child: EmptyStateWidget(
+                  icon: Icons.receipt_long,
+                  title: 'No Installments',
+                  subtitle: 'Add your first installment to track payments',
+                  actionLabel: 'Add Installment',
+                  onAction: () => showAddInstallmentDialog(context),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => ref.read(billNotifierProvider.notifier).loadBills(),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            children: [
+              // Installments Summary
+              _buildInstallmentsSummary(context, totalRemaining, installments),
+              const SizedBox(height: 16),
+
+              // Active Installments
+              if (activeInstallments.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildSectionHeader(
+                    'Active',
+                    activeInstallments.length,
+                    Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...activeInstallments.map(
+                  (installment) => InstallmentListItem(
+                    installment: installment,
+                    onDelete: () => _confirmDeleteBill(installment),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Completed Installments
+              if (completedInstallments.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildSectionHeader(
+                    'Completed',
+                    completedInstallments.length,
+                    Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...completedInstallments.map(
+                  (installment) => InstallmentListItem(
+                    installment: installment,
+                    onDelete: () => _confirmDeleteBill(installment),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+      loading: () => const LoadingWidget(useShimmer: true),
+      error: (error, stack) =>
+          error_widget.ErrorStateWidget(message: error.toString()),
+    );
+  }
+
+  /// Build installments summary card
+  Widget _buildInstallmentsSummary(
+    BuildContext context,
+    double totalRemaining,
+    List<RecurringBill> installments,
+  ) {
+    final theme = Theme.of(context);
+    final activeCount =
+        installments.where((i) => i.isActive && !i.isFullyPaid).length;
+    final completedCount = installments.where((i) => i.isFullyPaid).length;
+    final formatter = NumberFormat.currency(symbol: 'E£');
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.secondaryContainer,
+            theme.colorScheme.secondaryContainer.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.secondary.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddBillDialog(context),
-        child: const Icon(Icons.add),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Installments Summary',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildSummaryItem(
+                context,
+                'Active',
+                activeCount.toString(),
+                Icons.receipt_long,
+              ),
+              _buildSummaryItem(
+                context,
+                'Completed',
+                completedCount.toString(),
+                Icons.check_circle,
+              ),
+              _buildSummaryItem(
+                context,
+                'Remaining',
+                formatter.format(totalRemaining),
+                Icons.account_balance_wallet,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteBill(RecurringBill bill) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete'),
+        content: Text('Are you sure you want to delete ${bill.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (bill.id != null) {
+                ref
+                    .read(billNotifierProvider.notifier)
+                    .deleteBillEntry(bill.id!);
+                FeedbackService.showSuccess(context, '${bill.name} deleted');
+              }
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
@@ -329,8 +590,10 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     // Apply frequency filter
     if (_selectedFrequency != null) {
       filtered = filtered
-          .where((b) =>
-              b.frequency.toLowerCase() == _selectedFrequency!.toLowerCase(),)
+          .where(
+            (b) =>
+                b.frequency.toLowerCase() == _selectedFrequency!.toLowerCase(),
+          )
           .toList();
     }
 
@@ -348,14 +611,16 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
         break;
       case BillFilterType.dueToday:
         filtered = filtered
-            .where((b) =>
-                b.isActive &&
-                DateTime(
-                      b.nextDueDate.year,
-                      b.nextDueDate.month,
-                      b.nextDueDate.day,
-                    ) ==
-                    today,)
+            .where(
+              (b) =>
+                  b.isActive &&
+                  DateTime(
+                        b.nextDueDate.year,
+                        b.nextDueDate.month,
+                        b.nextDueDate.day,
+                      ) ==
+                      today,
+            )
             .toList();
         break;
       case BillFilterType.upcoming:

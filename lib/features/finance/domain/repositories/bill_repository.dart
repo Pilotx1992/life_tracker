@@ -20,4 +20,23 @@ abstract class BillRepository {
   Future<Either<Failure, List<BillPayment>>> getPaymentsByBill(Id billId);
   Future<Either<Failure, Id>> addPayment(BillPayment payment);
   Future<Either<Failure, bool>> deletePayment(Id id);
+
+  // ✨ Installment-specific methods
+  /// Get all installment-type bills
+  Future<Either<Failure, List<RecurringBill>>> getInstallments();
+
+  /// Get active (not fully paid) installments
+  Future<Either<Failure, List<RecurringBill>>> getActiveInstallments();
+
+  /// Get total remaining amount across all installments
+  Future<Either<Failure, double>> getTotalRemainingInstallments();
+
+  /// Make a payment for an installment (updates bill and creates payment record)
+  Future<Either<Failure, bool>> makeInstallmentPayment({
+    required Id billId,
+    required double amount,
+    required DateTime paidDate,
+    String? note,
+    Id? expenseId,
+  });
 }

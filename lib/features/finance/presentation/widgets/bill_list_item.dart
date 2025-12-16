@@ -6,6 +6,8 @@ import 'package:life_tracker/features/finance/domain/entities/recurring_bill.dar
 import 'package:life_tracker/features/finance/presentation/providers/account_provider.dart';
 import 'package:life_tracker/features/finance/presentation/providers/bill_provider.dart';
 import 'package:life_tracker/features/finance/presentation/widgets/add_bill_dialog.dart';
+import 'package:life_tracker/features/finance/presentation/widgets/make_payment_dialog.dart';
+import 'package:life_tracker/core/services/feedback_service.dart';
 
 class BillListItem extends ConsumerWidget {
   final RecurringBill bill;
@@ -189,7 +191,12 @@ class BillListItem extends ConsumerWidget {
                             const Duration(milliseconds: 100),
                             () {
                               if (context.mounted) {
-                                _showPayBillDialog(context, ref, bill);
+                                // Show appropriate dialog based on bill type
+                                if (bill.isInstallment) {
+                                  showMakePaymentDialog(context, bill);
+                                } else {
+                                  _showPayBillDialog(context, ref, bill);
+                                }
                               }
                             },
                           );
@@ -229,10 +236,38 @@ class BillListItem extends ConsumerWidget {
                         Future.delayed(
                           const Duration(milliseconds: 100),
                           () {
-                            if (bill.id != null) {
-                              ref
-                                  .read(billNotifierProvider.notifier)
-                                  .deleteBillEntry(bill.id!);
+                            if (bill.id != null && context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete Bill'),
+                                  content: Text(
+                                    'Are you sure you want to delete "${bill.name}"?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () {
+                                        ref
+                                            .read(billNotifierProvider.notifier)
+                                            .deleteBillEntry(bill.id!);
+                                        Navigator.pop(ctx);
+                                        FeedbackService.showSuccess(
+                                          context,
+                                          '${bill.name} deleted',
+                                        );
+                                      },
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
                           },
                         );

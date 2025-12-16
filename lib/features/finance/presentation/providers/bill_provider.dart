@@ -46,7 +46,8 @@ final getBillPaymentsUseCaseProvider =
     Provider((ref) => GetBillPayments(ref.read(billRepositoryProvider)));
 
 // Notification service provider
-final billNotificationServiceProvider = Provider<BillNotificationService>((ref) {
+final billNotificationServiceProvider =
+    Provider<BillNotificationService>((ref) {
   final notificationService = ref.read(notificationServiceProvider);
   return BillNotificationService(notificationService);
 });
@@ -217,6 +218,7 @@ class BillNotifier extends StateNotifier<AsyncValue<List<RecurringBill>>> {
     final payment = BillPayment(
       billId: bill.id!,
       paidDate: DateTime.now(),
+      amount: bill.amount,
       note: note,
     );
 
@@ -257,12 +259,100 @@ class BillNotifier extends StateNotifier<AsyncValue<List<RecurringBill>>> {
           }
         }
 
-        // Calculate next due date and update bill
-        final nextDueDate = CalculateNextDueDate.calculate(bill);
-        final updatedBill = bill.copyWith(nextDueDate: nextDueDate);
+        // For installments, update paid amount
+        if (bill.isInstallment) {
+          final updatedBill = bill.copyWith(
+            paidAmount: bill.paidAmount + bill.amount,
+            paidInstallments: bill.paidInstallments + 1,
+          );
 
-        // Update the bill with new due date
-        await updateBillEntry(updatedBill);
+          // Check if fully paid
+          if (updatedBill.remainingAmount <= 0) {
+            await updateBillEntry(updatedBill.copyWith(isActive: false));
+          } else {
+            // Calculate next due date
+            final nextDueDate = CalculateNextDueDate.calculate(updatedBill);
+            await updateBillEntry(
+                updatedBill.copyWith(nextDueDate: nextDueDate));
+          }
+        } else {
+          // For recurring bills, just update next due date
+          final nextDueDate = CalculateNextDueDate.calculate(bill);
+          final updatedBill = bill.copyWith(nextDueDate: nextDueDate);
+          await updateBillEntry(updatedBill);
+        }
+      },
+    );
+  }
+
+  /// ✨ Make a custom payment for an installment (partial or full)
+  Future<void> makeInstallmentPayment(
+    RecurringBill bill, {
+    required double amount,
+    String? note,
+  }) async {
+    if (bill.id == null || !bill.isInstallment) return;
+
+    // Create a bill payment record
+    final payment = BillPayment(
+      billId: bill.id!,
+      paidDate: DateTime.now(),
+      amount: amount,
+      note: note,
+    );
+
+    final paymentResult = await _addBillPayment(payment);
+    await paymentResult.fold(
+      (failure) async {
+        state = AsyncValue.error(failure, StackTrace.current);
+      },
+      (paymentId) async {
+        // Auto-create expense
+        if (_expenseNotifier != null) {
+          final expense = Expense(
+            amount: amount,
+            currency: bill.currency,
+            categoryId: bill.categoryId,
+            accountId: bill.accountId,
+            date: DateTime.now(),
+            note: note ?? 'Installment payment: ${bill.name}',
+          );
+          await _expenseNotifier.addExpenseEntry(expense);
+
+          // Update account balance
+          if (_accountNotifier != null) {
+            final accountsState = _accountNotifier.state;
+            if (accountsState is AsyncData<List<Account>>) {
+              final accounts = accountsState.value;
+              try {
+                final account =
+                    accounts.firstWhere((a) => a.id == bill.accountId);
+                final updatedAccount = account.copyWith(
+                  balance: account.balance - amount,
+                );
+                await _accountNotifier.updateAccountEntry(updatedAccount);
+              } catch (e) {
+                // Account not found or other error, ignore
+              }
+            }
+          }
+        }
+
+        // Update paid amount
+        final newPaidAmount = bill.paidAmount + amount;
+        final updatedBill = bill.copyWith(
+          paidAmount: newPaidAmount,
+          paidInstallments: bill.paidInstallments + 1,
+        );
+
+        // Check if fully paid
+        if (updatedBill.remainingAmount <= 0) {
+          await updateBillEntry(updatedBill.copyWith(isActive: false));
+        } else {
+          // Calculate next due date
+          final nextDueDate = CalculateNextDueDate.calculate(updatedBill);
+          await updateBillEntry(updatedBill.copyWith(nextDueDate: nextDueDate));
+        }
       },
     );
   }
@@ -272,6 +362,42 @@ class BillNotifier extends StateNotifier<AsyncValue<List<RecurringBill>>> {
     return result.fold(
       (failure) => <BillPayment>[],
       (payments) => payments,
+    );
+  }
+
+  /// ✨ Get only installment-type bills
+  List<RecurringBill> getInstallments() {
+    return state.maybeWhen(
+      data: (bills) => bills.where((b) => b.isInstallment).toList(),
+      orElse: () => <RecurringBill>[],
+    );
+  }
+
+  /// ✨ Get only recurring-type bills
+  List<RecurringBill> getRecurringBills() {
+    return state.maybeWhen(
+      data: (bills) => bills.where((b) => !b.isInstallment).toList(),
+      orElse: () => <RecurringBill>[],
+    );
+  }
+
+  /// ✨ Get active (not fully paid) installments
+  List<RecurringBill> getActiveInstallments() {
+    return state.maybeWhen(
+      data: (bills) => bills
+          .where((b) => b.isInstallment && b.isActive && !b.isFullyPaid)
+          .toList(),
+      orElse: () => <RecurringBill>[],
+    );
+  }
+
+  /// ✨ Get total remaining amount for all installments
+  double getTotalRemainingInstallments() {
+    return state.maybeWhen(
+      data: (bills) => bills
+          .where((b) => b.isInstallment && b.isActive)
+          .fold<double>(0.0, (sum, b) => sum + b.remainingAmount),
+      orElse: () => 0.0,
     );
   }
 }
@@ -292,5 +418,42 @@ final billNotifierProvider =
     notificationService: ref.read(billNotificationServiceProvider),
     expenseNotifier: ref.read(expenseNotifierProvider.notifier),
     accountNotifier: ref.read(accountNotifierProvider.notifier),
+  );
+});
+
+// ✨ Convenience providers for installments
+final installmentsProvider = Provider<List<RecurringBill>>((ref) {
+  final billsAsync = ref.watch(billNotifierProvider);
+  return billsAsync.maybeWhen(
+    data: (bills) => bills.where((b) => b.isInstallment).toList(),
+    orElse: () => <RecurringBill>[],
+  );
+});
+
+final activeInstallmentsProvider = Provider<List<RecurringBill>>((ref) {
+  final billsAsync = ref.watch(billNotifierProvider);
+  return billsAsync.maybeWhen(
+    data: (bills) => bills
+        .where((b) => b.isInstallment && b.isActive && !b.isFullyPaid)
+        .toList(),
+    orElse: () => <RecurringBill>[],
+  );
+});
+
+final totalRemainingInstallmentsProvider = Provider<double>((ref) {
+  final billsAsync = ref.watch(billNotifierProvider);
+  return billsAsync.maybeWhen(
+    data: (bills) => bills
+        .where((b) => b.isInstallment && b.isActive)
+        .fold<double>(0.0, (sum, b) => sum + b.remainingAmount),
+    orElse: () => 0.0,
+  );
+});
+
+final recurringBillsProvider = Provider<List<RecurringBill>>((ref) {
+  final billsAsync = ref.watch(billNotifierProvider);
+  return billsAsync.maybeWhen(
+    data: (bills) => bills.where((b) => !b.isInstallment).toList(),
+    orElse: () => <RecurringBill>[],
   );
 });

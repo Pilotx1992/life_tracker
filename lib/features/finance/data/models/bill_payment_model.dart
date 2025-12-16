@@ -11,6 +11,7 @@ class BillPaymentModel {
   late int billId; // Reference to RecurringBillModel
   @Index()
   late DateTime paidDate;
+  late double amount; // ✨ Payment amount
   String? note;
   @Index()
   int? expenseId; // Reference to ExpenseModel (if expense was auto-created)
@@ -22,6 +23,7 @@ class BillPaymentModel {
       id: id,
       billId: billId,
       paidDate: paidDate,
+      amount: amount,
       note: note,
       expenseId: expenseId,
     );
@@ -31,6 +33,7 @@ class BillPaymentModel {
     final model = BillPaymentModel()
       ..billId = entity.billId
       ..paidDate = entity.paidDate
+      ..amount = entity.amount
       ..note = entity.note
       ..expenseId = entity.expenseId;
     if (entity.id != null) {
@@ -43,12 +46,14 @@ class BillPaymentModel {
     Id? id,
     int? billId,
     DateTime? paidDate,
+    double? amount,
     String? note,
     int? expenseId,
   }) {
     final model = BillPaymentModel()
       ..billId = billId ?? this.billId
       ..paidDate = paidDate ?? this.paidDate
+      ..amount = amount ?? this.amount
       ..note = note ?? this.note
       ..expenseId = expenseId ?? this.expenseId;
     if (id != null) {

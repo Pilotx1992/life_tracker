@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:life_tracker/core/utils/thousands_separator_formatter.dart';
 import 'package:life_tracker/features/finance/domain/entities/recurring_bill.dart';
 import 'package:life_tracker/features/finance/domain/usecases/calculate_next_due_date.dart';
-import 'package:life_tracker/features/finance/presentation/providers/account_provider.dart';
 import 'package:life_tracker/features/finance/presentation/providers/bill_provider.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/presentation/providers/category_provider.dart';
@@ -27,10 +27,9 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
   final _reminderDaysController = TextEditingController();
 
   String _selectedFrequency = 'Monthly';
-  int _selectedDay = 1; // Day of month (1-31) or day of week (1-7)
+  int _selectedDay = 1;
   String _selectedCurrency = 'EGP';
   Id? _selectedCategoryId;
-  Id? _selectedAccountId;
   int _reminderDaysBefore = 3;
   bool _isActive = true;
 
@@ -48,7 +47,6 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
       _selectedDay = bill.dayOfSchedule;
       _selectedCurrency = bill.currency;
       _selectedCategoryId = bill.categoryId;
-      _selectedAccountId = bill.accountId;
       _reminderDaysBefore = bill.reminderDaysBefore;
       _isActive = bill.isActive;
       _reminderDaysController.text = _reminderDaysBefore.toString();
@@ -68,16 +66,15 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
   }
 
   DateTime _calculateNextDueDate() {
-    // Create a temporary bill to calculate next due date
     final tempBill = RecurringBill(
       name: _nameController.text,
       amount: 0,
       currency: _selectedCurrency,
       categoryId: _selectedCategoryId ?? 0,
-      accountId: _selectedAccountId ?? 0,
+      accountId: 0,
       frequency: _selectedFrequency,
       dayOfSchedule: _selectedDay,
-      nextDueDate: DateTime.now(), // Will be recalculated
+      nextDueDate: DateTime.now(),
       reminderDaysBefore: _reminderDaysBefore,
       createdAt: widget.bill?.createdAt ?? DateTime.now(),
     );
@@ -90,12 +87,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
         FeedbackService.showWarning(context, 'Please select a category');
         return;
       }
-      if (_selectedAccountId == null) {
-        FeedbackService.showWarning(context, 'Please select an account');
-        return;
-      }
 
-      // Strip commas from formatted numbers before parsing
       final amountText = _amountController.text.replaceAll(',', '');
       final amount = double.tryParse(amountText) ?? 0.0;
       final reminderDays = int.tryParse(_reminderDaysController.text) ?? 3;
@@ -108,7 +100,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
         amount: amount,
         currency: _selectedCurrency,
         categoryId: _selectedCategoryId!,
-        accountId: _selectedAccountId!,
+        accountId: widget.bill?.accountId ?? 0,
         frequency: _selectedFrequency,
         dayOfSchedule: _selectedDay,
         nextDueDate: nextDueDate,
@@ -132,268 +124,316 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final accountsAsync = ref.watch(accountNotifierProvider);
+    final theme = Theme.of(context);
     final categoriesAsync = ref.watch(categoriesProvider);
     final isEditing = widget.bill != null;
 
-    return AlertDialog(
-      title: Text(isEditing ? 'Edit Bill' : 'Add Recurring Bill'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              // Bill Name
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Bill Name',
-                  hintText: 'e.g., Rent, Internet, Gym',
-                  border: OutlineInputBorder(),
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 580),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a bill name';
-                  }
-                  return null;
-                },
               ),
-              const SizedBox(height: 16),
-              // Amount
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  border: OutlineInputBorder(),
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
-                ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [ThousandsSeparatorInputFormatter()],
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  // Strip commas before parsing
-                  final cleanValue = value.replaceAll(',', '');
-                  if (double.tryParse(cleanValue) == null ||
-                      double.parse(cleanValue) <= 0) {
-                    return 'Please enter a valid amount';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Frequency
-              DropdownButtonFormField<String>(
-                initialValue: _selectedFrequency,
-                decoration: const InputDecoration(
-                  labelText: 'Frequency',
-                  border: OutlineInputBorder(),
-                ),
-                items: _frequencies.map((frequency) {
-                  return DropdownMenuItem(
-                    value: frequency,
-                    child: Text(frequency),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedFrequency = value;
-                      // Reset day selection when frequency changes
-                      if (value == 'Weekly') {
-                        _selectedDay = 1; // Monday
-                      } else {
-                        _selectedDay = 1; // 1st of month
-                      }
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              // Day Selection
-              if (_selectedFrequency == 'Weekly')
-                DropdownButtonFormField<int>(
-                  initialValue: _selectedDay,
-                  decoration: const InputDecoration(
-                    labelText: 'Day of Week',
-                    border: OutlineInputBorder(),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.receipt_long_rounded,
+                    color: theme.colorScheme.onPrimaryContainer,
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text('Monday')),
-                    DropdownMenuItem(value: 2, child: Text('Tuesday')),
-                    DropdownMenuItem(value: 3, child: Text('Wednesday')),
-                    DropdownMenuItem(value: 4, child: Text('Thursday')),
-                    DropdownMenuItem(value: 5, child: Text('Friday')),
-                    DropdownMenuItem(value: 6, child: Text('Saturday')),
-                    DropdownMenuItem(value: 7, child: Text('Sunday')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() => _selectedDay = value);
-                    }
-                  },
-                )
-              else
-                TextFormField(
-                  initialValue: _selectedDay.toString(),
-                  decoration: const InputDecoration(
-                    labelText: 'Day of Month',
-                    border: OutlineInputBorder(),
-                    helperText: 'Enter day of month (1-31)',
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isEditing ? 'Edit Bill' : 'Add Recurring Bill',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a day';
-                    }
-                    final day = int.tryParse(value);
-                    if (day == null || day < 1 || day > 31) {
-                      return 'Please enter a valid day (1-31)';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    final day = int.tryParse(value);
-                    if (day != null && day >= 1 && day <= 31) {
-                      setState(() => _selectedDay = day);
-                    }
-                  },
+                  IconButton(
+                    icon: Icon(Icons.close,
+                        color: theme.colorScheme.onPrimaryContainer),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+
+            // Form Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Bill Name
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Bill Name',
+                          hintText: 'e.g., Rent, Internet',
+                          prefixIcon: const Icon(Icons.label_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Amount
+                      TextFormField(
+                        controller: _amountController,
+                        decoration: InputDecoration(
+                          labelText: 'Amount',
+                          prefixIcon: const Icon(Icons.attach_money),
+                          suffixText: 'EGP',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [ThousandsSeparatorInputFormatter()],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Required';
+                          }
+                          final cleanValue = value.replaceAll(',', '');
+                          if (double.tryParse(cleanValue) == null ||
+                              double.parse(cleanValue) <= 0) {
+                            return 'Invalid amount';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Frequency & Day Row
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedFrequency,
+                              decoration: InputDecoration(
+                                labelText: 'Frequency',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 14),
+                              ),
+                              items: _frequencies
+                                  .map((f) => DropdownMenuItem(
+                                      value: f, child: Text(f)))
+                                  .toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _selectedFrequency = value;
+                                    _selectedDay = 1;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 1,
+                            child: _selectedFrequency == 'Weekly'
+                                ? DropdownButtonFormField<int>(
+                                    value: _selectedDay,
+                                    decoration: InputDecoration(
+                                      labelText: 'Day',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 14),
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(
+                                          value: 1, child: Text('Mon')),
+                                      DropdownMenuItem(
+                                          value: 2, child: Text('Tue')),
+                                      DropdownMenuItem(
+                                          value: 3, child: Text('Wed')),
+                                      DropdownMenuItem(
+                                          value: 4, child: Text('Thu')),
+                                      DropdownMenuItem(
+                                          value: 5, child: Text('Fri')),
+                                      DropdownMenuItem(
+                                          value: 6, child: Text('Sat')),
+                                      DropdownMenuItem(
+                                          value: 7, child: Text('Sun')),
+                                    ],
+                                    onChanged: (value) {
+                                      if (value != null)
+                                        setState(() => _selectedDay = value);
+                                    },
+                                  )
+                                : TextFormField(
+                                    initialValue: _selectedDay.toString(),
+                                    decoration: InputDecoration(
+                                      labelText: 'Day',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 14),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      final day = int.tryParse(value);
+                                      if (day != null &&
+                                          day >= 1 &&
+                                          day <= 31) {
+                                        setState(() => _selectedDay = day);
+                                      }
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Category
+                      categoriesAsync.when(
+                        data: (categories) {
+                          final validCategoryId = _selectedCategoryId != null &&
+                                  categories
+                                      .any((c) => c.id == _selectedCategoryId)
+                              ? _selectedCategoryId
+                              : null;
+                          return DropdownButtonFormField<Id>(
+                            value: validCategoryId,
+                            decoration: InputDecoration(
+                              labelText: 'Category',
+                              prefixIcon: const Icon(Icons.category_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            hint: const Text('Select'),
+                            items: categories
+                                .map((c) => DropdownMenuItem(
+                                    value: c.id, child: Text(c.name)))
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => _selectedCategoryId = value),
+                          );
+                        },
+                        loading: () => const LinearProgressIndicator(),
+                        error: (_, __) => const Text('Error'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Reminder & Active Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _reminderDaysController,
+                              decoration: InputDecoration(
+                                labelText: 'Remind before',
+                                suffixText: 'days',
+                                prefixIcon:
+                                    const Icon(Icons.notifications_outlined),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _isActive
+                                  ? theme.colorScheme.primaryContainer
+                                  : theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _isActive ? 'Active' : 'Paused',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: _isActive
+                                        ? theme.colorScheme.onPrimaryContainer
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Switch.adaptive(
+                                  value: _isActive,
+                                  onChanged: (value) =>
+                                      setState(() => _isActive = value),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Note
+                      TextFormField(
+                        controller: _noteController,
+                        decoration: InputDecoration(
+                          labelText: 'Note (Optional)',
+                          prefixIcon: const Icon(Icons.note_alt_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        maxLines: 1,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Submit Button
+                      FilledButton(
+                        onPressed: _saveBill,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(isEditing ? 'Update Bill' : 'Add Bill'),
+                      ),
+                    ],
+                  ),
                 ),
-              const SizedBox(height: 16),
-              // Category
-              categoriesAsync.when(
-                data: (categories) {
-                  // Ensure selected category ID exists in the list
-                  final validCategoryId = _selectedCategoryId != null &&
-                          categories.any((c) => c.id == _selectedCategoryId)
-                      ? _selectedCategoryId
-                      : null;
-                  return DropdownButtonFormField<Id>(
-                    initialValue: validCategoryId,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    hint: const Text('Select category'),
-                    items: categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category.id,
-                        child: Text(category.name),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedCategoryId = value);
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select a category';
-                      }
-                      return null;
-                    },
-                  );
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text('Error loading categories'),
               ),
-              const SizedBox(height: 16),
-              // Account
-              accountsAsync.when(
-                data: (accounts) {
-                  // Ensure selected account ID exists in the list
-                  final validAccountId = _selectedAccountId != null &&
-                          accounts.any((a) => a.id == _selectedAccountId)
-                      ? _selectedAccountId
-                      : null;
-                  return DropdownButtonFormField<Id>(
-                    initialValue: validAccountId,
-                    decoration: const InputDecoration(
-                      labelText: 'Account',
-                      border: OutlineInputBorder(),
-                    ),
-                    hint: const Text('Select account'),
-                    items: accounts.map((account) {
-                      return DropdownMenuItem(
-                        value: account.id,
-                        child: Text(account.name),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedAccountId = value);
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select an account';
-                      }
-                      return null;
-                    },
-                  );
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (_, __) => const Text('Error loading accounts'),
-              ),
-              const SizedBox(height: 16),
-              // Reminder Days Before
-              TextFormField(
-                controller: _reminderDaysController,
-                decoration: const InputDecoration(
-                  labelText: 'Reminder Days Before',
-                  hintText: '3',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter reminder days';
-                  }
-                  final days = int.tryParse(value);
-                  if (days == null || days < 0) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              // Note
-              TextFormField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (Optional)',
-                  hintText: 'Additional notes',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              // Active Toggle
-              SwitchListTile(
-                title: const Text('Active'),
-                subtitle:
-                    const Text('Bill will schedule reminders when active'),
-                value: _isActive,
-                onChanged: (value) {
-                  setState(() => _isActive = value);
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _saveBill,
-          child: Text(isEditing ? 'Update' : 'Add'),
-        ),
-      ],
     );
   }
 }
