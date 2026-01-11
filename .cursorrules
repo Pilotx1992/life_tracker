@@ -1,120 +1,341 @@
-# Life Tracker - Project Rules
+# 🚀 Life Tracker - Expert Flutter Development Rules
 
-## Code Quality & Standards
+> *"Clean code is not written by following a set of rules. You don't become a software craftsman by learning a list of rules. Professionalism and craftsmanship come from values that drive disciplines."* - Robert C. Martin
 
-### Always Follow These Rules:
+---
 
-1. **Read the entire file before modifying it**
-   - Understand the existing structure and patterns
-   - Check all imports and dependencies
-   - Note any potential conflicts
+## 📋 Project Context
 
-2. **Use theme colors, never hardcoded colors**
-   - ❌ Bad: `Colors.black87`, `Colors.white`
-   - ✅ Good: `Theme.of(context).colorScheme.onSurface`
-   - ✅ Good: `Theme.of(context).colorScheme.surface`
-
-3. **Always check `context.mounted` after async operations**
-   ```dart
-   await someAsyncOperation();
-   if (!context.mounted) return;
-   Navigator.pop(context);
-   ```
-
-4. **Use `const` constructors wherever possible**
-   - Improves performance and reduces rebuilds
-   - ✅ Good: `const SizedBox(height: 16)`
-
-5. **Follow existing code patterns**
-   - Match the style and structure of the file you're editing
-   - Don't introduce new patterns unless necessary
-
-6. **Verify file paths before editing**
-   - Widgets are in `lib/shared/widgets/states/` not root
-   - Theme files are in `lib/core/constants/` not `lib/core/theme/`
-
-7. **Test after every change**
-   - Run `flutter analyze` before committing
-   - Test manually on both Light and Dark modes
-   - Test RTL layout if layout changed
-
-## File Organization
-
-### Import Order:
-```dart
-// 1. Dart imports
-import 'dart:async';
-
-// 2. Flutter imports
-import 'package:flutter/material.dart';
-
-// 3. Package imports
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// 4. Local imports
-import 'package:life_tracker/core/constants/app_colors.dart';
+```yaml
+Project: Life Tracker
+Type: Flutter Mobile Application
+Architecture: Clean Architecture with Feature-First Structure
+State Management: Riverpod 2.x (with code generation)
+Navigation: GoRouter
+Database: Isar (Local NoSQL)
+Localization: Flutter Intl (English & Arabic RTL)
+Min SDK: Flutter 3.x, Dart 3.x
 ```
 
-### Common File Paths:
-- Empty State: `lib/shared/widgets/states/empty_state_widget.dart`
-- Loading: `lib/shared/widgets/states/loading_widget.dart`
-- Error: `lib/shared/widgets/states/error_widget.dart`
-- Theme: `lib/core/constants/app_theme.dart`
-- Colors: `lib/core/constants/app_colors.dart`
+---
 
-## Architecture Rules
+## 🏗️ Architecture Overview
 
-1. **Clean Architecture**
-   - Data → Domain → Presentation layers
-   - Use Repository pattern for data access
-   - Use UseCases for business logic
+```
+lib/
+├── core/                          # Cross-cutting concerns
+│   ├── constants/                 # ✅ PRIMARY theme files
+│   │   ├── app_theme.dart         # Main theme (Google Fonts)
+│   │   ├── app_colors.dart        # Color definitions
+│   │   └── app_design_tokens.dart # Spacing, sizing tokens
+│   ├── services/                  # App-wide services
+│   │   ├── feedback_service.dart  # ✅ SnackBar/Toast handling
+│   │   ├── notification_service.dart
+│   │   ├── backup_service.dart
+│   │   └── ...
+│   ├── router/                    # Navigation (GoRouter)
+│   └── utils/                     # Helper functions
+├── shared/
+│   └── widgets/
+│       ├── states/                # ⚠️ State widgets HERE!
+│       │   ├── empty_state_widget.dart
+│       │   ├── loading_widget.dart
+│       │   ├── error_widget.dart
+│       │   ├── skeleton_widgets.dart  # ✅ Shimmer skeletons
+│       │   └── states.dart        # Barrel file
+│       ├── animations/
+│       ├── buttons/
+│       ├── fields/
+│       ├── forms/
+│       └── layout/
+└── features/
+    ├── dashboard/
+    ├── finance/
+    ├── health/
+    ├── notes/
+    ├── reminders/
+    └── settings/
+```
 
-2. **State Management**
-   - Use Riverpod for state management
-   - Use `ref.watch` for UI updates
-   - Use `ref.read` for actions
-   - Use `.select()` for partial rebuilds when possible
+---
 
-3. **Navigation**
-   - Use GoRouter for navigation
-   - Always use `context.push()` or `context.go()`
-   - Never use `Navigator.push()` directly
+## 🎯 Golden Rules (NEVER BREAK)
 
-## Error Prevention
+### 1️⃣ Theme Colors - ZERO Hardcoding
 
-1. **Never delete files without verification**
-   - Search for imports: `grep -r "path/to/file" lib/`
-   - Update imports first, then delete
+```dart
+// ❌ FORBIDDEN - Will break in dark mode
+color: Colors.black
+color: Colors.white  
+color: Colors.grey.shade300
+backgroundColor: Colors.blue
 
-2. **One task at a time**
-   - Complete task → Test → Commit → Next task
-   - Don't mix multiple changes in one commit
+// ✅ MANDATORY - Theme-aware colors
+color: Theme.of(context).colorScheme.onSurface
+color: Theme.of(context).colorScheme.surface
+color: Theme.of(context).dividerColor
+backgroundColor: Theme.of(context).colorScheme.primary
+```
 
-3. **Small, focused commits**
-   - One logical change per commit
-   - Clear commit messages: `feat(ux-ui): Add RefreshIndicator to expenses_screen`
+#### Complete Color Migration Table:
 
-## Testing Requirements
+| Hardcoded ❌ | Theme Equivalent ✅ | Usage |
+|-------------|---------------------|-------|
+| `Colors.black` | `colorScheme.onSurface` | Primary text |
+| `Colors.black87` | `colorScheme.onSurface` | Primary text |
+| `Colors.black54` | `colorScheme.onSurface.withValues(alpha: 0.6)` | Secondary text |
+| `Colors.white` | `colorScheme.surface` | Backgrounds |
+| `Colors.grey` | `colorScheme.outline` | Borders, dividers |
+| `Colors.grey.shade100` | `colorScheme.surfaceContainerHighest` | Subtle backgrounds |
+| `Colors.grey.shade300` | `Theme.of(context).dividerColor` | Dividers |
+| `Colors.red` | `colorScheme.error` | Errors, destructive |
+| `Colors.green` | `colorScheme.tertiary` | Success states |
+| `Colors.blue` | `colorScheme.primary` | Primary actions |
 
-Before committing any change:
-- [ ] `flutter analyze` passes
-- [ ] App builds successfully
-- [ ] Manual testing passes
-- [ ] Dark mode tested (if UI changed)
-- [ ] RTL tested (if layout changed)
-- [ ] No breaking changes
+> **⚠️ IMPORTANT:** Use `withValues(alpha: x)` instead of deprecated `withOpacity(x)`
 
-## Documentation
+---
 
-- Update progress in `UX_UI_COMPLETION_PLAN.md` after completing tasks
-- Document any deviations from the plan
-- Add comments for complex logic
+### 2️⃣ Async Context Safety
 
-## Out of Scope
+```dart
+// ❌ DANGEROUS - Context may be invalid
+Future<void> _saveData() async {
+  await repository.save(data);
+  Navigator.pop(context);  // 💥 CRASH if widget disposed
+  ScaffoldMessenger.of(context).showSnackBar(...);  // 💥 CRASH
+}
 
-- ❌ New charts or graphs (keep existing ones only)
-- ❌ New external packages (unless absolutely necessary)
-- ❌ Major architectural changes
-- ❌ New features not in the current plan
-- ❌ Database schema changes
+// ✅ SAFE - Always check mounted
+Future<void> _saveData() async {
+  try {
+    await repository.save(data);
+    
+    if (!context.mounted) return;  // ✅ Critical check
+    
+    FeedbackService.showSuccess(context, 'Saved!');
+    Navigator.pop(context);
+    
+  } catch (e) {
+    if (!context.mounted) return;  // ✅ Also in catch
+    FeedbackService.showError(context, e.toString());
+  }
+}
+```
 
+---
+
+### 3️⃣ Three-State Pattern (MANDATORY)
+
+Every screen displaying async data MUST handle ALL states:
+
+```dart
+@override
+Widget build(BuildContext context) {
+  final dataAsync = ref.watch(dataProvider);
+  
+  return dataAsync.when(
+    // 1️⃣ LOADING - Show skeleton or spinner
+    loading: () => const SkeletonList.cards(itemCount: 5),
+    
+    // 2️⃣ ERROR - Show error with retry
+    error: (error, stack) => ErrorStateWidget(
+      message: _getUserFriendlyError(error),
+      onRetry: () => ref.invalidate(dataProvider),
+    ),
+    
+    // 3️⃣ DATA - Handle empty AND populated
+    data: (items) {
+      if (items.isEmpty) {
+        return EmptyStateWidget(
+          icon: Icons.inbox_outlined,
+          message: context.l10n.noItemsYet,
+          actionLabel: context.l10n.addFirst,
+          onAction: () => _showAddDialog(context),
+        );
+      }
+      return _buildList(items);
+    },
+  );
+}
+```
+
+---
+
+## ⚡ Performance Optimization
+
+### ListView Best Practices
+
+```dart
+// ❌ SLOW - Creates all widgets upfront
+ListView(
+  children: items.map((item) => ItemCard(item: item)).toList(),
+)
+
+// ✅ FAST - Lazy builds only visible items
+ListView.builder(
+  cacheExtent: 500,                          // Pre-render 500px ahead
+  addAutomaticKeepAlives: false,             // Reduce memory usage
+  addRepaintBoundaries: true,                // Reduce repaints
+  physics: const AlwaysScrollableScrollPhysics(), // Enable pull-to-refresh
+  
+  itemCount: items.length,
+  itemBuilder: (context, index) {
+    return KeyedSubtree(
+      key: ValueKey(items[index].id),
+      child: ItemCard(item: items[index]),
+    );
+  },
+)
+```
+
+### Provider Optimization
+
+```dart
+// ❌ INEFFICIENT - Rebuilds on ANY change
+final account = ref.watch(accountProvider);
+
+// ✅ EFFICIENT - Rebuilds only when specific value changes  
+final balance = ref.watch(
+  accountProvider.select((account) => account.balance),
+);
+
+// ✅ For multiple values, use records
+final (balance, name) = ref.watch(
+  accountProvider.select((a) => (a.balance, a.name)),
+);
+```
+
+---
+
+## 🔄 State Management Patterns
+
+### Refresh Pattern (with RefreshIndicator)
+
+```dart
+RefreshIndicator(
+  onRefresh: () async {
+    ref.invalidate(dataProvider);
+    await ref.read(dataProvider.future);
+  },
+  child: ListView.builder(
+    physics: const AlwaysScrollableScrollPhysics(),
+    cacheExtent: 500,
+    itemCount: items.length,
+    itemBuilder: (context, index) => ItemCard(item: items[index]),
+  ),
+)
+```
+
+---
+
+## 🌍 RTL & Internationalization
+
+### Directional Properties
+
+| Non-Directional ❌ | Directional ✅ |
+|-------------------|----------------|
+| `EdgeInsets.only(left:)` | `EdgeInsetsDirectional.only(start:)` |
+| `EdgeInsets.only(right:)` | `EdgeInsetsDirectional.only(end:)` |
+| `Alignment.centerLeft` | `AlignmentDirectional.centerStart` |
+| `Alignment.centerRight` | `AlignmentDirectional.centerEnd` |
+| `BorderRadius.only(topLeft:)` | `BorderRadiusDirectional.only(topStart:)` |
+| `TextAlign.left` | `TextAlign.start` |
+
+---
+
+## 🎨 UI Component Standards
+
+### Skeleton Loading (Shimmer)
+
+```dart
+// For list screens
+loading: () => const SkeletonList.cards(itemCount: 5),
+
+// For tile lists
+loading: () => const SkeletonList.listTiles(itemCount: 8),
+```
+
+### FeedbackService Usage
+
+```dart
+// ✅ Use FeedbackService instead of ScaffoldMessenger
+FeedbackService.showSuccess(context, 'Item saved!');
+FeedbackService.showError(context, 'Failed to save');
+FeedbackService.showInfo(context, 'Processing...');
+```
+
+### Button Guidelines
+
+```dart
+// Primary action
+FilledButton(onPressed: _submit, child: const Text('Submit'))
+
+// Secondary action  
+OutlinedButton(onPressed: _cancel, child: const Text('Cancel'))
+
+// Destructive action
+FilledButton(
+  onPressed: _delete,
+  style: FilledButton.styleFrom(
+    backgroundColor: Theme.of(context).colorScheme.error,
+  ),
+  child: const Text('Delete'),
+)
+```
+
+---
+
+## 📁 File Path Reference
+
+```dart
+// ✅ State widgets
+import 'package:life_tracker/shared/widgets/states/states.dart';
+// Or individual:
+import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
+import 'package:life_tracker/shared/widgets/states/loading_widget.dart';
+import 'package:life_tracker/shared/widgets/states/error_widget.dart';
+import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
+
+// ✅ Theme (PRIMARY)
+import 'package:life_tracker/core/constants/app_theme.dart';
+import 'package:life_tracker/core/constants/app_colors.dart';
+import 'package:life_tracker/core/constants/app_design_tokens.dart';
+
+// ✅ Services
+import 'package:life_tracker/core/services/feedback_service.dart';
+
+// ❌ AVOID (old paths)
+import 'package:life_tracker/core/theme/app_theme.dart';  // Don't use
+```
+
+---
+
+## ✅ Pre-Commit Checklist
+
+- [ ] `flutter analyze` shows 0 errors, 0 warnings
+- [ ] No hardcoded colors (search for `Colors.`)
+- [ ] No missing `context.mounted` checks after async
+- [ ] Using `withValues(alpha:)` not `withOpacity()`
+- [ ] Light/Dark mode tested
+- [ ] RTL layout tested (if applicable)
+
+**Commit Format:** `type(scope): message`  
+**Example:** `feat(finance): Add RefreshIndicator to expenses screen`
+
+---
+
+## 🐛 Common Issues & Fixes
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| Widget overflow | Fixed width in Row/Column | Use `Expanded`/`Flexible` |
+| Colors wrong in dark mode | Hardcoded colors | Use theme colors |
+| Crash on navigation | Using context after async | Add `mounted` check |
+| List not refreshing | Missing invalidate | Call `ref.invalidate()` |
+| Empty list not scrollable | Missing physics | Add `AlwaysScrollableScrollPhysics` |
+| Deprecated warning | Using `withOpacity` | Use `withValues(alpha:)` |
+
+---
+
+*"Any fool can write code that a computer can understand. Good programmers write code that humans can understand."* - Martin Fowler

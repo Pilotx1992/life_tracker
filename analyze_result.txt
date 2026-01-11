@@ -1,0 +1,133 @@
+﻿Analyzing life_tracker...                                       
+
+   info - Statements in an if should be enclosed in a block - lib\core\services\health_service.dart:233:9 - curly_braces_in_flow_control_structures
+   info - Missing a required trailing comma - lib\core\services\health_service.dart:251:16 - require_trailing_commas
+   info - Statements in an if should be enclosed in a block - lib\core\services\health_service.dart:269:9 - curly_braces_in_flow_control_structures
+   info - Missing a required trailing comma - lib\core\services\health_service.dart:287:16 - require_trailing_commas
+   info - Use 'const' for final variables initialized to a constant value - lib\core\services\notification_service.dart:67:7 - prefer_const_declarations
+   info - Missing a required trailing comma - lib\core\services\notification_service.dart:123:80 - require_trailing_commas
+   info - Missing a required trailing comma - lib\core\services\notification_service.dart:144:78 - require_trailing_commas
+   info - Missing a required trailing comma - lib\core\services\notification_service.dart:178:88 - require_trailing_commas
+   info - Missing a required trailing comma - lib\core\services\notification_service.dart:338:81 - require_trailing_commas
+   info - Missing a required trailing comma - lib\core\services\stand_hours_service.dart:104:63 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\data\repositories\bill_repository_impl.dart:187:51 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\data\repositories\bill_repository_impl.dart:206:51 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\data\repositories\bill_repository_impl.dart:208:75 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\providers\bill_provider.dart:276:63 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\screens\bills_screen.dart:117:75 - require_trailing_commas
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\finance\presentation\widgets\add_bill_dialog.dart:2:8 - unnecessary_import
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:165:68 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:215:42 - require_trailing_commas
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\finance\presentation\widgets\add_bill_dialog.dart:237:31 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:244:65 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:248:63 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:248:64 - require_trailing_commas
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\finance\presentation\widgets\add_bill_dialog.dart:265:37 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:273:75 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:277:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:279:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:281:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:283:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:285:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:287:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:289:71 - require_trailing_commas
+   info - Statements in an if should be enclosed in a block - lib\features\finance\presentation\widgets\add_bill_dialog.dart:293:41 - curly_braces_in_flow_control_structures
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:305:75 - require_trailing_commas
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\finance\presentation\widgets\add_bill_dialog.dart:331:29 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:342:69 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:342:70 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_bill_dialog.dart:374:60 - require_trailing_commas
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\finance\presentation\widgets\add_installment_dialog.dart:202:58 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\finance\presentation\widgets\add_installment_dialog.dart:409:23 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\finance\presentation\widgets\add_installment_dialog.dart:572:17 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_installment_dialog.dart:587:67 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_installment_dialog.dart:589:71 - require_trailing_commas
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\finance\presentation\widgets\add_installment_dialog.dart:600:17 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\add_installment_dialog.dart:614:74 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\installment_list_item.dart:132:66 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\make_payment_dialog.dart:245:42 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\finance\presentation\widgets\make_payment_dialog.dart:304:63 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\health\data\repositories\smart_activity_repository.dart:117:52 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\health\data\repositories\smart_activity_repository.dart:128:8 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\health\data\repositories\smart_activity_repository.dart:141:45 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\health\data\repositories\smart_activity_repository.dart:151:50 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\health\data\repositories\smart_activity_repository.dart:162:8 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\health\data\repositories\smart_activity_repository.dart:175:32 - require_trailing_commas
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\health\presentation\screens\health_screen.dart:459:60 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\health\presentation\widgets\health_summary_card.dart:29:56 - require_trailing_commas
+   info - Don't use 'BuildContext's across async gaps - lib\features\notes\presentation\screens\notes_screen.dart:682:17 - use_build_context_synchronously
+   info - Missing a required trailing comma - lib\features\notes\presentation\widgets\attachment_widget.dart:89:77 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\notes\presentation\widgets\note_card.dart:141:61 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\notes\presentation\widgets\note_list_item.dart:169:61 - require_trailing_commas
+   info - Statements in an if should be enclosed in a block - lib\features\reminders\presentation\providers\reminder_provider.dart:106:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\reminders\presentation\providers\reminder_provider.dart:141:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\reminders\presentation\providers\reminder_provider.dart:189:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\reminders\presentation\providers\reminder_provider.dart:225:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\reminders\presentation\providers\reminder_provider.dart:268:11 - curly_braces_in_flow_control_structures
+   info - Missing a required trailing comma - lib\features\reminders\presentation\providers\reminder_provider.dart:324:71 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\presentation\screens\reminders_screen.dart:242:61 - require_trailing_commas
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\reminders\presentation\widgets\add_reminder_dialog.dart:386:19 - deprecated_member_use
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:38:78 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:46:96 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:59:75 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:72:86 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:133:76 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:161:84 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:176:87 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:189:31 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:195:83 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:213:81 - require_trailing_commas
+   info - Missing a required trailing comma - lib\features\reminders\services\reminder_notification_service.dart:225:86 - require_trailing_commas
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\app_lock_setup_screen.dart:285:19 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\app_lock_setup_screen.dart:286:19 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\backup_screen.dart:371:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\backup_screen.dart:372:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\backup_screen.dart:382:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\backup_screen.dart:383:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:294:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:295:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:305:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:306:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:316:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:317:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:341:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:342:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:356:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:357:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:402:17 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:403:17 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:437:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:438:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:462:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:463:15 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:473:15 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\settings\presentation\screens\settings_screen.dart:474:15 - deprecated_member_use
+   info - Unnecessary 'const' keyword - lib\shared\widgets\states\skeleton_widgets.dart:264:11 - unnecessary_const
+   info - Unnecessary 'const' keyword - lib\shared\widgets\states\skeleton_widgets.dart:273:11 - unnecessary_const
+   info - Unnecessary 'const' keyword - lib\shared\widgets\states\skeleton_widgets.dart:274:11 - unnecessary_const
+   info - Unnecessary 'const' keyword - lib\shared\widgets\states\skeleton_widgets.dart:275:11 - unnecessary_const
+   info - Unnecessary 'const' keyword - lib\shared\widgets\states\skeleton_widgets.dart:276:11 - unnecessary_const
+   info - Dependencies not sorted alphabetically - pubspec.yaml:43:3 - sort_pub_dependencies
+   info - Dependencies not sorted alphabetically - pubspec.yaml:68:3 - sort_pub_dependencies
+
+flutter : 109 issues 
+found. (ran in 8.4s)
+At line:1 char:1
++ flutter analyze 
+2>&1 | Out-File 
+-FilePath 
+analyze_result.txt 
+-Encodin ...
++ 
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (109 iss   
+ ues found. (ran     
+in 8.4s):String)     
+[], RemoteExcep    
+tion
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 

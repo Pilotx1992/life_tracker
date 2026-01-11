@@ -247,21 +247,24 @@ final appRouter = GoRouter(
       builder: (context, state) => const NotificationTestScreen(),
     ),
   ],
-  errorBuilder: (context, state) => Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
-          const SizedBox(height: 16),
-          Text('Page not found: ${state.uri}'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.go(AppRoutes.dashboard),
-            child: const Text('Go to Dashboard'),
-          ),
-        ],
+  errorBuilder: (context, state) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
+            const SizedBox(height: 16),
+            Text('Page not found: ${state.uri}'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context.go(AppRoutes.dashboard),
+              child: const Text('Go to Dashboard'),
+            ),
+          ],
+        ),
       ),
-    ),
-  ),
+    );
+  },
 );

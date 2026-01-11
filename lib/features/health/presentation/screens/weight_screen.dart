@@ -374,7 +374,7 @@ class _WeightScreenState extends ConsumerState<WeightScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 4, right: 8),
               child: Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: Text(
                   'Compared to last time',
                   style: TextStyle(

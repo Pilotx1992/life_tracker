@@ -2,10 +2,6 @@
 description: UX/UI implementation workflows for Life Tracker project
 ---
 
----
-description: UX/UI implementation workflows for Life Tracker project
----
-
 # 🔄 UX/UI Workflows
 
 ## 📋 Quick Commands
@@ -53,6 +49,7 @@ flutter analyze                   # Check errors
 | Hardcoded ❌ | Theme ✅ |
 |-------------|----------|
 | `Colors.black` | `colorScheme.onSurface` |
+| `Colors.black54` | `colorScheme.onSurface.withValues(alpha: 0.6)` |
 | `Colors.white` | `colorScheme.surface` |
 | `Colors.grey` | `colorScheme.outline` |
 | `Colors.grey.shade300` | `dividerColor` |
@@ -60,8 +57,9 @@ flutter analyze                   # Check errors
 | `Colors.blue` | `colorScheme.primary` |
 | `Colors.green` | `colorScheme.tertiary` |
 
-3. `flutter analyze`
-4. Test Light + Dark
+3. **IMPORTANT**: Use `withValues(alpha: x)` NOT `withOpacity(x)`
+4. `flutter analyze`
+5. Test Light + Dark
 
 ---
 
@@ -69,7 +67,7 @@ flutter analyze                   # Check errors
 
 ```dart
 return dataAsync.when(
-  loading: () => const LoadingWidget(useShimmer: true),
+  loading: () => const SkeletonList.cards(itemCount: 5),
   error: (e, _) => ErrorStateWidget(
     message: e.toString(),
     onRetry: () => ref.invalidate(provider),
@@ -78,8 +76,8 @@ return dataAsync.when(
     if (items.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.inbox,
-        message: 'No items',
-        actionLabel: 'Add First',
+        message: context.l10n.noItems,
+        actionLabel: context.l10n.addFirst,
         onAction: _add,
       );
     }
@@ -117,7 +115,6 @@ ListView.builder(
   cacheExtent: 500,
   addAutomaticKeepAlives: false,
   physics: const AlwaysScrollableScrollPhysics(),
-  itemExtent: 72,  // If fixed height
   itemBuilder: (ctx, i) => KeyedSubtree(
     key: ValueKey(items[i].id),
     child: ItemCard(item: items[i]),
@@ -144,112 +141,25 @@ final (balance, name) = ref.watch(
 
 ---
 
-## /create-feedback-service
-
-Path: `lib/core/services/feedback_service.dart`
+## /show-feedback
 
 ```dart
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-class FeedbackService {
-  FeedbackService._();
-
-  static void showSuccess(BuildContext context, String message) {
-    HapticFeedback.lightImpact();
-    _show(context, message, Colors.green.shade700, Icons.check_circle);
-  }
-
-  static void showError(BuildContext context, String message) {
-    HapticFeedback.heavyImpact();
-    _show(context, message, Colors.red.shade700, Icons.error);
-  }
-
-  static void showInfo(BuildContext context, String message) {
-    _show(context, message, Colors.blue.shade700, Icons.info);
-  }
-
-  static void _show(BuildContext ctx, String msg, Color color, IconData icon) {
-    ScaffoldMessenger.of(ctx).clearSnackBars();
-    ScaffoldMessenger.of(ctx).showSnackBar(
-      SnackBar(
-        content: Row(children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 12),
-          Expanded(child: Text(msg)),
-        ]),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-}
+// ✅ Use FeedbackService instead of ScaffoldMessenger
+FeedbackService.showSuccess(context, 'Saved!');
+FeedbackService.showError(context, 'Failed');
+FeedbackService.showInfo(context, 'Processing...');
 ```
 
 ---
 
-## /enhance-loading-widget
-
-Path: `lib/shared/widgets/states/loading_widget.dart`
+## /skeleton-loading
 
 ```dart
-class LoadingWidget extends StatelessWidget {
-  final bool useShimmer;
-  const LoadingWidget({super.key, this.useShimmer = true});
+// For card lists
+loading: () => const SkeletonList.cards(itemCount: 5),
 
-  @override
-  Widget build(BuildContext context) {
-    if (!useShimmer) return const Center(child: CircularProgressIndicator());
-    return const _ShimmerList();
-  }
-}
-
-class _ShimmerList extends StatefulWidget {
-  const _ShimmerList();
-  @override
-  State<_ShimmerList> createState() => _ShimmerListState();
-}
-
-class _ShimmerListState extends State<_ShimmerList>
-    with SingleTickerProviderStateMixin {
-  late final _ctrl = AnimationController(
-    vsync: this, duration: const Duration(milliseconds: 1500))..repeat();
-  late final _anim = Tween<double>(begin: -1, end: 2).animate(_ctrl);
-
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
-    final highlight = isDark ? Colors.grey.shade700 : Colors.grey.shade100;
-
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (ctx, _) => ListView.builder(
-        itemCount: 3,
-        padding: const EdgeInsets.all(16),
-        itemBuilder: (_, i) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Container(
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                begin: Alignment(_anim.value - 1, 0),
-                end: Alignment(_anim.value, 0),
-                colors: [base, highlight, base],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// For tile lists
+loading: () => const SkeletonList.listTiles(itemCount: 8),
 ```
 
 ---
@@ -297,27 +207,26 @@ grep -r "core/theme/app_colors" lib/
 
 ---
 
-## /quick-wins
+## 📁 Correct Import Paths
 
-// turbo-all
+```dart
+// ✅ State widgets
+import 'package:life_tracker/shared/widgets/states/states.dart';
+import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
+import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
+import 'package:life_tracker/shared/widgets/states/error_widget.dart';
 
-1. `/create-feedback-service`
-2. `/verify-theme-files`
-3. Add RefreshIndicator to expenses, incomes, debts
-4. `flutter analyze`
-5. Update plan
+// ✅ Services
+import 'package:life_tracker/core/services/feedback_service.dart';
 
----
+// ✅ Theme (PRIMARY)
+import 'package:life_tracker/core/constants/app_theme.dart';
+import 'package:life_tracker/core/constants/app_colors.dart';
+import 'package:life_tracker/core/constants/app_design_tokens.dart';
 
-## /complete-phase-1
-
-// turbo-all
-
-1. `/verify-theme-files`
-2. Migrate imports if needed
-3. `/check-delete-file` for duplicates
-4. `/enhance-loading-widget`
-5. `flutter analyze`
+// ❌ AVOID (old paths)
+import 'package:life_tracker/core/theme/app_theme.dart';  // Don't use
+```
 
 ---
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -35,6 +36,15 @@ class _AlarmRingingScreenState extends ConsumerState<AlarmRingingScreen> {
 
   @override
   void dispose() {
+    // Stop ringing when leaving the alarm screen
+    try {
+      if (_reminder?.id != null) {
+        ref.read(alarmServiceProvider).stopRinging(_reminder!.id!);
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ Failed to stop ringing: $e');
+    }
+
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
@@ -51,9 +61,13 @@ class _AlarmRingingScreenState extends ConsumerState<AlarmRingingScreen> {
         _isLoading = false;
       });
 
-      // Start ringing if alarm service is available
-      // Note: AlarmService should be injected via provider
-      // For now, we'll handle this in the provider integration
+      // Start ringing using AlarmService when the screen loads
+      try {
+        final alarmService = ref.read(alarmServiceProvider);
+        await alarmService.startRinging(reminder);
+      } catch (e) {
+        if (kDebugMode) debugPrint('⚠️ Failed to start ringing: $e');
+      }
     } catch (e) {
       setState(() {
         _isLoading = false;

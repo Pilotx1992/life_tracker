@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:life_tracker/core/router/app_router.dart';
 
 /// Simple NotificationService scaffold.
 /// - Initializes flutter_local_notifications
@@ -74,6 +75,25 @@ class NotificationService {
             (NotificationResponse response) async {
           if (kDebugMode) {
             debugPrint('🔔 Notification tapped: ${response.payload}');
+          }
+
+          // Handle alarm payloads - navigate to alarm ringing screen when user taps
+          try {
+            final payload = response.payload ?? '';
+            if (payload.startsWith('alarm|')) {
+              final parts = payload.split('|');
+              final idStr = parts.length > 1 ? parts[1] : null;
+              final id = idStr == null ? null : int.tryParse(idStr);
+              if (id != null) {
+                // Use GoRouter to navigate to alarm ringing route
+                appRouter.go('${AppRoutes.alarmRinging}?id=$id');
+              }
+            }
+          } catch (e, s) {
+            if (kDebugMode) {
+              debugPrint('⚠️ Failed to handle notification tap: $e');
+              debugPrint('Stack: $s');
+            }
           }
         },
       );

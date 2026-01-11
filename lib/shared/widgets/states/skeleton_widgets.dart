@@ -261,7 +261,7 @@ class StatCardSkeleton extends StatelessWidget {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               ShimmerBox(width: 36, height: 36, borderRadius: 8),
               SizedBox(width: AppDesignTokens.space12),
@@ -270,10 +270,10 @@ class StatCardSkeleton extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppDesignTokens.space16),
-          const ShimmerBox(width: 100, height: 28, borderRadius: 4),
-          const SizedBox(height: AppDesignTokens.space8),
-          const ShimmerBox(width: 60, height: 12, borderRadius: 4),
+          SizedBox(height: AppDesignTokens.space16),
+          ShimmerBox(width: 100, height: 28, borderRadius: 4),
+          SizedBox(height: AppDesignTokens.space8),
+          ShimmerBox(width: 60, height: 12, borderRadius: 4),
         ],
       ),
     );

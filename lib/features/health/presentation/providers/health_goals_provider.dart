@@ -14,7 +14,7 @@ final healthGoalsProvider = Provider<List<HealthGoal>>((ref) {
     ),
     const HealthGoal(
       type: 'calories',
-      target: 2000,
+      target: 500,
       current: 0,
       period: 'daily',
     ),

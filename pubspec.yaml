@@ -40,28 +40,22 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.3
   permission_handler: ^11.3.0
+  flutter_sound: ^9.16.3  # For voice recording
+  flutter_timezone: ^3.0.1
+  just_audio: ^0.9.40  # For better audio control
+  open_filex: ^4.5.0
+  pedometer: ^4.0.1
   riverpod_annotation: ^2.3.5
   shared_preferences: ^2.5.3
   timezone: ^0.9.3
-  flutter_timezone: ^3.0.1
   url_launcher: ^6.3.2
   uuid: ^4.4.1
-
-  # Audio recording
-  open_filex: ^4.5.0
-  flutter_sound: ^9.16.3  # For voice recording
-  
-  # Alarm system
   vibration: ^3.1.4  # For vibration support
-  just_audio: ^0.9.40  # For better audio control
-
-  # Step counting from device sensor
-  pedometer: ^4.0.1
 
 dev_dependencies:
-  # Dev dependencies (sorted alphabetically)
   build_runner: ^2.4.9
   flutter_lints: ^4.0.0
+  flutter_local_notifications_platform_interface: any
   flutter_test:
     sdk: flutter
   freezed: ^2.5.2
@@ -71,8 +65,15 @@ dev_dependencies:
   json_serializable: ^6.8.0
   mockito: ^5.4.4
   riverpod_generator: ^2.4.0
+  flutter_launcher_icons: ^0.13.1
 
-  flutter_local_notifications_platform_interface: any
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/Icon.png"
+  remove_alpha_ios: true
+  min_sdk_android: 21 # android min sdk min:16, default 21
+
 flutter:
   uses-material-design: true
 

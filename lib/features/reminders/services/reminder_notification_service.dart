@@ -66,7 +66,7 @@ class ReminderNotificationService {
       // Use AlarmService if alarm is enabled
       if (reminder.hasAlarm && _alarmService != null) {
         try {
-          await _alarmService!.scheduleAlarm(reminder);
+          await _alarmService.scheduleAlarm(reminder);
           if (kDebugMode) {
             debugPrint(
                 '⏰ ReminderNotification: Scheduled ALARM for reminder ${reminder.id}');
@@ -155,7 +155,7 @@ class ReminderNotificationService {
       // Cancel alarm if it exists
       if (_alarmService != null) {
         try {
-          await _alarmService!.cancelAlarm(reminderId);
+          await _alarmService.cancelAlarm(reminderId);
           if (kDebugMode) {
             debugPrint(
                 '🚫 ReminderNotification: Cancelled alarm for reminder $reminderId');

@@ -9,7 +9,8 @@ import 'package:life_tracker/features/notes/presentation/widgets/note_card.dart'
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/note_list_item.dart';
 import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
-import 'package:life_tracker/shared/widgets/states/error_widget.dart' as error_widget;
+import 'package:life_tracker/shared/widgets/states/error_widget.dart'
+    as error_widget;
 import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
 import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
@@ -679,6 +680,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
       }
     }
 
+    if (!context.mounted) return;
     _deleteNote(context, note);
   }
 
