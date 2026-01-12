@@ -124,3 +124,6 @@ DerivedData/
 
 # Exceptions to above rules
 !**/generated_plugin_registrant.dart
+
+# Auto Claude data directory
+.auto-claude/
