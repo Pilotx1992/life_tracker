@@ -1,0 +1,34 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
+  },
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Read(C:\\Users\\X\\life_tracker/**)",
+      "Write(C:\\Users\\X\\life_tracker/**)",
+      "Edit(C:\\Users\\X\\life_tracker/**)",
+      "Glob(C:\\Users\\X\\life_tracker/**)",
+      "Grep(C:\\Users\\X\\life_tracker/**)",
+      "Read(C:\\Users\\X\\life_tracker\\.auto-claude\\specs\\001-examine-ux-ui/**)",
+      "Write(C:\\Users\\X\\life_tracker\\.auto-claude\\specs\\001-examine-ux-ui/**)",
+      "Edit(C:\\Users\\X\\life_tracker\\.auto-claude\\specs\\001-examine-ux-ui/**)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__context7__resolve-library-id(*)",
+      "mcp__context7__get-library-docs(*)",
+      "mcp__graphiti-memory__search_nodes(*)",
+      "mcp__graphiti-memory__search_facts(*)",
+      "mcp__graphiti-memory__add_episode(*)",
+      "mcp__graphiti-memory__get_episodes(*)",
+      "mcp__graphiti-memory__get_entity_edge(*)"
+    ]
+  }
+}
