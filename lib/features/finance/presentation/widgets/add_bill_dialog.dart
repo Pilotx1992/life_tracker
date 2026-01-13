@@ -161,7 +161,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                   ),
                   IconButton(
                     icon: Icon(Icons.close,
-                        color: theme.colorScheme.onPrimaryContainer),
+                        color: theme.colorScheme.onPrimaryContainer,),
                     onPressed: () => Navigator.pop(context),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -211,7 +211,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                           ),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                            decimal: true,),
                         inputFormatters: [ThousandsSeparatorInputFormatter()],
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -233,18 +233,18 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                           Expanded(
                             flex: 2,
                             child: DropdownButtonFormField<String>(
-                              value: _selectedFrequency,
+                              initialValue: _selectedFrequency,
                               decoration: InputDecoration(
                                 labelText: 'Frequency',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 14),
+                                    horizontal: 12, vertical: 14,),
                               ),
                               items: _frequencies
                                   .map((f) => DropdownMenuItem(
-                                      value: f, child: Text(f)))
+                                      value: f, child: Text(f),),)
                                   .toList(),
                               onChanged: (value) {
                                 if (value != null) {
@@ -261,7 +261,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                             flex: 1,
                             child: _selectedFrequency == 'Weekly'
                                 ? DropdownButtonFormField<int>(
-                                    value: _selectedDay,
+                                    initialValue: _selectedDay,
                                     decoration: InputDecoration(
                                       labelText: 'Day',
                                       border: OutlineInputBorder(
@@ -269,27 +269,28 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                                       ),
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 14),
+                                              horizontal: 12, vertical: 14,),
                                     ),
                                     items: const [
                                       DropdownMenuItem(
-                                          value: 1, child: Text('Mon')),
+                                          value: 1, child: Text('Mon'),),
                                       DropdownMenuItem(
-                                          value: 2, child: Text('Tue')),
+                                          value: 2, child: Text('Tue'),),
                                       DropdownMenuItem(
-                                          value: 3, child: Text('Wed')),
+                                          value: 3, child: Text('Wed'),),
                                       DropdownMenuItem(
-                                          value: 4, child: Text('Thu')),
+                                          value: 4, child: Text('Thu'),),
                                       DropdownMenuItem(
-                                          value: 5, child: Text('Fri')),
+                                          value: 5, child: Text('Fri'),),
                                       DropdownMenuItem(
-                                          value: 6, child: Text('Sat')),
+                                          value: 6, child: Text('Sat'),),
                                       DropdownMenuItem(
-                                          value: 7, child: Text('Sun')),
+                                          value: 7, child: Text('Sun'),),
                                     ],
                                     onChanged: (value) {
-                                      if (value != null)
+                                      if (value != null) {
                                         setState(() => _selectedDay = value);
+                                      }
                                     },
                                   )
                                 : TextFormField(
@@ -301,7 +302,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                                       ),
                                       contentPadding:
                                           const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 14),
+                                              horizontal: 12, vertical: 14,),
                                     ),
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) {
@@ -327,7 +328,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                               ? _selectedCategoryId
                               : null;
                           return DropdownButtonFormField<Id>(
-                            value: validCategoryId,
+                            initialValue: validCategoryId,
                             decoration: InputDecoration(
                               labelText: 'Category',
                               prefixIcon: const Icon(Icons.category_outlined),
@@ -338,7 +339,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                             hint: const Text('Select'),
                             items: categories
                                 .map((c) => DropdownMenuItem(
-                                    value: c.id, child: Text(c.name)))
+                                    value: c.id, child: Text(c.name),),)
                                 .toList(),
                             onChanged: (value) =>
                                 setState(() => _selectedCategoryId = value),
@@ -370,7 +371,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
                           const SizedBox(width: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                                horizontal: 12, vertical: 6,),
                             decoration: BoxDecoration(
                               color: _isActive
                                   ? theme.colorScheme.primaryContainer

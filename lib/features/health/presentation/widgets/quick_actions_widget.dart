@@ -35,7 +35,7 @@ class QuickActionsWidget extends StatelessWidget {
         label: 'Start Workout',
         color: sunsetColor,
         onTap: () {
-          // TODO: Navigate to workout screen
+          // Feature coming soon - will navigate to workout screen
           FeedbackService.showInfo(context, 'Workout tracking coming soon!');
         },
       ),
@@ -44,7 +44,7 @@ class QuickActionsWidget extends StatelessWidget {
         label: 'Log Sleep',
         color: sunsetColor,
         onTap: () {
-          // TODO: Navigate to sleep logging
+          // Feature coming soon - will navigate to sleep logging
           FeedbackService.showInfo(context, 'Sleep tracking coming soon!');
         },
       ),

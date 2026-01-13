@@ -23,8 +23,14 @@ class BillListItem extends ConsumerWidget {
       bill.nextDueDate.month,
       bill.nextDueDate.day,
     );
-    final isOverdue = dueDate.isBefore(today);
-    final isDueToday = dueDate.isAtSameMomentAs(today);
+
+    // Check if bill is overdue (only if active and not fully paid)
+    final isOverdue = bill.isActive &&
+                      !bill.isFullyPaid &&
+                      dueDate.isBefore(today);
+    final isDueToday = bill.isActive &&
+                       !bill.isFullyPaid &&
+                       dueDate.isAtSameMomentAs(today);
 
     String frequencyLabel = bill.frequency;
     if (bill.frequency.toLowerCase() == 'monthly') {

@@ -242,7 +242,7 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                           ),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                            decimal: true,),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter an amount';
@@ -301,7 +301,7 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
   }
 
   Widget _buildStatItem(
-      ThemeData theme, String label, String value, Color color) {
+      ThemeData theme, String label, String value, Color color,) {
     return Column(
       children: [
         Text(

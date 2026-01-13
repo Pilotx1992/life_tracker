@@ -21,7 +21,7 @@ import 'package:life_tracker/features/finance/presentation/screens/commitment_de
 import 'package:life_tracker/features/finance/domain/entities/account.dart';
 import 'package:life_tracker/features/finance/domain/entities/financial_commitment.dart';
 
-// Notes Screens
+// Notebook Screens
 import 'package:life_tracker/features/notes/presentation/screens/notes_screen.dart';
 import 'package:life_tracker/features/notes/presentation/screens/note_editor_screen.dart';
 import 'package:life_tracker/features/notes/presentation/screens/note_detail_screen.dart';
@@ -39,6 +39,8 @@ import 'package:life_tracker/features/reminders/presentation/widgets/alarm_ringi
 
 // Settings Screens
 import 'package:life_tracker/features/settings/presentation/screens/settings_screen.dart';
+import 'package:life_tracker/features/settings/presentation/screens/app_lock_setup_screen.dart';
+import 'package:life_tracker/features/settings/presentation/screens/backup_screen.dart';
 
 /// App routes
 class AppRoutes {
@@ -68,7 +70,7 @@ class AppRoutes {
   static const String medications = '/health/medications';
   static const String devices = '/health/devices';
 
-  // Notes
+  // Notebook
   static const String noteEditor = '/notes/editor';
   static const String noteDetail = '/notes/detail';
 
@@ -177,7 +179,7 @@ final appRouter = GoRouter(
         ),
       ],
     ),
-    // Notes Module
+    // Notebook Module
     GoRoute(
       path: AppRoutes.notes,
       name: 'notes',
@@ -239,6 +241,37 @@ final appRouter = GoRouter(
       path: AppRoutes.settings,
       name: 'settings',
       builder: (context, state) => const SettingsScreen(),
+      routes: [
+        GoRoute(
+          path: 'app-lock', // /settings/app-lock
+          name: 'app_lock_setup',
+          builder: (context, state) => const AppLockSetupScreen(),
+        ),
+        GoRoute(
+          path: 'backup', // /settings/backup
+          name: 'backup',
+          builder: (context, state) => const BackupScreen(),
+        ),
+        GoRoute(
+          path: 'privacy', // /settings/privacy
+          name: 'privacy_policy',
+          builder: (context, state) => const Scaffold(
+            body: Center(child: Text('Privacy Policy')),
+          ),
+        ),
+        GoRoute(
+          path: 'terms', // /settings/terms
+          name: 'terms_of_service',
+          builder: (context, state) => const Scaffold(
+            body: Center(child: Text('Terms of Service')),
+          ),
+        ),
+        GoRoute(
+          path: 'licenses', // /settings/licenses
+          name: 'licenses',
+          builder: (context, state) => const LicensePage(),
+        ),
+      ],
     ),
     // Dev / Diagnostic routes
     GoRoute(

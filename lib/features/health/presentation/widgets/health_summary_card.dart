@@ -26,7 +26,7 @@ class HealthSummaryCard extends StatelessWidget {
     this.onTap,
     required this.theme,
   }) : assert(icon != null || iconAsset != null,
-            'Either icon or iconAsset must be provided');
+            'Either icon or iconAsset must be provided',);
 
   @override
   Widget build(BuildContext context) {

@@ -66,7 +66,6 @@ class IncomeListItem extends StatelessWidget {
     final currencyFormat =
         NumberFormat.currency(symbol: _getCurrencySymbol(income.currency));
     final dateFormat = DateFormat('MMM dd, yyyy');
-    final timeFormat = DateFormat('hh:mm a');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -129,7 +128,7 @@ class IncomeListItem extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${dateFormat.format(income.date)} ${timeFormat.format(income.date)}',
+                          dateFormat.format(income.date),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context)

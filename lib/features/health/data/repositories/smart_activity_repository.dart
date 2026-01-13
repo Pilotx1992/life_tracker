@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_tracker/core/providers/gps_provider.dart';
 import 'package:life_tracker/core/providers/health_provider.dart';
 import 'package:life_tracker/core/providers/pedometer_provider.dart';
 import 'package:life_tracker/core/utils/calorie_calculator.dart';
 import 'package:life_tracker/features/health/domain/entities/activity_summary.dart';
 import 'package:life_tracker/features/health/domain/repositories/activity_repository.dart';
+import 'package:life_tracker/features/settings/presentation/providers/user_profile_providers.dart';
 
 class SmartActivityRepository implements ActivityRepository {
   final Ref _ref;
@@ -66,6 +68,11 @@ class SmartActivityRepository implements ActivityRepository {
           .fold(0.0, (sum, item) => sum + item.distance);
     }
 
+    // 1.5. Check GPS Distance (higher accuracy when tracking)
+    final gpsService = _ref.read(gpsDistanceServiceProvider);
+    final gpsDistanceMeters = gpsService.todayDistanceMeters;
+    final isGpsTracking = gpsService.isTracking;
+
     // 2. Tiered Confidence Logic
     // PRD Section 13.4: Data Aging Refinement
     // Tier 1: Health Connect (< 5 mins) → 95% confidence
@@ -114,52 +121,72 @@ class SmartActivityRepository implements ActivityRepository {
       final exerciseMinutes =
           CalorieCalculator.calculateExerciseMinutes(healthSteps);
       final standHours = CalorieCalculator.calculateStandHours(
-          healthSteps, now.hour + now.minute / 60.0);
+          healthSteps, now.hour + now.minute / 60.0,);
+
+      // Use GPS distance if tracking, otherwise use Health Connect distance
+      final distanceToUse = isGpsTracking && gpsDistanceMeters > 0
+          ? gpsDistanceMeters
+          : healthDistance;
+      final distanceConfidence = isGpsTracking && gpsDistanceMeters > 0
+          ? 0.98  // GPS has highest confidence
+          : confidence;
 
       _controller.add(ActivitySummary(
         steps: healthSteps,
         activeCalories: healthCalories,
-        distanceMeters: healthDistance,
+        distanceMeters: distanceToUse,
         exerciseMinutes: exerciseMinutes,
         standHours: standHours,
         date: now,
         source: source,
-        confidence: confidence,
-      ));
+        confidence: distanceConfidence,
+      ),);
     } else {
       // PRIORITY 3: Physics Engine directly (Pedometer Service)
       // PRD Module A: Calculate Steps and Calories without Heart Rate data.
 
       final usedSteps = currentPedometerSteps;
 
-      // Get weight for calculation
+      // Get weight and height for calculation
       final weight = healthState.weightData.isNotEmpty
           ? healthState.weightData.first.weight
           : 70.0; // Default
 
+      // Get user's height from profile, fallback to 170cm
+      final profileAsync = _ref.read(userProfileProvider);
+      final heightCm = profileAsync.valueOrNull?.heightInCm ?? 170.0;
+
       final calculatedCalories = CalorieCalculator.calculateCaloriesSimple(
-          steps: usedSteps, weightKg: weight);
+          steps: usedSteps, weightKg: weight,);
 
       final calculatedDistance = CalorieCalculator.calculateDistance(
         steps: usedSteps,
-        heightCm: 170.0, // Default
+        heightCm: heightCm,
       );
+
+      // Use GPS distance if tracking, otherwise use calculated distance
+      final distanceToUse = isGpsTracking && gpsDistanceMeters > 0
+          ? gpsDistanceMeters
+          : calculatedDistance * 1000; // Convert km to meters
+      final distanceConfidence = isGpsTracking && gpsDistanceMeters > 0
+          ? 0.98  // GPS has highest confidence
+          : confidence;
 
       final exerciseMinutes =
           CalorieCalculator.calculateExerciseMinutes(usedSteps);
       final standHours = CalorieCalculator.calculateStandHours(
-          usedSteps, now.hour + now.minute / 60.0);
+          usedSteps, now.hour + now.minute / 60.0,);
 
       _controller.add(ActivitySummary(
         steps: usedSteps,
         activeCalories: calculatedCalories,
-        distanceMeters: calculatedDistance * 1000, // KM to Meters
+        distanceMeters: distanceToUse,
         exerciseMinutes: exerciseMinutes,
         standHours: standHours,
         date: now,
         source: source,
-        confidence: confidence,
-      ));
+        confidence: distanceConfidence,
+      ),);
     }
   }
 
@@ -172,7 +199,7 @@ class SmartActivityRepository implements ActivityRepository {
   Future<void> refresh() async {
     await _ref.read(healthConnectProvider.notifier).syncAllData(
         startDate: DateTime.now().subtract(const Duration(days: 1)),
-        endDate: DateTime.now());
+        endDate: DateTime.now(),);
   }
 
   void dispose() {

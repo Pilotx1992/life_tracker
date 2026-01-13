@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_tracker/core/router/app_router.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
+import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
 import 'package:life_tracker/features/settings/presentation/providers/settings_provider.dart';
 import 'package:life_tracker/features/settings/presentation/screens/device_setup_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -172,6 +173,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(AppRoutes.appLockSetup),
               ),
+              ListTile(
+                leading: const Icon(Icons.fingerprint),
+                title: const Text('Fingerprint for Notes'),
+                subtitle: const Text('Use fingerprint to unlock locked notes'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showEnableFingerprintDialog(),
+              ),
+              ListTile(
+                leading: const Icon(Icons.lock_reset),
+                title: const Text('Reset Note PIN'),
+                subtitle: const Text('Clear saved PIN for locked notes'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showResetNotePinDialog(),
+              ),
             ],
           ),
           // Backup & Restore
@@ -285,43 +300,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Theme'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<ThemeMode>(
-              title: const Text('Light'),
-              value: ThemeMode.light,
-              groupValue: currentMode,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text('Dark'),
-              value: ThemeMode.dark,
-              groupValue: currentMode,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-            RadioListTile<ThemeMode>(
-              title: const Text('System Default'),
-              value: ThemeMode.system,
-              groupValue: currentMode,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setThemeMode(value);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<ThemeMode>(
+          groupValue: currentMode,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setThemeMode(value);
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<ThemeMode>(
+                title: Text('Light'),
+                value: ThemeMode.light,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text('Dark'),
+                value: ThemeMode.dark,
+              ),
+              RadioListTile<ThemeMode>(
+                title: Text('System Default'),
+                value: ThemeMode.system,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -332,40 +335,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Language'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('English'),
-              value: 'en',
-              groupValue: currentLanguage,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setLanguage(value);
-                  Navigator.of(context).pop();
-                  FeedbackService.showInfo(
-                    context,
-                    'Language changed. Restart app to apply.',
-                  );
-                }
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('العربية (Arabic)'),
-              value: 'ar',
-              groupValue: currentLanguage,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setLanguage(value);
-                  Navigator.of(context).pop();
-                  FeedbackService.showInfo(
-                    context,
-                    'Language changed. Restart app to apply.',
-                  );
-                }
-              },
-            ),
-          ],
+        content: RadioGroup<String>(
+          groupValue: currentLanguage,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setLanguage(value);
+              Navigator.of(context).pop();
+              FeedbackService.showInfo(
+                context,
+                'Language changed. Restart app to apply.',
+              );
+            }
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: Text('English'),
+                value: 'en',
+              ),
+              RadioListTile<String>(
+                title: Text('العربية (Arabic)'),
+                value: 'ar',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -388,28 +382,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Default Currency'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            cacheExtent: 500,
-            itemCount: currencies.length,
-            itemBuilder: (context, index) {
-              final currency = currencies[index];
-              return RadioListTile<String>(
-                title: Text(currency),
-                value: currency,
-                groupValue: currentCurrency,
-                onChanged: (value) {
-                  if (value != null) {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setDefaultCurrency(value);
-                    Navigator.of(context).pop();
-                  }
-                },
-              );
-            },
+        content: RadioGroup<String>(
+          groupValue: currentCurrency,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setDefaultCurrency(value);
+              Navigator.of(context).pop();
+            }
+          },
+          child: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              cacheExtent: 500,
+              itemCount: currencies.length,
+              itemBuilder: (context, index) {
+                final currency = currencies[index];
+                return RadioListTile<String>(
+                  title: Text(currency),
+                  value: currency,
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -428,21 +422,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Date Format'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: formats.map((format) {
-            return RadioListTile<String>(
-              title: Text(format['label']!),
-              value: format['value']!,
-              groupValue: currentFormat,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setDateFormat(value);
-                  Navigator.of(context).pop();
-                }
-              },
-            );
-          }).toList(),
+        content: RadioGroup<String>(
+          groupValue: currentFormat,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setDateFormat(value);
+              Navigator.of(context).pop();
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: formats.map((format) {
+              return RadioListTile<String>(
+                title: Text(format['label']!),
+                value: format['value']!,
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
@@ -453,34 +449,251 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Time Format'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('12-hour (AM/PM)'),
-              value: '12h',
-              groupValue: currentFormat,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setTimeFormat(value);
-                  Navigator.of(context).pop();
-                }
-              },
+        content: RadioGroup<String>(
+          groupValue: currentFormat,
+          onChanged: (value) {
+            if (value != null) {
+              ref.read(settingsProvider.notifier).setTimeFormat(value);
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: Text('12-hour (AM/PM)'),
+                value: '12h',
+              ),
+              RadioListTile<String>(
+                title: Text('24-hour'),
+                value: '24h',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showResetNotePinDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Note PIN?'),
+        content: const Text(
+          'This will clear your saved PIN for locked notes. '
+          'You will need to set a new PIN next time you lock a note.\n\n'
+          'Warning: Existing locked notes may become inaccessible if you forgot the PIN.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            RadioListTile<String>(
-              title: const Text('24-hour'),
-              value: '24h',
-              groupValue: currentFormat,
-              onChanged: (value) {
-                if (value != null) {
-                  ref.read(settingsProvider.notifier).setTimeFormat(value);
-                  Navigator.of(context).pop();
-                }
-              },
+            child: const Text('Reset PIN'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await NoteEncryptionService().clearPIN();
+      if (mounted) {
+        FeedbackService.showSuccess(context, 'Note PIN has been reset');
+      }
+    }
+  }
+
+  Future<void> _showEnableFingerprintDialog() async {
+    final encryptionService = NoteEncryptionService();
+    
+    // Check prerequisites
+    final isAvailable = await encryptionService.isBiometricAvailable();
+    if (!isAvailable) {
+      if (mounted) {
+        FeedbackService.showWarning(
+          context,
+          'Biometric authentication is not available on this device',
+        );
+      }
+      return;
+    }
+
+    final hasPIN = await encryptionService.hasPIN();
+    if (!hasPIN) {
+      if (mounted) {
+        FeedbackService.showWarning(
+          context,
+          'Please set up a Note PIN first by locking a note',
+        );
+      }
+      return;
+    }
+
+    final isEnabled = await encryptionService.isBiometricEnabled();
+    if (!mounted) return;
+
+    if (isEnabled) {
+      // Show disable dialog
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Disable Fingerprint?'),
+          content: const Text(
+            'You will need to enter your PIN to unlock locked notes.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Disable'),
             ),
           ],
         ),
+      );
+
+      if (confirmed == true) {
+        await encryptionService.disableBiometric();
+        if (mounted) {
+          FeedbackService.showSuccess(context, 'Fingerprint disabled for notes');
+        }
+      }
+    } else {
+      // Show enable dialog - requires PIN verification
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Enable Fingerprint?'),
+          content: const Text(
+            'Use your fingerprint to quickly unlock locked notes.\n\n'
+            'You will need to enter your PIN to enable this feature.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).pop(true),
+              icon: const Icon(Icons.fingerprint),
+              label: const Text('Enable'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        // Ask for PIN to enable biometric
+        final pin = await showDialog<String>(
+          context: context,
+          builder: (context) => const _SimplePinDialog(
+            title: 'Enter PIN',
+            message: 'Enter your Note PIN to enable fingerprint',
+          ),
+        );
+
+        if (pin != null && mounted) {
+          final success = await encryptionService.enableBiometric(pin);
+          if (mounted) {
+            if (success) {
+              FeedbackService.showSuccess(context, 'Fingerprint enabled for notes');
+            } else {
+              FeedbackService.showError(context, 'Invalid PIN');
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/// Simple PIN input dialog for Settings (doesn't trigger biometric)
+class _SimplePinDialog extends StatefulWidget {
+  final String title;
+  final String? message;
+
+  const _SimplePinDialog({
+    required this.title,
+    this.message,
+  });
+
+  @override
+  State<_SimplePinDialog> createState() => _SimplePinDialogState();
+}
+
+class _SimplePinDialogState extends State<_SimplePinDialog> {
+  final _controllers = List.generate(4, (_) => TextEditingController());
+  final _focusNodes = List.generate(4, (_) => FocusNode());
+
+  @override
+  void dispose() {
+    for (var c in _controllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onChanged(int index, String value) {
+    if (value.isNotEmpty && index < 3) {
+      _focusNodes[index + 1].requestFocus();
+    }
+    if (index == 3 && value.isNotEmpty) {
+      final pin = _controllers.map((c) => c.text).join();
+      Navigator.of(context).pop(pin);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.message != null) ...[
+            Text(widget.message!),
+            const SizedBox(height: 16),
+          ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(4, (i) {
+              return SizedBox(
+                width: 50,
+                child: TextField(
+                  controller: _controllers[i],
+                  focusNode: _focusNodes[i],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  maxLength: 1,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    counterText: '',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (v) => _onChanged(i, v),
+                ),
+              );
+            }),
+          ),
+        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ],
     );
   }
 }

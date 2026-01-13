@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:life_tracker/core/router/app_router.dart';
 import 'package:life_tracker/core/constants/app_design_tokens.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/domain/entities/account.dart';
@@ -71,6 +73,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
         title: const Text('Debts'),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 88), // Space for FAB
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -223,7 +226,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                     Divider(
                       height: 1,
                       thickness: 1,
-                      color: Colors.grey.shade200,
+                      color: Theme.of(context).dividerColor,
                     ),
                     const SizedBox(height: 20),
                     // Net Worth
@@ -247,7 +250,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                               Icon(
                                 Icons.info_outline,
                                 size: 18,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(context).colorScheme.outline,
                               ),
                             ],
                           ),
@@ -283,7 +286,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                   horizontal: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -408,7 +411,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 34),
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.grey.shade300,
+          color: isSelected
+              ? color
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
@@ -416,7 +421,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
             label,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : Colors.black87,
+                  color: isSelected
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
           ),
         ),
@@ -485,7 +492,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
             ),
             child: InkWell(
               onTap: () {
-                // TODO: Navigate to accounts screen
+                context.push(AppRoutes.financeAccounts);
               },
               child: Row(
                 children: [
@@ -514,7 +521,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                   const SizedBox(width: 8),
                   Icon(
                     Icons.keyboard_arrow_down,
-                    color: Colors.grey.shade600,
+                    color: Theme.of(context).colorScheme.outline,
                     size: 24,
                   ),
                 ],
@@ -596,7 +603,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                 ),
                 child: InkWell(
                   onTap: () {
-                    // TODO: Navigate to credit cards
+                    // Navigate to accounts screen filtered to credit cards
+                    context.push(AppRoutes.financeAccounts);
                   },
                   child: Row(
                     children: [
@@ -625,7 +633,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                       const SizedBox(width: 8),
                       Icon(
                         Icons.keyboard_arrow_down,
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).colorScheme.outline,
                         size: 24,
                       ),
                     ],
@@ -746,7 +754,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(AppDesignTokens.radiusMedium),
-                      side: BorderSide(color: Colors.grey.shade300, width: 1),
+                      side: BorderSide(
+                          color: Theme.of(context).dividerColor, width: 1,),
                     ),
                     margin: const EdgeInsets.only(
                       bottom: AppDesignTokens.space8,

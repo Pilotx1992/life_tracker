@@ -70,7 +70,7 @@ class _CommitmentsScreenState extends ConsumerState<CommitmentsScreen>
                     .read(commitmentNotifierProvider.notifier)
                     .loadCommitments(),
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 88), // Space for FAB
                   physics: const AlwaysScrollableScrollPhysics(),
                   cacheExtent: 500,
                   addAutomaticKeepAlives: false,
@@ -158,7 +158,7 @@ class _CommitmentsScreenState extends ConsumerState<CommitmentsScreen>
                     .read(commitmentNotifierProvider.notifier)
                     .loadCommitments(),
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 88), // Space for FAB
                   physics: const AlwaysScrollableScrollPhysics(),
                   cacheExtent: 500,
                   addAutomaticKeepAlives: false,

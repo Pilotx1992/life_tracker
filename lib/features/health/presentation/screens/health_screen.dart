@@ -357,7 +357,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                 icon: Icons.bedtime,
                 iconColor: Colors.indigo,
                 theme: theme,
-                // TODO: Add sleep data when implemented
+                // [Phase 2] Sleep data will be added when sleep tracking is implemented
               ),
               _buildBmiCard(context, ref, theme),
               HealthMetricCard(
@@ -456,7 +456,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(

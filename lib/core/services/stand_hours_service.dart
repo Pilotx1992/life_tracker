@@ -101,7 +101,7 @@ class StandHoursService {
     }
 
     await prefs.setString(
-        _lastRecordedDateKey, DateTime.now().toIso8601String());
+        _lastRecordedDateKey, DateTime.now().toIso8601String(),);
   }
 
   /// Calculate total stand hours (hours with >= [minStepsPerHour] steps)

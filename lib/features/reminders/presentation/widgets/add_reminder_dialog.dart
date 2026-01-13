@@ -383,7 +383,7 @@ class _AddReminderDialogState extends ConsumerState<AddReminderDialog> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
-                  value: _snoozeDuration,
+                  initialValue: _snoozeDuration,
                   decoration: const InputDecoration(
                     labelText: 'Snooze Duration',
                     border: OutlineInputBorder(),

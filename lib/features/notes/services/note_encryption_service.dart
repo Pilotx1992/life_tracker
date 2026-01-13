@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:local_auth/local_auth.dart';
 
 /// Service for encrypting and decrypting note content
 class NoteEncryptionService {
@@ -11,13 +12,29 @@ class NoteEncryptionService {
   NoteEncryptionService._internal();
 
   final _secureStorage = const FlutterSecureStorage();
+  final _localAuth = LocalAuthentication();
   static const String _pinKey = 'note_lock_pin';
   static const String _saltKey = 'note_lock_salt';
+  static const String _biometricEnabledKey = 'note_biometric_enabled';
+  static const String _storedPinForBiometricKey = 'note_stored_pin';
 
   /// Check if a PIN is set
   Future<bool> hasPIN() async {
     final pin = await _secureStorage.read(key: _pinKey);
-    return pin != null && pin.isNotEmpty;
+    final result = pin != null && pin.isNotEmpty;
+    if (kDebugMode) {
+      debugPrint('🔐 NoteEncryptionService.hasPIN() = $result (pin exists: ${pin != null})');
+    }
+    return result;
+  }
+
+  /// Clear stored PIN (for debugging/reset)
+  Future<void> clearPIN() async {
+    await _secureStorage.delete(key: _pinKey);
+    await _secureStorage.delete(key: _saltKey);
+    if (kDebugMode) {
+      debugPrint('🗑️ NoteEncryptionService: PIN cleared');
+    }
   }
 
   /// Set or update the PIN for note locking
@@ -133,4 +150,90 @@ class NoteEncryptionService {
     final hash = sha256.convert(bytes);
     return hash.toString();
   }
+
+  // ==================== BIOMETRIC AUTHENTICATION ====================
+
+  /// Check if device supports biometric authentication
+  Future<bool> isBiometricAvailable() async {
+    try {
+      final isAvailable = await _localAuth.canCheckBiometrics;
+      final isDeviceSupported = await _localAuth.isDeviceSupported();
+      return isAvailable && isDeviceSupported;
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error checking biometric availability: $e');
+      return false;
+    }
+  }
+
+  /// Check if biometric is enabled for notes
+  Future<bool> isBiometricEnabled() async {
+    final enabled = await _secureStorage.read(key: _biometricEnabledKey);
+    return enabled == 'true';
+  }
+
+  /// Enable biometric authentication for notes
+  /// Stores the PIN securely to use after biometric verification
+  Future<bool> enableBiometric(String pin) async {
+    try {
+      // First verify the PIN is correct
+      final isValid = await verifyPIN(pin);
+      if (!isValid) {
+        if (kDebugMode) debugPrint('❌ Cannot enable biometric: Invalid PIN');
+        return false;
+      }
+
+      // Store the PIN for later retrieval after biometric auth
+      await _secureStorage.write(key: _storedPinForBiometricKey, value: pin);
+      await _secureStorage.write(key: _biometricEnabledKey, value: 'true');
+      
+      if (kDebugMode) debugPrint('✅ Biometric enabled for notes');
+      return true;
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error enabling biometric: $e');
+      return false;
+    }
+  }
+
+  /// Disable biometric authentication for notes
+  Future<void> disableBiometric() async {
+    await _secureStorage.delete(key: _biometricEnabledKey);
+    await _secureStorage.delete(key: _storedPinForBiometricKey);
+    if (kDebugMode) debugPrint('🗑️ Biometric disabled for notes');
+  }
+
+  /// Authenticate using biometric and return the stored PIN if successful
+  /// Returns null if authentication fails or biometric is not enabled
+  Future<String?> authenticateWithBiometric({
+    String reason = 'Authenticate to unlock note',
+  }) async {
+    try {
+      final isEnabled = await isBiometricEnabled();
+      if (!isEnabled) {
+        if (kDebugMode) debugPrint('⚠️ Biometric not enabled for notes');
+        return null;
+      }
+
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: reason,
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+
+      if (authenticated) {
+        // Return the stored PIN for decryption
+        final storedPin = await _secureStorage.read(key: _storedPinForBiometricKey);
+        if (kDebugMode) debugPrint('✅ Biometric authenticated, PIN retrieved');
+        return storedPin;
+      } else {
+        if (kDebugMode) debugPrint('❌ Biometric authentication failed');
+        return null;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Error during biometric auth: $e');
+      return null;
+    }
+  }
 }
+

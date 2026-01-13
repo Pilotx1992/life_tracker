@@ -184,7 +184,7 @@ class BillRepositoryImpl implements BillRepository {
           .where((model) =>
               model.type == BillType.installment &&
               model.isActive &&
-              model.paidAmount < model.totalAmount)
+              model.paidAmount < model.totalAmount,)
           .map((model) => model.toEntity())
           .toList();
       return Right(activeInstallments);
@@ -203,9 +203,9 @@ class BillRepositoryImpl implements BillRepository {
           .where((model) =>
               model.type == BillType.installment &&
               model.isActive &&
-              model.paidAmount < model.totalAmount)
+              model.paidAmount < model.totalAmount,)
           .fold<double>(0.0,
-              (sum, model) => sum + (model.totalAmount - model.paidAmount));
+              (sum, model) => sum + (model.totalAmount - model.paidAmount),);
       return Right(totalRemaining);
     } on CacheException catch (e) {
       return Left(CacheFailure(e.toString()));

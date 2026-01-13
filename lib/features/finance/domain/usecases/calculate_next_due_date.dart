@@ -39,8 +39,8 @@ class CalculateNextDueDate {
     // Try current month first
     var nextDate = DateTime(currentDate.year, currentDate.month, validDay);
 
-    // If the date has passed, move to next month
-    if (nextDate.isBefore(currentDate)) {
+    // If the date has passed or is today, move to next month
+    if (nextDate.isBefore(currentDate) || nextDate.isAtSameMomentAs(currentDate)) {
       // Try next month
       final nextMonth = currentDate.month == 12
           ? DateTime(currentDate.year + 1, 1, 1)
@@ -95,8 +95,8 @@ class CalculateNextDueDate {
       nextDate = DateTime(nextDate.year, nextDate.month, daysInMonth);
     }
 
-    // If the date has passed this year, move to next year
-    if (nextDate.isBefore(currentDate)) {
+    // If the date has passed or is today, move to next year
+    if (nextDate.isBefore(currentDate) || nextDate.isAtSameMomentAs(currentDate)) {
       nextDate = DateTime(currentDate.year + 1, currentDate.month, dayOfMonth);
       // Clamp again for next year
       final daysInNextMonth =

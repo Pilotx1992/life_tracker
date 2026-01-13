@@ -54,6 +54,7 @@ class MedicationsScreen extends ConsumerWidget {
                   .loadMedications();
             },
             child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 88), // Space for FAB
               physics: const AlwaysScrollableScrollPhysics(),
               cacheExtent: 500,
               addAutomaticKeepAlives: false,

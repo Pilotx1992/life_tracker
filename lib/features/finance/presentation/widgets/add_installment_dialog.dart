@@ -199,7 +199,7 @@ class _AddInstallmentDialogState extends ConsumerState<AddInstallmentDialog>
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.close),
             style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.surface.withOpacity(0.5),
+              backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -405,8 +405,9 @@ class _AddInstallmentDialogState extends ConsumerState<AddInstallmentDialog>
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
                     final cleanValue = value.replaceAll(',', '');
-                    if (double.tryParse(cleanValue) == null)
+                    if (double.tryParse(cleanValue) == null) {
                       return 'Invalid amount';
+                    }
                     return null;
                   },
                 ),
@@ -569,7 +570,7 @@ class _AddInstallmentDialogState extends ConsumerState<AddInstallmentDialog>
             Expanded(
               flex: 2,
               child: DropdownButtonFormField<String>(
-                value: _frequency,
+                initialValue: _frequency,
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: 'Frequency',
@@ -584,9 +585,9 @@ class _AddInstallmentDialogState extends ConsumerState<AddInstallmentDialog>
                 items: const [
                   DropdownMenuItem(value: 'Monthly', child: Text('Monthly')),
                   DropdownMenuItem(
-                      value: 'Quarterly', child: Text('Quarterly')),
+                      value: 'Quarterly', child: Text('Quarterly'),),
                   DropdownMenuItem(
-                      value: 'Semi-Annual', child: Text('Semi-Annual')),
+                      value: 'Semi-Annual', child: Text('Semi-Annual'),),
                   DropdownMenuItem(value: 'Yearly', child: Text('Yearly')),
                 ],
                 onChanged: (value) {
@@ -597,7 +598,7 @@ class _AddInstallmentDialogState extends ConsumerState<AddInstallmentDialog>
             const SizedBox(width: 12),
             Expanded(
               child: DropdownButtonFormField<int>(
-                value: _dayOfMonth,
+                initialValue: _dayOfMonth,
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: 'Day',
@@ -611,7 +612,7 @@ class _AddInstallmentDialogState extends ConsumerState<AddInstallmentDialog>
                 ),
                 items: List.generate(28, (i) => i + 1)
                     .map((day) =>
-                        DropdownMenuItem(value: day, child: Text('$day')))
+                        DropdownMenuItem(value: day, child: Text('$day')),)
                     .toList(),
                 onChanged: (value) {
                   if (value != null) setState(() => _dayOfMonth = value);

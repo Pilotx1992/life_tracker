@@ -86,7 +86,7 @@ class AttachmentWidget extends StatelessWidget {
                 radius: 16,
                 child: IconButton(
                   icon: Icon(Icons.close,
-                      size: 18, color: Theme.of(context).colorScheme.surface),
+                      size: 18, color: Theme.of(context).colorScheme.surface,),
                   onPressed: () async {
                     await onDelete!();
                   },

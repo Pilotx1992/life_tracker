@@ -138,7 +138,7 @@ class NoteCard extends StatelessWidget {
           children: [
             ListTile(
               leading: Icon(Icons.delete,
-                  color: Theme.of(context).colorScheme.error),
+                  color: Theme.of(context).colorScheme.error,),
               title: const Text('Delete Note'),
               onTap: () {
                 Navigator.of(context).pop();

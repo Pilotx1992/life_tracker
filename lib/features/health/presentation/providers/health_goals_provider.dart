@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/features/health/domain/entities/health_goal.dart';
 
 /// Provider for Health Goals
-/// TODO: Implement full repository pattern when data layer is ready
+/// [Phase 2] Full repository pattern will be implemented when data layer is ready
 final healthGoalsProvider = Provider<List<HealthGoal>>((ref) {
   // Mock default goals - will be replaced with real data source
   return [

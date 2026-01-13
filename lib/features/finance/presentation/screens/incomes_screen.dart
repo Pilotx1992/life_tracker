@@ -169,7 +169,7 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
                         .format(totalAmount),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: const Color(0xFF4CAF50), // Green color for income
                         ),
                   ),
                   const SizedBox(height: 8),
@@ -237,7 +237,7 @@ class _IncomesScreenState extends ConsumerState<IncomesScreen> {
                             .loadIncomes();
                       },
                       child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 88), // Space for FAB
                         physics: const AlwaysScrollableScrollPhysics(),
                         cacheExtent: 500,
                         addAutomaticKeepAlives: false,

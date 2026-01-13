@@ -7,6 +7,7 @@ import 'package:life_tracker/features/health/domain/usecases/add_weight.dart';
 import 'package:life_tracker/features/health/domain/usecases/calculate_bmi.dart';
 import 'package:life_tracker/features/health/domain/usecases/delete_weight.dart';
 import 'package:life_tracker/features/health/domain/usecases/get_weights.dart';
+import 'package:life_tracker/features/health/presentation/providers/profile_provider.dart';
 
 // Data Source Provider - Fixed to handle async properly
 final weightLocalDataSourceProvider = FutureProvider((ref) async {
@@ -98,7 +99,7 @@ class WeightListNotifier extends StateNotifier<AsyncValue<List<WeightEntry>>> {
 
     state = const AsyncValue.loading();
 
-  final result = await getWeights!(const GetWeightsParams());
+    final result = await getWeights!(const GetWeightsParams());
 
     result.fold(
       (failure) => state = AsyncValue.error(
@@ -112,14 +113,14 @@ class WeightListNotifier extends StateNotifier<AsyncValue<List<WeightEntry>>> {
   Future<bool> addNewWeight(double weight, DateTime date, String? note) async {
     if (addWeight == null) return false;
 
-      final weightEntry = WeightEntry(
-        id: null,
-        weight: weight,
-        date: date,
-        note: note,
-      );
+    final weightEntry = WeightEntry(
+      id: null,
+      weight: weight,
+      date: date,
+      note: note,
+    );
 
-  final result = await addWeight!(weightEntry);
+    final result = await addWeight!(weightEntry);
 
     return result.fold(
       (failure) {
@@ -136,7 +137,7 @@ class WeightListNotifier extends StateNotifier<AsyncValue<List<WeightEntry>>> {
   Future<bool> deleteWeight(int id) async {
     if (deleteWeightUseCase == null) return false;
 
-  final result = await deleteWeightUseCase!(id);
+    final result = await deleteWeightUseCase!(id);
 
     return result.fold(
       (failure) {
@@ -162,17 +163,24 @@ final latestWeightProvider = Provider<WeightEntry?>((ref) {
   );
 });
 
-/// BMI provider (requires user height from settings - for now we'll use a default)
+/// BMI provider - uses height from user profile
 final bmiProvider = FutureProvider<double?>((ref) async {
   final latestWeight = ref.watch(latestWeightProvider);
   final calculateBmi = ref.read(calculateBmiUseCaseProvider);
+  final userProfileAsync = ref.watch(userProfileProvider);
 
   if (latestWeight == null) return null;
 
-  // TODO: Get height from user profile settings
-  // For now, using a default height of 170 cm
-  const defaultHeight = 170.0;
+  // Get height from user profile, fallback to 170cm if not set
+  final height = userProfileAsync.whenOrNull(
+        data: (profile) => profile.height,
+      ) ??
+      170.0;
 
-  final either = await calculateBmi(BmiParams(weight: latestWeight.weight, height: defaultHeight));
+  if (height <= 0) return null;
+
+  final either = await calculateBmi(
+    BmiParams(weight: latestWeight.weight, height: height),
+  );
   return either.fold((_) => null, (bmi) => bmi);
 });

@@ -365,4 +365,101 @@ class AppLockService {
     // Set up new PIN
     return await setupPin(newPin);
   }
+
+  // ==================== PIN STRENGTH VALIDATION ====================
+
+  /// Check if PIN is weak (sequential or repeating patterns)
+  bool isPinWeak(String pin) {
+    if (pin.length != 4) return true;
+
+    // Check for sequential (1234, 4321, etc.)
+    if (_isSequential(pin)) return true;
+
+    // Check for repeated (1111, 2222, etc.)
+    if (_isRepeating(pin)) return true;
+
+    // Check for common patterns
+    if (_isCommonPattern(pin)) return true;
+
+    return false;
+  }
+
+  /// Check if PIN is sequential (ascending or descending)
+  bool _isSequential(String pin) {
+    if (!_isNumeric(pin)) return false;
+    
+    final nums = pin.split('').map(int.parse).toList();
+
+    // Ascending: 1234, 2345, etc.
+    bool isAscending = true;
+    for (int i = 0; i < nums.length - 1; i++) {
+      if (nums[i + 1] != nums[i] + 1) {
+        isAscending = false;
+        break;
+      }
+    }
+
+    // Descending: 4321, 5432, etc.
+    bool isDescending = true;
+    for (int i = 0; i < nums.length - 1; i++) {
+      if (nums[i + 1] != nums[i] - 1) {
+        isDescending = false;
+        break;
+      }
+    }
+
+    return isAscending || isDescending;
+  }
+
+  /// Check if PIN has all same digits (1111, 2222, etc.)
+  bool _isRepeating(String pin) {
+    return pin.split('').toSet().length == 1;
+  }
+
+  /// Check for common weak patterns
+  bool _isCommonPattern(String pin) {
+    const commonPatterns = [
+      '0000', '1111', '2222', '3333', '4444',
+      '5555', '6666', '7777', '8888', '9999',
+      '1234', '4321', '2580', '0852', '1212',
+      '1010', '2020', '1122', '2211', '0123',
+      '3210', '9876', '6789', '1357', '2468',
+    ];
+    return commonPatterns.contains(pin);
+  }
+
+  /// Check if string is all numeric
+  bool _isNumeric(String str) {
+    return RegExp(r'^[0-9]+$').hasMatch(str);
+  }
+
+  /// Get PIN strength description
+  String getPinStrengthDescription(String pin) {
+    if (pin.length != 4) return 'Too short';
+    if (_isRepeating(pin)) return 'Very Weak - Repeating digits';
+    if (_isSequential(pin)) return 'Weak - Sequential pattern';
+    if (_isCommonPattern(pin)) return 'Weak - Common pattern';
+    return 'Strong';
+  }
+
+  /// Get PIN strength level (0-3)
+  /// 0 = Very Weak, 1 = Weak, 2 = Good, 3 = Strong
+  int getPinStrengthLevel(String pin) {
+    if (pin.length != 4) return 0;
+    if (_isRepeating(pin)) return 0;
+    if (_isSequential(pin)) return 1;
+    if (_isCommonPattern(pin)) return 1;
+    return 3;
+  }
+
+  // ==================== PUBLIC LOCKOUT STATUS ====================
+
+  /// Check if currently locked out (public version)
+  Future<bool> isLockedOut() async {
+    return await _isLockedOut();
+  }
+
+  /// Get max failed attempts allowed
+  int get maxFailedAttempts => _maxFailedAttempts;
 }
+

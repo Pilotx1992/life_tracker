@@ -197,7 +197,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                 .loadExpenses();
                           },
                           child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 88), // Space for FAB
                             physics: const AlwaysScrollableScrollPhysics(),
                             cacheExtent: 500,
                             addAutomaticKeepAlives: false,

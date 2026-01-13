@@ -364,27 +364,29 @@ class _RestoreDialogState extends State<_RestoreDialog> {
             const SizedBox(height: 24),
             const Text('Conflict Strategy:'),
             const SizedBox(height: 8),
-            RadioListTile<String>(
-              title: const Text('Merge'),
-              subtitle: const Text('Add backup data to existing data'),
-              value: 'merge',
+            RadioGroup<String>(
               groupValue: _selectedStrategy,
               onChanged: (value) {
                 setState(() {
                   _selectedStrategy = value!;
                 });
               },
-            ),
-            RadioListTile<String>(
-              title: const Text('Replace'),
-              subtitle: const Text('Replace all existing data with backup'),
-              value: 'replace',
-              groupValue: _selectedStrategy,
-              onChanged: (value) {
-                setState(() {
-                  _selectedStrategy = value!;
-                });
-              },
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    title: Text('Merge'),
+                    subtitle: Text('Add backup data to existing data'),
+                    value: 'merge',
+                  ),
+                  RadioListTile<String>(
+                    title: Text('Replace'),
+                    subtitle:
+                        Text('Replace all existing data with backup'),
+                    value: 'replace',
+                  ),
+                ],
+              ),
             ),
           ],
         ),

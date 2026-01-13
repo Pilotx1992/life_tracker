@@ -102,8 +102,9 @@ class ReminderListNotifier extends AsyncNotifier<List<Reminder>> {
 
       return await result.fold(
         (failure) {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('Failed to add reminder: ${failure.message}');
+          }
           return false;
         },
         (id) async {
@@ -137,8 +138,9 @@ class ReminderListNotifier extends AsyncNotifier<List<Reminder>> {
 
       return await result.fold(
         (failure) {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('Failed to update reminder: ${failure.message}');
+          }
           return false;
         },
         (success) async {
@@ -185,8 +187,9 @@ class ReminderListNotifier extends AsyncNotifier<List<Reminder>> {
 
       return await result.fold(
         (failure) {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('Failed to delete reminder: ${failure.message}');
+          }
           return false;
         },
         (success) async {
@@ -221,8 +224,9 @@ class ReminderListNotifier extends AsyncNotifier<List<Reminder>> {
 
       return await result.fold(
         (failure) {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('Failed to mark completed: ${failure.message}');
+          }
           return false;
         },
         (success) async {
@@ -264,8 +268,9 @@ class ReminderListNotifier extends AsyncNotifier<List<Reminder>> {
 
     await nextOccurrenceResult.fold(
       (failure) async {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('Failed to calculate next occurrence: ${failure.message}');
+        }
       },
       (nextOccurrence) async {
         // Check if next occurrence is within end date bounds
@@ -321,7 +326,7 @@ final upcomingRemindersProvider = Provider<List<Reminder>>((ref) {
   return reminders
       .where((r) =>
           !r.isCompleted &&
-          r.dateTime.isAfter(now.subtract(const Duration(seconds: 1))))
+          r.dateTime.isAfter(now.subtract(const Duration(seconds: 1))),)
       .toList()
     ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 });

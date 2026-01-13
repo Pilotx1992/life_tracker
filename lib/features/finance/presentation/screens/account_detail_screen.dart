@@ -965,7 +965,14 @@ class AccountDetailScreen extends ConsumerWidget {
                             const EdgeInsets.only(top: 16, left: 16, right: 16),
                         child: TextButton(
                           onPressed: () {
-                            // TODO: Navigate to full transaction history
+                            _showAllTransactions(
+                              context,
+                              ref,
+                              transactions,
+                              currencyFormat,
+                              account.currency,
+                              account,
+                            );
                           },
                           child: Text(
                             'View all ${transactions.length} transactions',
@@ -1154,6 +1161,163 @@ class AccountDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showAllTransactions(
+    BuildContext context,
+    WidgetRef ref,
+    List<_TransactionItem> transactions,
+    NumberFormat currencyFormat,
+    String currency,
+    Account account,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        // Group transactions by date
+        final transactionsByDate = <DateTime, List<_TransactionItem>>{};
+        for (final transaction in transactions) {
+          final dateKey = DateTime(
+            transaction.date.year,
+            transaction.date.month,
+            transaction.date.day,
+          );
+          if (!transactionsByDate.containsKey(dateKey)) {
+            transactionsByDate[dateKey] = [];
+          }
+          transactionsByDate[dateKey]!.add(transaction);
+        }
+
+        final sortedDates = transactionsByDate.keys.toList()
+          ..sort((a, b) => b.compareTo(a));
+
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Transaction History',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      Text(
+                        '${transactions.length} transactions',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 24),
+                // Transaction list
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    padding: const EdgeInsets.only(bottom: 16),
+                    itemCount: sortedDates.length,
+                    itemBuilder: (context, index) {
+                      final date = sortedDates[index];
+                      final dateTransactions = transactionsByDate[date]!;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Date header
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 4),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 1,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    DateFormat('dd MMM yyyy')
+                                        .format(date)
+                                        .toUpperCase(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 1,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Transactions
+                          ...dateTransactions.map(
+                            (transaction) => _buildTransactionItem(
+                              context,
+                              ref,
+                              transaction,
+                              currencyFormat,
+                              currency,
+                              account,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

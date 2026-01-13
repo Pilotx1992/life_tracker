@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/features/health/domain/entities/sleep_entry.dart';
 
 /// Provider for Sleep data
-/// TODO: Implement full repository pattern when data layer is ready
+/// [Phase 2] Full repository pattern will be implemented when data layer is ready
 final sleepListProvider = Provider<List<SleepEntry>>((ref) {
   // Mock data for now - will be replaced with real data source
   return [];

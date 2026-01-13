@@ -229,8 +229,9 @@ class HealthService {
   }) async {
     if (_health == null) await initialize();
     if (!_isAuthorized) {
-      if (!await hasPermissions())
+      if (!await hasPermissions()) {
         throw Exception('Health permissions not granted');
+      }
     }
 
     try {
@@ -248,7 +249,7 @@ class HealthService {
                     (data.value as NumericHealthValue).numericValue.toDouble(),
                 date: data.dateFrom,
                 source: data.sourceName,
-              ))
+              ),)
           .toList();
 
       energyData.sort((a, b) => b.date.compareTo(a.date));
@@ -265,8 +266,9 @@ class HealthService {
   }) async {
     if (_health == null) await initialize();
     if (!_isAuthorized) {
-      if (!await hasPermissions())
+      if (!await hasPermissions()) {
         throw Exception('Health permissions not granted');
+      }
     }
 
     try {
@@ -284,7 +286,7 @@ class HealthService {
                     (data.value as NumericHealthValue).numericValue.toDouble(),
                 date: data.dateFrom,
                 source: data.sourceName,
-              ))
+              ),)
           .toList();
 
       distanceData.sort((a, b) => b.date.compareTo(a.date));

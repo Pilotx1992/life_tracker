@@ -35,7 +35,7 @@ class ReminderNotificationService {
       if (reminder.id == null) {
         if (kDebugMode) {
           debugPrint(
-              '⚠️ ReminderNotification: Cannot schedule - reminder has no ID');
+              '⚠️ ReminderNotification: Cannot schedule - reminder has no ID',);
         }
         return false;
       }
@@ -43,7 +43,7 @@ class ReminderNotificationService {
       if (reminder.isCompleted) {
         if (kDebugMode) {
           debugPrint(
-              '⚠️ ReminderNotification: Cannot schedule - reminder ${reminder.id} is completed');
+              '⚠️ ReminderNotification: Cannot schedule - reminder ${reminder.id} is completed',);
         }
         return false;
       }
@@ -56,7 +56,7 @@ class ReminderNotificationService {
       if (reminder.dateTime.isBefore(now)) {
         if (kDebugMode) {
           debugPrint(
-              '⚠️ ReminderNotification: Cannot schedule - date has passed');
+              '⚠️ ReminderNotification: Cannot schedule - date has passed',);
           debugPrint('   Reminder date: ${reminder.dateTime}');
           debugPrint('   Current time: $now');
         }
@@ -69,7 +69,7 @@ class ReminderNotificationService {
           await _alarmService.scheduleAlarm(reminder);
           if (kDebugMode) {
             debugPrint(
-                '⏰ ReminderNotification: Scheduled ALARM for reminder ${reminder.id}');
+                '⏰ ReminderNotification: Scheduled ALARM for reminder ${reminder.id}',);
             debugPrint('   Title: ${reminder.title}');
             debugPrint('   DateTime: ${reminder.dateTime}');
             debugPrint('   Vibrate: ${reminder.vibrate}');
@@ -130,7 +130,7 @@ class ReminderNotificationService {
       if (success) {
         if (kDebugMode) {
           debugPrint(
-              '✅ ReminderNotification: Notification scheduled successfully');
+              '✅ ReminderNotification: Notification scheduled successfully',);
         }
       } else {
         if (kDebugMode) {
@@ -158,7 +158,7 @@ class ReminderNotificationService {
           await _alarmService.cancelAlarm(reminderId);
           if (kDebugMode) {
             debugPrint(
-                '🚫 ReminderNotification: Cancelled alarm for reminder $reminderId');
+                '🚫 ReminderNotification: Cancelled alarm for reminder $reminderId',);
           }
         } catch (e) {
           if (kDebugMode) {
@@ -173,7 +173,7 @@ class ReminderNotificationService {
 
       if (kDebugMode) {
         debugPrint(
-            '🚫 ReminderNotification: Cancelled notification for reminder $reminderId');
+            '🚫 ReminderNotification: Cancelled notification for reminder $reminderId',);
       }
     } catch (e, stack) {
       if (kDebugMode) {
@@ -186,13 +186,13 @@ class ReminderNotificationService {
   /// Schedule notifications for all active reminders.
   /// Returns the count of successfully scheduled notifications.
   Future<int> rescheduleAllReminderNotifications(
-      List<Reminder> reminders) async {
+      List<Reminder> reminders,) async {
     int successCount = 0;
     int failCount = 0;
 
     if (kDebugMode) {
       debugPrint(
-          '🔄 ReminderNotification: Rescheduling ${reminders.length} reminders...');
+          '🔄 ReminderNotification: Rescheduling ${reminders.length} reminders...',);
     }
 
     for (final reminder in reminders) {
@@ -210,7 +210,7 @@ class ReminderNotificationService {
       debugPrint('✅ ReminderNotification: Rescheduled $successCount reminders');
       if (failCount > 0) {
         debugPrint(
-            '⚠️ ReminderNotification: Failed to reschedule $failCount reminders');
+            '⚠️ ReminderNotification: Failed to reschedule $failCount reminders',);
       }
     }
 
@@ -222,7 +222,7 @@ class ReminderNotificationService {
     if (reminder.nextOccurrence == null) {
       if (kDebugMode) {
         debugPrint(
-            '⚠️ ReminderNotification: No next occurrence for reminder ${reminder.id}');
+            '⚠️ ReminderNotification: No next occurrence for reminder ${reminder.id}',);
       }
       return false;
     }

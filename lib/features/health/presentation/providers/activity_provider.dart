@@ -79,7 +79,7 @@ final activityDataProvider = Provider<ActivityData>((ref) {
         : DataSource.pedometer;
   });
 
-  // TODO: Fetch goals from UserProfile or Settings
+  // [Phase 2] Goals will be fetched from UserProfile or Settings
 
   return ActivityData(
     moveCurrent: move,

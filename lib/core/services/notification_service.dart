@@ -64,7 +64,7 @@ class NotificationService {
         requestAlertPermission: true,
       );
 
-      final initSettings = const InitializationSettings(
+      const initSettings = InitializationSettings(
         android: androidInit,
         iOS: iosInit,
       );
@@ -120,7 +120,7 @@ class NotificationService {
 
       if (kDebugMode) {
         debugPrint(
-            '🔔 Notification permission: $_permissionGranted (status: $status)');
+            '🔔 Notification permission: $_permissionGranted (status: $status)',);
       }
 
       // Also request exact alarm permission for Android 12+
@@ -141,7 +141,7 @@ class NotificationService {
             await Permission.ignoreBatteryOptimizations.request();
         if (kDebugMode) {
           debugPrint(
-              '🔋 Battery optimization exemption: ${batteryStatus.isGranted}');
+              '🔋 Battery optimization exemption: ${batteryStatus.isGranted}',);
         }
       } catch (e) {
         if (kDebugMode) {
@@ -175,7 +175,7 @@ class NotificationService {
       if (scheduledDate.isBefore(now)) {
         if (kDebugMode) {
           debugPrint(
-              '⚠️ Cannot schedule notification in the past: $scheduledDate (now: $now)');
+              '⚠️ Cannot schedule notification in the past: $scheduledDate (now: $now)',);
         }
         return false;
       }
@@ -335,7 +335,7 @@ class NotificationService {
       if (scheduledDate.isBefore(now)) {
         if (kDebugMode) {
           debugPrint(
-              '⚠️ Cannot schedule alarm in the past: $scheduledDate (now: $now)');
+              '⚠️ Cannot schedule alarm in the past: $scheduledDate (now: $now)',);
         }
         return false;
       }

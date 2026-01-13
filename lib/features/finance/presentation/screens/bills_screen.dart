@@ -114,7 +114,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen>
             },
             icon: const Icon(Icons.add),
             label: Text(
-                _tabController.index == 2 ? 'Add Installment' : 'Add Bill'),
+                _tabController.index == 2 ? 'Add Installment' : 'Add Bill',),
           );
         },
       ),
@@ -175,12 +175,13 @@ class _BillsScreenState extends ConsumerState<BillsScreen>
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
         final overdueBills = filteredBills
-            .where((b) => b.isActive && b.nextDueDate.isBefore(today))
+            .where((b) => b.isActive && !b.isFullyPaid && b.nextDueDate.isBefore(today))
             .toList();
         final dueTodayBills = filteredBills
             .where(
               (b) =>
                   b.isActive &&
+                  !b.isFullyPaid &&
                   DateTime(
                         b.nextDueDate.year,
                         b.nextDueDate.month,
@@ -190,14 +191,14 @@ class _BillsScreenState extends ConsumerState<BillsScreen>
             )
             .toList();
         final upcomingBills = filteredBills
-            .where((b) => b.isActive && b.nextDueDate.isAfter(today))
+            .where((b) => b.isActive && !b.isFullyPaid && b.nextDueDate.isAfter(today))
             .toList();
         final inactiveBills = filteredBills.where((b) => !b.isActive).toList();
 
         return RefreshIndicator(
           onRefresh: () => ref.read(billNotifierProvider.notifier).loadBills(),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 88), // Space for FAB
             children: [
               // Summary Card
               _buildSummaryCard(context, bills),
@@ -305,7 +306,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen>
         return RefreshIndicator(
           onRefresh: () => ref.read(billNotifierProvider.notifier).loadBills(),
           child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.only(top: 16, bottom: 88), // Space for FAB
             children: [
               // Installments Summary
               _buildInstallmentsSummary(context, totalRemaining, installments),

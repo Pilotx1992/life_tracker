@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:life_tracker/core/services/app_lock_service.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
-import 'package:life_tracker/features/settings/presentation/widgets/pin_input_widget.dart';
+import 'package:life_tracker/shared/widgets/fields/pin_keypad_widget.dart';
 
 class AppLockSetupScreen extends StatefulWidget {
   const AppLockSetupScreen({super.key});
@@ -12,11 +12,15 @@ class AppLockSetupScreen extends StatefulWidget {
 
 class _AppLockSetupScreenState extends State<AppLockSetupScreen> {
   final AppLockService _lockService = AppLockService.instance;
+  final GlobalKey<PinKeypadWidgetState> _pinKeypadKey = GlobalKey();
 
   int _currentStep =
       0; // 0: choose method, 1: setup PIN, 2: confirm PIN, 3: test biometric, 4: timeout
   String? _selectedMethod; // 'pin', 'biometric', 'both'
   String? _firstPin;
+  String? _errorMessage;
+  int? _pinStrengthLevel;
+  String? _pinStrengthDescription;
   bool _isBiometricAvailable = false;
   int _selectedTimeout = 300; // 5 minutes in seconds
   final List<int> _timeoutOptions = [
@@ -74,9 +78,24 @@ class _AppLockSetupScreenState extends State<AppLockSetupScreen> {
 
   void _onPinEntered(String pin) {
     if (_currentStep == 1) {
-      // First PIN entry
+      // First PIN entry - check strength
+      final isWeak = _lockService.isPinWeak(pin);
+      if (isWeak) {
+        setState(() {
+          _errorMessage = 'Weak PIN! Try a stronger combination.';
+          _pinStrengthLevel = _lockService.getPinStrengthLevel(pin);
+          _pinStrengthDescription = _lockService.getPinStrengthDescription(pin);
+        });
+        _pinKeypadKey.currentState?.shake();
+        _pinKeypadKey.currentState?.clearPin();
+        return;
+      }
+      
       setState(() {
         _firstPin = pin;
+        _errorMessage = null;
+        _pinStrengthLevel = null;
+        _pinStrengthDescription = null;
         _currentStep = 2; // Go to confirmation
       });
     } else if (_currentStep == 2) {
@@ -84,15 +103,33 @@ class _AppLockSetupScreenState extends State<AppLockSetupScreen> {
       if (pin == _firstPin) {
         _savePin(pin);
       } else {
-        FeedbackService.showError(
-          context,
-          'PINs do not match. Please try again.',
-        );
         setState(() {
-          _firstPin = null;
-          _currentStep = 1; // Go back to first entry
+          _errorMessage = 'PINs do not match. Try again.';
+        });
+        _pinKeypadKey.currentState?.shake();
+        _pinKeypadKey.currentState?.clearPin();
+        
+        // After a moment, reset to first entry
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            setState(() {
+              _firstPin = null;
+              _errorMessage = null;
+              _currentStep = 1;
+            });
+          }
         });
       }
+    }
+  }
+
+  void _onPinChanged(String pin) {
+    if (_currentStep == 1 && pin.length == 4) {
+      // Show strength indicator during first entry
+      setState(() {
+        _pinStrengthLevel = _lockService.getPinStrengthLevel(pin);
+        _pinStrengthDescription = _lockService.getPinStrengthDescription(pin);
+      });
     }
   }
 
@@ -236,22 +273,27 @@ class _AppLockSetupScreenState extends State<AppLockSetupScreen> {
                 ),
               ],
             ] else if (_currentStep == 1) ...[
-              const Text(
-                'Enter PIN',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              PinInputWidget(
-                onPinEntered: _onPinEntered,
+              Center(
+                child: PinKeypadWidget(
+                  key: _pinKeypadKey,
+                  title: 'Create PIN',
+                  subtitle: 'Choose a strong 4-digit PIN',
+                  onPinComplete: _onPinEntered,
+                  onPinChanged: _onPinChanged,
+                  errorMessage: _errorMessage,
+                  strengthLevel: _pinStrengthLevel,
+                  strengthDescription: _pinStrengthDescription,
+                ),
               ),
             ] else if (_currentStep == 2) ...[
-              const Text(
-                'Confirm PIN',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              PinInputWidget(
-                onPinEntered: _onPinEntered,
+              Center(
+                child: PinKeypadWidget(
+                  key: _pinKeypadKey,
+                  title: 'Confirm PIN',
+                  subtitle: 'Re-enter your PIN to confirm',
+                  onPinComplete: _onPinEntered,
+                  errorMessage: _errorMessage,
+                ),
               ),
             ] else if (_currentStep == 3) ...[
               const Text(
@@ -278,18 +320,25 @@ class _AppLockSetupScreenState extends State<AppLockSetupScreen> {
               const SizedBox(height: 8),
               const Text('Lock the app automatically after inactivity'),
               const SizedBox(height: 24),
-              ..._timeoutOptions.map((timeout) {
-                return RadioListTile<int>(
-                  title: Text(_formatTimeout(timeout)),
-                  value: timeout,
+              ...[
+                RadioGroup<int>(
                   groupValue: _selectedTimeout,
                   onChanged: (value) {
                     setState(() {
                       _selectedTimeout = value!;
                     });
                   },
-                );
-              }),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: _timeoutOptions.map((timeout) {
+                      return RadioListTile<int>(
+                        title: Text(_formatTimeout(timeout)),
+                        value: timeout,
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _saveTimeout,

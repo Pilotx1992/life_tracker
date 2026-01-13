@@ -12,10 +12,8 @@ final pedometerServiceProvider = Provider<PedometerService>((ref) {
 final todayStepsFromPedometerProvider = StreamProvider<int>((ref) {
   final service = ref.watch(pedometerServiceProvider);
 
-  // Initialize the service
-  service.initialize();
-
-  // Return the stream
+  // No need to initialize here - already initialized in app_startup.dart
+  // Return the stream directly
   return service.todayStepsStream;
 });
 

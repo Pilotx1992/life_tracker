@@ -63,7 +63,12 @@ class CommitmentDetailScreen extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDesignTokens.space16),
+        padding: const EdgeInsets.only(
+          left: AppDesignTokens.space16,
+          right: AppDesignTokens.space16,
+          top: AppDesignTokens.space16,
+          bottom: 88, // Space for FAB
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

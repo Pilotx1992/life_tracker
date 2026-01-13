@@ -273,11 +273,15 @@ class BillNotifier extends StateNotifier<AsyncValue<List<RecurringBill>>> {
             // Calculate next due date
             final nextDueDate = CalculateNextDueDate.calculate(updatedBill);
             await updateBillEntry(
-                updatedBill.copyWith(nextDueDate: nextDueDate));
+                updatedBill.copyWith(nextDueDate: nextDueDate),);
           }
         } else {
           // For recurring bills, just update next due date
-          final nextDueDate = CalculateNextDueDate.calculate(bill);
+          // Calculate from the current nextDueDate to maintain the schedule
+          final nextDueDate = CalculateNextDueDate.calculate(
+            bill,
+            fromDate: bill.nextDueDate,
+          );
           final updatedBill = bill.copyWith(nextDueDate: nextDueDate);
           await updateBillEntry(updatedBill);
         }

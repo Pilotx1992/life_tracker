@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:life_tracker/core/constants/app_design_tokens.dart';
 import 'package:life_tracker/core/router/app_router.dart';
 import 'package:life_tracker/features/settings/presentation/providers/user_profile_providers.dart';
+import 'package:life_tracker/features/dashboard/presentation/providers/dashboard_stats_provider.dart';
 
 /// Premium Dashboard Screen with vibrant colors and animations
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -340,6 +342,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   Widget _buildQuickStats(BuildContext context, ThemeData theme, bool isDark) {
+    final statsAsync = ref.watch(dashboardStatsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -369,52 +373,171 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         const SizedBox(height: AppDesignTokens.space16),
 
         // Stats Grid with glassmorphic cards
-        Row(
-          children: [
-            Expanded(
-              child: _GlassStatCard(
-                icon: Icons.trending_up_rounded,
-                label: 'Activity',
-                value: '87%',
-                color: const Color(0xFF4ECDC4),
-                isDark: isDark,
+        statsAsync.when(
+          data: (stats) {
+            // Format currency
+            final currencySymbol = stats.currency == 'USD' ? '\$' : 'E£';
+            final balanceFormatted = NumberFormat.currency(
+              symbol: currencySymbol,
+              decimalDigits: 0,
+            ).format(stats.totalBalance);
+
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _GlassStatCard(
+                        icon: Icons.trending_up_rounded,
+                        label: 'Activity',
+                        value: '${stats.activityPercentage}%',
+                        color: const Color(0xFF4ECDC4),
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: AppDesignTokens.space12),
+                    Expanded(
+                      child: _GlassStatCard(
+                        icon: Icons.check_circle_rounded,
+                        label: 'Tasks',
+                        value: '${stats.pendingTasks}',
+                        color: const Color(0xFF9B59B6),
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppDesignTokens.space12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _GlassStatCard(
+                        icon: Icons.favorite_rounded,
+                        label: 'Health',
+                        value: stats.healthStatus,
+                        color: const Color(0xFFFF6B6B),
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: AppDesignTokens.space12),
+                    Expanded(
+                      child: _GlassStatCard(
+                        icon: Icons.account_balance_wallet_rounded,
+                        label: 'Balance',
+                        value: balanceFormatted,
+                        color: stats.totalBalance >= 0
+                            ? const Color(0xFF2ECC71)
+                            : const Color(0xFFE74C3C),
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+          loading: () => Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.trending_up_rounded,
+                      label: 'Activity',
+                      value: '--',
+                      color: const Color(0xFF4ECDC4),
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: AppDesignTokens.space12),
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.check_circle_rounded,
+                      label: 'Tasks',
+                      value: '--',
+                      color: const Color(0xFF9B59B6),
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: AppDesignTokens.space12),
-            Expanded(
-              child: _GlassStatCard(
-                icon: Icons.check_circle_rounded,
-                label: 'Tasks',
-                value: '12',
-                color: const Color(0xFF9B59B6),
-                isDark: isDark,
+              const SizedBox(height: AppDesignTokens.space12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.favorite_rounded,
+                      label: 'Health',
+                      value: '--',
+                      color: const Color(0xFFFF6B6B),
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: AppDesignTokens.space12),
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.account_balance_wallet_rounded,
+                      label: 'Balance',
+                      value: '--',
+                      color: const Color(0xFF2ECC71),
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppDesignTokens.space12),
-        Row(
-          children: [
-            Expanded(
-              child: _GlassStatCard(
-                icon: Icons.favorite_rounded,
-                label: 'Health',
-                value: 'Good',
-                color: const Color(0xFFFF6B6B),
-                isDark: isDark,
+            ],
+          ),
+          error: (_, __) => Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.trending_up_rounded,
+                      label: 'Activity',
+                      value: '0%',
+                      color: const Color(0xFF4ECDC4),
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: AppDesignTokens.space12),
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.check_circle_rounded,
+                      label: 'Tasks',
+                      value: '0',
+                      color: const Color(0xFF9B59B6),
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: AppDesignTokens.space12),
-            Expanded(
-              child: _GlassStatCard(
-                icon: Icons.account_balance_wallet_rounded,
-                label: 'Balance',
-                value: '+\$240',
-                color: const Color(0xFF2ECC71),
-                isDark: isDark,
+              const SizedBox(height: AppDesignTokens.space12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.favorite_rounded,
+                      label: 'Health',
+                      value: 'N/A',
+                      color: const Color(0xFFFF6B6B),
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: AppDesignTokens.space12),
+                  Expanded(
+                    child: _GlassStatCard(
+                      icon: Icons.account_balance_wallet_rounded,
+                      label: 'Balance',
+                      value: 'E£0',
+                      color: const Color(0xFF2ECC71),
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

@@ -60,7 +60,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notes'),
+        title: const Text('Notebook'),
         actions: [
           // View toggle
           IconButton(
@@ -170,7 +170,12 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                       ref.read(noteNotifierProvider.notifier).loadNotes(),
                   child: _isGridView
                       ? GridView.builder(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.only(
+                            left: 8,
+                            right: 8,
+                            top: 8,
+                            bottom: 88, // Space for FAB
+                          ),
                           cacheExtent: 500,
                           addAutomaticKeepAlives: false,
                           addRepaintBoundaries: true,
@@ -194,6 +199,7 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                           },
                         )
                       : ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 88), // Space for FAB
                           cacheExtent: 500,
                           addAutomaticKeepAlives: false,
                           addRepaintBoundaries: true,

@@ -7,6 +7,7 @@ import 'package:life_tracker/core/constants/app_design_tokens.dart';
 import 'package:life_tracker/core/router/app_router.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/notes/domain/entities/note.dart';
+import 'package:life_tracker/features/notes/domain/entities/checklist_item.dart';
 import 'package:life_tracker/features/notes/presentation/providers/note_provider.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/attachment_widget.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/audio_player_widget.dart';
@@ -87,6 +88,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 88), // Space for FAB
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -226,31 +228,43 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Checklist',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                    Row(
+                      children: [
+                        Text(
+                          'Todo List',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: () => _addChecklistItem(context),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Add'),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(AppDesignTokens.space12),
                         child: Column(
-                          children: widget.note.checklistItems.map((item) {
+                          children: widget.note.checklistItems
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    item.isChecked
-                                        ? Icons.check_box
-                                        : Icons.check_box_outline_blank,
-                                    color: item.isChecked
-                                        ? Colors.green
-                                        : Colors.grey,
+                                  Checkbox(
+                                    value: item.isChecked,
+                                    onChanged: (value) =>
+                                        _toggleChecklistItem(index),
                                   ),
-                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       item.text,
@@ -258,10 +272,26 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                                         decoration: item.isChecked
                                             ? TextDecoration.lineThrough
                                             : null,
-                                        color:
-                                            item.isChecked ? Colors.grey : null,
+                                        color: item.isChecked
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.6)
+                                            : null,
                                       ),
                                     ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                    ),
+                                    onPressed: () =>
+                                        _deleteChecklistItem(index),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .error
+                                        .withValues(alpha: 0.7),
                                   ),
                                 ],
                               ),
@@ -271,6 +301,20 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+
+            // Add Todo List Button (if no checklist exists)
+            if (widget.note.checklistItems.isEmpty && _isUnlocked)
+              Padding(
+                padding: const EdgeInsets.all(AppDesignTokens.space16),
+                child: OutlinedButton.icon(
+                  onPressed: () => _addChecklistItem(context),
+                  icon: const Icon(Icons.checklist),
+                  label: const Text('Add Todo List'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
                 ),
               ),
 
@@ -575,5 +619,88 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     }
 
     return true;
+  }
+
+  /// Add a new checklist item
+  Future<void> _addChecklistItem(BuildContext context) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Todo Item'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter todo item...',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: null,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) {
+              Navigator.pop(context, value.trim());
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.pop(context, controller.text.trim());
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final newItem = ChecklistItem(text: result, isChecked: false);
+      final updatedItems = [...widget.note.checklistItems, newItem];
+      final updatedNote = widget.note.copyWith(
+        checklistItems: updatedItems,
+        updatedAt: DateTime.now(),
+      );
+
+      await ref.read(noteNotifierProvider.notifier).updateNoteEntry(updatedNote);
+      if (context.mounted) {
+        FeedbackService.showSuccess(context, 'Todo item added');
+      }
+    }
+  }
+
+  /// Toggle a checklist item's checked state
+  Future<void> _toggleChecklistItem(int index) async {
+    final items = List<ChecklistItem>.from(widget.note.checklistItems);
+    items[index] = items[index].copyWith(isChecked: !items[index].isChecked);
+
+    final updatedNote = widget.note.copyWith(
+      checklistItems: items,
+      updatedAt: DateTime.now(),
+    );
+
+    await ref.read(noteNotifierProvider.notifier).updateNoteEntry(updatedNote);
+  }
+
+  /// Delete a checklist item
+  Future<void> _deleteChecklistItem(int index) async {
+    final items = List<ChecklistItem>.from(widget.note.checklistItems);
+    items.removeAt(index);
+
+    final updatedNote = widget.note.copyWith(
+      checklistItems: items,
+      updatedAt: DateTime.now(),
+    );
+
+    await ref.read(noteNotifierProvider.notifier).updateNoteEntry(updatedNote);
+    if (mounted) {
+      FeedbackService.showSuccess(context, 'Todo item deleted');
+    }
   }
 }

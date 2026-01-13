@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +13,8 @@ class PedometerService {
   final StreamController<int> _todayStepsController =
       StreamController<int>.broadcast();
   StreamSubscription<StepCount>? _stepCountSubscription;
+  Timer? _dayCheckTimer;
+  Timer? _midnightTimer;
 
   // State
   int _stepCountAtMidnight = 0;
@@ -33,6 +36,7 @@ class PedometerService {
     await _loadSavedState();
     _checkDayReset();
     _startListening();
+    _startDayCheckTimer();
   }
 
   /// Load saved state from shared preferences
@@ -59,9 +63,23 @@ class PedometerService {
 
     if (_lastResetDate == null || _lastResetDate!.isBefore(todayStart)) {
       // New day - reset the offset
+      if (kDebugMode) {
+        debugPrint('🔄 Pedometer: Day changed - performing reset');
+        debugPrint('   Last reset: $_lastResetDate');
+        debugPrint('   Today start: $todayStart');
+        debugPrint('   Current steps: $_currentStepCount');
+      }
+
       _stepCountAtMidnight = _currentStepCount;
       _lastResetDate = todayStart;
       _saveState();
+
+      // Emit 0 steps for the new day
+      _todayStepsController.add(0);
+
+      if (kDebugMode) {
+        debugPrint('✅ Pedometer: Reset complete - steps at midnight: $_stepCountAtMidnight');
+      }
     }
   }
 
@@ -81,6 +99,67 @@ class PedometerService {
       // Step counting not available on this device (e.g., emulators)
       // Emit 0 steps so the app continues to work
       _todayStepsController.add(0);
+    }
+  }
+
+  /// Start a periodic timer to check for day transitions
+  /// Also schedules an exact midnight reset
+  void _startDayCheckTimer() {
+    // Cancel existing timers
+    _dayCheckTimer?.cancel();
+    _midnightTimer?.cancel();
+
+    // Calculate time until next midnight
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    final timeUntilMidnight = nextMidnight.difference(now);
+
+    if (kDebugMode) {
+      debugPrint('⏰ Pedometer: Scheduled midnight reset in ${timeUntilMidnight.inHours}h ${timeUntilMidnight.inMinutes % 60}m');
+      debugPrint('   Next midnight: $nextMidnight');
+    }
+
+    // Schedule exact midnight reset
+    _midnightTimer = Timer(timeUntilMidnight, () {
+      if (kDebugMode) {
+        debugPrint('🌙 Pedometer: Midnight timer fired!');
+      }
+      _performMidnightReset();
+      // After midnight reset, schedule the next midnight
+      _startDayCheckTimer();
+    });
+
+    // Run periodic check every 15 minutes as backup
+    // (in case app was suspended during midnight or timer didn't fire)
+    _dayCheckTimer = Timer.periodic(
+      const Duration(minutes: 15),
+      (_) => _checkDayReset(),
+    );
+  }
+
+  /// Perform midnight reset explicitly
+  void _performMidnightReset() {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    if (kDebugMode) {
+      debugPrint('🔄 Pedometer: Performing midnight reset');
+      debugPrint('   Time: $now');
+      debugPrint('   Current total steps: $_currentStepCount');
+    }
+
+    // Reset the offset to current step count
+    _stepCountAtMidnight = _currentStepCount;
+    _lastResetDate = todayStart;
+    _saveState();
+
+    // Emit 0 steps for the new day
+    _todayStepsController.add(0);
+
+    if (kDebugMode) {
+      debugPrint('✅ Pedometer: Midnight reset complete');
+      debugPrint('   Steps at midnight: $_stepCountAtMidnight');
+      debugPrint('   Today steps: 0');
     }
   }
 
@@ -114,6 +193,8 @@ class PedometerService {
   /// Dispose resources
   void dispose() {
     _stepCountSubscription?.cancel();
+    _dayCheckTimer?.cancel();
+    _midnightTimer?.cancel();
     _todayStepsController.close();
   }
 }

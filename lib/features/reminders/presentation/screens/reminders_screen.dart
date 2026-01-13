@@ -156,7 +156,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
     return RefreshIndicator(
       onRefresh: _refreshReminders,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.only(top: 8, bottom: 88), // Space for FAB
         physics: const AlwaysScrollableScrollPhysics(),
         cacheExtent: 500,
         addAutomaticKeepAlives: false,
@@ -239,7 +239,7 @@ class _RemindersScreenState extends ConsumerState<RemindersScreen>
                   FeedbackService.showSuccess(context, 'Reminder completed!');
                 } else if (mounted) {
                   FeedbackService.showError(
-                      context, 'Failed to complete reminder');
+                      context, 'Failed to complete reminder',);
                 }
               },
       ),
