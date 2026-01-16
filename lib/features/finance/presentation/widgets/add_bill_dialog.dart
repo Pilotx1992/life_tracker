@@ -80,7 +80,7 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
     return CalculateNextDueDate.calculate(tempBill);
   }
 
-  void _saveBill() {
+  Future<void> _saveBill() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedCategoryId == null) {
         FeedbackService.showWarning(context, 'Please select a category');
@@ -112,12 +112,19 @@ class _AddBillDialogState extends ConsumerState<AddBillDialog> {
       );
 
       if (widget.bill == null) {
-        ref.read(billNotifierProvider.notifier).addBillEntry(bill);
+        await ref.read(billNotifierProvider.notifier).addBillEntry(bill);
       } else {
-        ref.read(billNotifierProvider.notifier).updateBillEntry(bill);
+        await ref.read(billNotifierProvider.notifier).updateBillEntry(bill);
       }
 
+      if (!mounted) return;
       Navigator.of(context).pop();
+
+      if (!mounted) return;
+      FeedbackService.showSuccess(
+        context,
+        widget.bill == null ? 'Bill added successfully' : 'Bill updated successfully',
+      );
     }
   }
 

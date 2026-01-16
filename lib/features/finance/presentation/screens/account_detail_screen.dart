@@ -468,7 +468,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         'CURRENT BALANCE',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: 0.5,
                             ),
                       ),
@@ -476,7 +476,7 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         account.currency,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -512,7 +512,7 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Account Type',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -521,7 +521,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                       ),
                     ],
@@ -542,7 +542,7 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Status',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -660,7 +660,7 @@ class AccountDetailScreen extends ConsumerWidget {
                                 .titleLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
                         ),
@@ -678,7 +678,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         'UTILIZED LIMIT',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: 0.5,
                             ),
                       ),
@@ -686,7 +686,7 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         account.currency,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -695,7 +695,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         style:
                             Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                       ),
                     ],
@@ -722,7 +722,7 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Total limit',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -731,7 +731,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                       ),
                     ],
@@ -752,7 +752,7 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Available limit',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -761,7 +761,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                       ),
                     ],
@@ -1058,7 +1058,7 @@ class AccountDetailScreen extends ConsumerWidget {
                                     .bodyMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.black87,
+                                      color: Theme.of(context).colorScheme.onSurface,
                                     ),
                               );
                             },
@@ -1088,7 +1088,7 @@ class AccountDetailScreen extends ConsumerWidget {
                                         .bodyMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.w500,
-                                          color: Colors.black87,
+                                          color: Theme.of(context).colorScheme.onSurface,
                                         ),
                                   );
                                 },
@@ -1104,7 +1104,7 @@ class AccountDetailScreen extends ConsumerWidget {
                                 .bodyMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
                 // Location or note (if available)
@@ -1116,7 +1116,7 @@ class AccountDetailScreen extends ConsumerWidget {
                     child: Text(
                       transaction.expense!.note!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                     ),
@@ -1129,7 +1129,7 @@ class AccountDetailScreen extends ConsumerWidget {
                     child: Text(
                       transaction.transfer!.note!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                     ),
@@ -1143,7 +1143,7 @@ class AccountDetailScreen extends ConsumerWidget {
                     child: Text(
                       transaction.income!.note!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 12,
                           ),
                     ),

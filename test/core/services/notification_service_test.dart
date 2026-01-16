@@ -64,5 +64,54 @@ void main() {
       expect(details.android!.actions![1].id, 'action2');
       expect(details.android!.actions![1].title, 'Action 2');
     });
+
+    test('cancelNotification should cancel a specific notification', () async {
+      when(mockFlutterLocalNotificationsPlugin.cancel(any))
+          .thenAnswer((_) async {});
+
+      await notificationService.cancelNotification(42);
+
+      verify(mockFlutterLocalNotificationsPlugin.cancel(42)).called(1);
+    });
+
+    test('cancelAllNotifications should cancel all notifications', () async {
+      when(mockFlutterLocalNotificationsPlugin.cancelAll())
+          .thenAnswer((_) async {});
+
+      await notificationService.cancelAllNotifications();
+
+      verify(mockFlutterLocalNotificationsPlugin.cancelAll()).called(1);
+    });
+
+    test('showImmediateNotification should show notification immediately',
+        () async {
+      when(
+        mockFlutterLocalNotificationsPlugin.show(
+          any,
+          any,
+          any,
+          any,
+          payload: anyNamed('payload'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final result = await notificationService.showImmediateNotification(
+        id: 100,
+        title: 'Immediate Title',
+        body: 'Immediate Body',
+        payload: 'test_payload',
+      );
+
+      expect(result, isTrue);
+      verify(
+        mockFlutterLocalNotificationsPlugin.show(
+          100,
+          'Immediate Title',
+          'Immediate Body',
+          any,
+          payload: 'test_payload',
+        ),
+      ).called(1);
+    });
   });
 }

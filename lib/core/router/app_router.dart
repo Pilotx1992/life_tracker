@@ -135,6 +135,13 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'detail', // /finance/accounts/detail
               name: 'account_detail',
+              redirect: (context, state) {
+                // Redirect to accounts list if extra is null (app restored)
+                if (state.extra == null) {
+                  return AppRoutes.financeAccounts;
+                }
+                return null;
+              },
               builder: (context, state) {
                 final account = state.extra as Account;
                 return AccountDetailScreen(account: account);
@@ -170,6 +177,12 @@ final appRouter = GoRouter(
             GoRoute(
               path: 'detail', // /finance/commitments/detail
               name: 'commitment_detail',
+              redirect: (context, state) {
+                if (state.extra == null) {
+                  return AppRoutes.financeCommitments;
+                }
+                return null;
+              },
               builder: (context, state) {
                 final commitment = state.extra as FinancialCommitment;
                 return CommitmentDetailScreen(commitment: commitment);
@@ -208,6 +221,12 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'detail', // /notes/detail
           name: 'note_detail',
+          redirect: (context, state) {
+            if (state.extra == null) {
+              return AppRoutes.notes;
+            }
+            return null;
+          },
           builder: (context, state) {
             final note = state.extra as Note;
             return NoteDetailScreen(note: note);

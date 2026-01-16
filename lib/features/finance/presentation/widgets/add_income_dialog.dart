@@ -145,6 +145,12 @@ class _AddIncomeDialogState extends ConsumerState<AddIncomeDialog> {
 
       if (!mounted) return;
       Navigator.of(context).pop();
+
+      if (!mounted) return;
+      FeedbackService.showSuccess(
+        context,
+        widget.income == null ? 'Income added successfully' : 'Income updated successfully',
+      );
     }
   }
 

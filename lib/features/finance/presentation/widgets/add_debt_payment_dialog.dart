@@ -46,7 +46,7 @@ class _AddDebtPaymentDialogState extends ConsumerState<AddDebtPaymentDialog> {
     }
   }
 
-  void _savePayment() {
+  Future<void> _savePayment() async {
     if (_formKey.currentState!.validate()) {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
       final remaining = widget.debt.remainingAmount;
@@ -72,9 +72,10 @@ class _AddDebtPaymentDialogState extends ConsumerState<AddDebtPaymentDialog> {
 
       // Update account balance
       if (_selectedAccountId != null) {
-        _updateAccountBalance(ref, int.parse(_selectedAccountId!), amount);
+        await _updateAccountBalance(ref, int.parse(_selectedAccountId!), amount);
       }
 
+      if (!mounted) return;
       Navigator.of(context).pop();
       FeedbackService.showSuccess(context, 'Payment recorded');
     }
@@ -86,25 +87,29 @@ class _AddDebtPaymentDialogState extends ConsumerState<AddDebtPaymentDialog> {
     double amount,
   ) async {
     final accountsAsync = ref.read(accountListProvider);
-    accountsAsync.whenData((accounts) {
-      final account = accounts.firstWhere(
-        (a) => a.id == accountId,
-        orElse: () => accounts.first,
-      );
-
-      if (account.id != null) {
-        // If "I Owe", paying reduces my balance.
-        // If "Owed to Me", receiving increases my balance.
-        final amountChange = widget.debt.type == 'i_owe' ? -amount : amount;
-
-        final updatedAccount = account.copyWith(
-          balance: account.balance + amountChange,
+    await accountsAsync.when(
+      data: (accounts) async {
+        final account = accounts.firstWhere(
+          (a) => a.id == accountId,
+          orElse: () => accounts.first,
         );
-        ref
-            .read(accountNotifierProvider.notifier)
-            .updateAccountEntry(updatedAccount);
-      }
-    });
+
+        if (account.id != null) {
+          // If "I Owe", paying reduces my balance.
+          // If "Owed to Me", receiving increases my balance.
+          final amountChange = widget.debt.type == 'i_owe' ? -amount : amount;
+
+          final updatedAccount = account.copyWith(
+            balance: account.balance + amountChange,
+          );
+          await ref
+              .read(accountNotifierProvider.notifier)
+              .updateAccountEntry(updatedAccount);
+        }
+      },
+      loading: () async {},
+      error: (_, __) async {},
+    );
   }
 
   @override

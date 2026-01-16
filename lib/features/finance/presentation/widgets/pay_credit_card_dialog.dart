@@ -58,9 +58,8 @@ class _PayCreditCardDialogState extends ConsumerState<PayCreditCardDialog> {
 
           // التحقق من وجود رصيد كافي
           if (fromAccount.balance < amount) {
-            if (mounted) {
-              FeedbackService.showError(context, 'Insufficient balance');
-            }
+            if (!mounted) return;
+            FeedbackService.showError(context, 'Insufficient balance');
             return;
           }
 
@@ -81,12 +80,11 @@ class _PayCreditCardDialogState extends ConsumerState<PayCreditCardDialog> {
 
           // التحقق من أن المبلغ لا يتجاوز الدين الحالي
           if (amount > currentDebt) {
-            if (mounted) {
-              FeedbackService.showError(
-                context,
-                'Amount cannot exceed current debt (${currencyFormat.format(currentDebt)})',
-              );
-            }
+            if (!mounted) return;
+            FeedbackService.showError(
+              context,
+              'Amount cannot exceed current debt (${currencyFormat.format(currentDebt)})',
+            );
             return;
           }
 
@@ -123,29 +121,25 @@ class _PayCreditCardDialogState extends ConsumerState<PayCreditCardDialog> {
               .read(transferNotifierProvider.notifier)
               .addTransferEntry(paymentTransfer);
 
-          if (mounted) {
-            Navigator.of(context).pop();
-            FeedbackService.showSuccess(
-              context,
-              'Paid ${NumberFormat.currency(symbol: '\$').format(amount)} to ${creditCardAccount.name}',
-            );
-          }
+          if (!mounted) return;
+          Navigator.of(context).pop();
+          FeedbackService.showSuccess(
+            context,
+            'Paid ${NumberFormat.currency(symbol: '\$').format(amount)} to ${creditCardAccount.name}',
+          );
         },
         loading: () async {
-          if (mounted) {
-            FeedbackService.showInfo(context, 'Loading accounts...');
-          }
+          if (!mounted) return;
+          FeedbackService.showInfo(context, 'Loading accounts...');
         },
         error: (error, stack) async {
-          if (mounted) {
-            FeedbackService.showError(context, 'Error: $error');
-          }
+          if (!mounted) return;
+          FeedbackService.showError(context, 'Error: $error');
         },
       );
     } catch (e) {
-      if (mounted) {
-        FeedbackService.showError(context, 'Error: $e');
-      }
+      if (!mounted) return;
+      FeedbackService.showError(context, 'Error: $e');
     }
   }
 

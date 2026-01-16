@@ -387,6 +387,8 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
           note: note,
         );
 
+    if (!mounted) return;
+
     Navigator.pop(context);
 
     if (!mounted) return;

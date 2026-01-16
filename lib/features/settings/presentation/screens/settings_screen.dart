@@ -7,6 +7,8 @@ import 'package:life_tracker/features/notes/services/note_encryption_service.dar
 import 'package:life_tracker/features/settings/presentation/providers/settings_provider.dart';
 import 'package:life_tracker/features/settings/presentation/screens/device_setup_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:life_tracker/features/settings/presentation/widgets/settings_section.dart';
+import 'package:life_tracker/features/settings/presentation/widgets/settings_tile.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -34,244 +36,226 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: ListView(
-        children: [
-          // Theme Setting
-          _buildSection(
-            title: 'Appearance',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.palette),
-                title: const Text('Theme'),
-                subtitle: Text(_getThemeModeLabel(settings.themeMode)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showThemeDialog(settings.themeMode),
-              ),
+      backgroundColor: colorScheme.surface,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.medium(
+            title: const Text('Settings'),
+            centerTitle: false,
+            backgroundColor: colorScheme.surface,
+            scrolledUnderElevation: 0,
+            actions: [
+               IconButton(
+                 icon: const Icon(Icons.help_outline),
+                 onPressed: () => context.push(AppRoutes.termsOfService),
+               ),
             ],
           ),
-          // Language Setting
-          _buildSection(
-            title: 'Language',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: const Text('Language'),
-                subtitle: Text(_getLanguageLabel(settings.language)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showLanguageDialog(settings.language),
-              ),
-            ],
-          ),
-          // Finance Settings
-          _buildSection(
-            title: 'Finance',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.currency_exchange),
-                title: const Text('Default Currency'),
-                subtitle: Text(settings.defaultCurrency),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showCurrencyDialog(settings.defaultCurrency),
-              ),
-            ],
-          ),
-          // Date & Time Settings
-          _buildSection(
-            title: 'Date & Time',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: const Text('Date Format'),
-                subtitle: Text(settings.dateFormat),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showDateFormatDialog(settings.dateFormat),
-              ),
-              ListTile(
-                leading: const Icon(Icons.access_time),
-                title: const Text('Time Format'),
-                subtitle:
-                    Text(settings.timeFormat == '12h' ? '12-hour' : '24-hour'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showTimeFormatDialog(settings.timeFormat),
-              ),
-            ],
-          ),
-          // Notification Settings
-          _buildSection(
-            title: 'Notifications',
-            children: [
-              SwitchListTile(
-                secondary: const Icon(Icons.notifications),
-                title: const Text('Enable Notifications'),
-                subtitle: const Text('Receive app notifications'),
-                value: settings.notificationsEnabled,
-                onChanged: (value) {
-                  ref
-                      .read(settingsProvider.notifier)
-                      .setNotificationsEnabled(value);
-                },
-              ),
-              if (settings.notificationsEnabled) ...[
-                SwitchListTile(
-                  secondary: const Icon(Icons.volume_up),
-                  title: const Text('Notification Sound'),
-                  subtitle: const Text('Play sound for notifications'),
-                  value: settings.notificationSound,
-                  onChanged: (value) {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setNotificationSound(value);
-                  },
-                ),
-                SwitchListTile(
-                  secondary: const Icon(Icons.vibration),
-                  title: const Text('Vibration'),
-                  subtitle: const Text('Vibrate for notifications'),
-                  value: settings.notificationVibration,
-                  onChanged: (value) {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setNotificationVibration(value);
-                  },
-                ),
-              ],
-            ],
-          ),
-          // Device Integration
-          _buildSection(
-            title: 'Devices',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.devices),
-                title: const Text('Device Integration'),
-                subtitle:
-                    const Text('Connect smart scales and fitness trackers'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const DeviceSetupScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          // Security Settings
-          _buildSection(
-            title: 'Security',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.lock),
-                title: const Text('App Lock'),
-                subtitle: const Text('Manage app lock settings'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutes.appLockSetup),
-              ),
-              ListTile(
-                leading: const Icon(Icons.fingerprint),
-                title: const Text('Fingerprint for Notes'),
-                subtitle: const Text('Use fingerprint to unlock locked notes'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showEnableFingerprintDialog(),
-              ),
-              ListTile(
-                leading: const Icon(Icons.lock_reset),
-                title: const Text('Reset Note PIN'),
-                subtitle: const Text('Clear saved PIN for locked notes'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _showResetNotePinDialog(),
-              ),
-            ],
-          ),
-          // Backup & Restore
-          _buildSection(
-            title: 'Data',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.backup),
-                title: const Text('Backup & Restore'),
-                subtitle: const Text('Create and restore backups'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutes.backup),
-              ),
-            ],
-          ),
-          // About Section
-          _buildSection(
-            title: 'About',
-            children: [
-              if (_packageInfo != null) ...[
-                ListTile(
-                  leading: const Icon(Icons.info),
-                  title: const Text('App Version'),
-                  subtitle: Text(
-                    '${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+          
+          SliverList(
+            delegate: SliverChildListDelegate([
+              // General Settings
+              SettingsSection(
+                title: 'General',
+                children: [
+                   SettingsTile(
+                    icon: const Icon(Icons.palette_outlined),
+                    iconColor: Colors.blue,
+                    title: 'App Theme',
+                    subtitle: _getThemeModeLabel(settings.themeMode),
+                    onTap: () => _showThemeDialog(settings.themeMode),
                   ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.inventory),
-                  title: const Text('Package Name'),
-                  subtitle: Text(_packageInfo!.packageName),
-                ),
-              ],
-              ListTile(
-                leading: const Icon(Icons.description),
-                title: const Text('Privacy Policy'),
-                subtitle: const Text('View privacy policy'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutes.privacyPolicy),
+                  SettingsTile(
+                    icon: const Icon(Icons.language),
+                    iconColor: Colors.purple,
+                    title: 'Language',
+                    subtitle: _getLanguageLabel(settings.language),
+                    onTap: () => _showLanguageDialog(settings.language),
+                  ),
+                ],
               ),
-              ListTile(
-                leading: const Icon(Icons.gavel),
-                title: const Text('Terms of Service'),
-                subtitle: const Text('View terms and conditions'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutes.termsOfService),
+
+              // Account & Security
+              SettingsSection(
+                title: 'Account & Security',
+                children: [
+                  SettingsTile(
+                    icon: const Icon(Icons.lock_outline),
+                    iconColor: Colors.orange,
+                    title: 'App Lock',
+                    subtitle: 'Secure your app access',
+                    onTap: () => context.push(AppRoutes.appLockSetup),
+                  ),
+                  SettingsTile(
+                    icon: const Icon(Icons.fingerprint),
+                    iconColor: Colors.teal,
+                    title: 'Fingerprint for Notes',
+                    subtitle: 'Quick unlock for notes',
+                    trailing: Switch(
+                      value: true, // TODO: Bind to actual state
+                      onChanged: (v) => _showEnableFingerprintDialog(),
+                    ),
+                    showChevron: false,
+                    onTap: () => _showEnableFingerprintDialog(),
+                  ),
+                   SettingsTile(
+                    icon: const Icon(Icons.lock_reset),
+                    iconColor: Colors.red,
+                    title: 'Reset Note PIN',
+                    subtitle: 'Clear saved PIN',
+                    onTap: () => _showResetNotePinDialog(),
+                  ),
+                ],
               ),
-              ListTile(
-                leading: const Icon(Icons.article),
-                title: const Text('Licenses'),
-                subtitle: const Text('View open source licenses'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutes.licenses),
+
+              // Notifications
+              SettingsSection(
+                title: 'Notifications',
+                children: [
+                  SettingsTile(
+                    icon: const Icon(Icons.notifications_outlined),
+                    iconColor: Colors.amber,
+                    title: 'Notifications',
+                    subtitle: settings.notificationsEnabled ? 'On' : 'Off',
+                    trailing: Switch(
+                      value: settings.notificationsEnabled,
+                      onChanged: (value) {
+                         ref
+                          .read(settingsProvider.notifier)
+                          .setNotificationsEnabled(value);
+                      },
+                    ),
+                    showChevron: false,
+                  ),
+                  if (settings.notificationsEnabled) ...[
+                     SettingsTile(
+                      icon: const Icon(Icons.volume_up_outlined),
+                      iconColor: Colors.amber,
+                      title: 'Sound',
+                      trailing: Switch(
+                        value: settings.notificationSound,
+                         onChanged: (value) {
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setNotificationSound(value);
+                        },
+                      ),
+                      showChevron: false,
+                    ),
+                     SettingsTile(
+                      icon: const Icon(Icons.vibration),
+                      iconColor: Colors.amber,
+                      title: 'Vibration',
+                      trailing: Switch(
+                        value: settings.notificationVibration,
+                         onChanged: (value) {
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setNotificationVibration(value);
+                        },
+                      ),
+                      showChevron: false,
+                    ),
+                  ],
+                ],
               ),
-            ],
+
+              // Data & Integrations
+              SettingsSection(
+                title: 'Data & Integrations',
+                children: [
+                   SettingsTile(
+                    icon: const Icon(Icons.cloud_upload_outlined),
+                    iconColor: Colors.indigo,
+                    title: 'Backup & Restore',
+                    subtitle: 'Manage your data',
+                    onTap: () => context.push(AppRoutes.backup),
+                  ),
+                  SettingsTile(
+                    icon: const Icon(Icons.devices_other),
+                    iconColor: Colors.green,
+                    title: 'Connected Devices',
+                    subtitle: 'Health connect & sensors',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const DeviceSetupScreen(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Preferences (Finance/Time)
+              SettingsSection(
+                title: 'Regional Format',
+                children: [
+                   SettingsTile(
+                    icon: const Icon(Icons.currency_exchange),
+                    iconColor: Colors.green.shade700,
+                    title: 'Currency',
+                    subtitle: settings.defaultCurrency,
+                    onTap: () => _showCurrencyDialog(settings.defaultCurrency),
+                  ),
+                   SettingsTile(
+                    icon: const Icon(Icons.calendar_month),
+                    iconColor: Colors.blueGrey,
+                    title: 'Date Format',
+                    subtitle: settings.dateFormat,
+                    onTap: () => _showDateFormatDialog(settings.dateFormat),
+                  ),
+                   SettingsTile(
+                    icon: const Icon(Icons.access_time),
+                    iconColor: Colors.blueGrey,
+                    title: 'Time Format',
+                    subtitle: settings.timeFormat == '12h' ? '12-hour' : '24-hour',
+                    onTap: () => _showTimeFormatDialog(settings.timeFormat),
+                  ),
+                ],
+              ),
+
+              // About
+              SettingsSection(
+                title: 'About',
+                children: [
+                  SettingsTile(
+                    icon: const Icon(Icons.info_outline),
+                    title: 'Version',
+                    subtitle: _packageInfo != null 
+                        ? '${_packageInfo!.version} (${_packageInfo!.buildNumber})' 
+                        : 'Loading...',
+                    showChevron: false,
+                  ),
+                  SettingsTile(
+                    icon: const Icon(Icons.policy_outlined),
+                    title: 'Privacy Policy',
+                    onTap: () => context.push(AppRoutes.privacyPolicy),
+                  ),
+                  SettingsTile(
+                    icon: const Icon(Icons.gavel_outlined),
+                    title: 'Terms of Service',
+                    onTap: () => context.push(AppRoutes.termsOfService),
+                  ),
+                  SettingsTile(
+                    icon: const Icon(Icons.code),
+                    title: 'Open Source Licenses',
+                    onTap: () => context.push(AppRoutes.licenses),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 48),
+            ]),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-        ),
-        Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
+
 
   String _getThemeModeLabel(ThemeMode mode) {
     switch (mode) {

@@ -112,7 +112,16 @@ class _AddCommitmentDialogState extends ConsumerState<AddCommitmentDialog> {
             .updateCommitmentEntry(commitment);
       }
 
+      if (!mounted) return;
       Navigator.of(context).pop(true);
+
+      if (!mounted) return;
+      FeedbackService.showSuccess(
+        context,
+        widget.commitment == null
+            ? 'Commitment added successfully'
+            : 'Commitment updated successfully',
+      );
     }
   }
 

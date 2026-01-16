@@ -240,7 +240,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           // Encrypt content with the user's PIN
           // At this point, userPin is guaranteed to be non-null and non-empty
           if (kDebugMode) {
-            debugPrint('🔐 Encrypting content with PIN: ${userPin!.length} digits');
+            debugPrint('🔐 Encrypting content with PIN: ${userPin.length} digits');
           }
           final content = _contentController.text.trim();
           if (content.isNotEmpty) {
@@ -249,9 +249,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               userPin,
             );
             if (kDebugMode) {
-              debugPrint(_encryptedContent != null
-                  ? '✅ Content encrypted successfully'
-                  : '❌ Encryption failed');
+              debugPrint(
+                _encryptedContent != null
+                    ? '✅ Content encrypted successfully'
+                    : '❌ Encryption failed',
+              );
             }
           }
         }
