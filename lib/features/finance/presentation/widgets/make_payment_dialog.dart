@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:life_tracker/features/finance/domain/entities/account.dart';
 import 'package:life_tracker/features/finance/domain/entities/recurring_bill.dart';
+import 'package:life_tracker/features/finance/presentation/providers/account_provider.dart';
 import 'package:life_tracker/features/finance/presentation/providers/bill_provider.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 
-/// Dialog for making a payment on an installment
+/// Dialog for making a payment on a bill or installment
 class MakePaymentDialog extends ConsumerStatefulWidget {
-  final RecurringBill installment;
+  final RecurringBill bill;
 
   const MakePaymentDialog({
     super.key,
-    required this.installment,
+    required this.bill,
   });
 
   @override
@@ -23,12 +25,13 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   bool _isFullPayment = true;
+  Account? _selectedAccount;
 
   @override
   void initState() {
     super.initState();
-    // Default to the regular installment amount
-    _amountController.text = widget.installment.amount.toStringAsFixed(2);
+    // Default to the regular bill/installment amount
+    _amountController.text = widget.bill.amount.toStringAsFixed(2);
   }
 
   @override
@@ -41,7 +44,7 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bill = widget.installment;
+    final bill = widget.bill;
     final formatter =
         NumberFormat.currency(symbol: '${bill.currency} ', decimalDigits: 2);
 
@@ -259,6 +262,117 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                       ),
                       const SizedBox(height: 16),
 
+                      // Account dropdown (for all bills and installments)
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final accountsAsync = ref.watch(accountListProvider);
+
+                          return accountsAsync.when(
+                              data: (accounts) {
+                                if (accounts.isEmpty) {
+                                  return Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.errorContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.warning_rounded,
+                                          color: theme.colorScheme.error,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'No accounts available. Please add an account first.',
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: theme.colorScheme.onErrorContainer,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                _selectedAccount ??= accounts.first;
+
+                                return DropdownButtonFormField<Account>(
+                                  initialValue: _selectedAccount,
+                                  decoration: InputDecoration(
+                                    labelText: 'Pay from Account',
+                                    prefixIcon: const Icon(Icons.account_balance_wallet),
+                                    filled: true,
+                                    fillColor: theme.colorScheme.surfaceContainerHighest
+                                        .withValues(alpha: 0.3),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  isExpanded: true,
+                                  items: accounts.map((account) {
+                                    final balanceText = NumberFormat.currency(
+                                      symbol: account.currency,
+                                      decimalDigits: 0,
+                                    ).format(account.balance);
+
+                                    return DropdownMenuItem(
+                                      value: account,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              account.name,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            balanceText,
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedAccount = value;
+                                    });
+                                  },
+                                  validator: (value) {
+                                    if (value == null) {
+                                      return 'Please select an account';
+                                    }
+                                    return null;
+                                  },
+                                );
+                              },
+                              loading: () => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              error: (_, __) => Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.errorContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Error loading accounts',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onErrorContainer,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 16),
+
                       // Note field
                       TextFormField(
                         controller: _noteController,
@@ -378,14 +492,33 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate account selection
+    if (_selectedAccount == null) {
+      if (!mounted) return;
+      FeedbackService.showError(context, 'Please select an account');
+      return;
+    }
+
     final amount = double.parse(_amountController.text);
     final note = _noteController.text.isEmpty ? null : _noteController.text;
 
-    ref.read(billNotifierProvider.notifier).makeInstallmentPayment(
-          widget.installment,
-          amount: amount,
-          note: note,
-        );
+    // Add account to bill before payment
+    final billWithAccount = widget.bill.copyWith(
+      accountId: _selectedAccount!.id,
+    );
+
+    // Check if this is an installment or regular bill
+    if (widget.bill.isInstallment) {
+      // For installments, use makeInstallmentPayment
+      ref.read(billNotifierProvider.notifier).makeInstallmentPayment(
+            billWithAccount,
+            amount: amount,
+            note: note,
+          );
+    } else {
+      // For regular bills, use markBillAsPaid
+      ref.read(billNotifierProvider.notifier).markBillAsPaid(billWithAccount);
+    }
 
     if (!mounted) return;
 
@@ -395,18 +528,18 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
 
     FeedbackService.showSuccess(
       context,
-      'Payment of ${widget.installment.currency} ${amount.toStringAsFixed(2)} recorded',
+      'Payment of ${widget.bill.currency} ${amount.toStringAsFixed(2)} recorded',
     );
   }
 }
 
-/// Shows the make payment dialog
+/// Shows the make payment dialog for bills and installments
 Future<void> showMakePaymentDialog(
   BuildContext context,
-  RecurringBill installment,
+  RecurringBill bill,
 ) async {
   await showDialog(
     context: context,
-    builder: (context) => MakePaymentDialog(installment: installment),
+    builder: (context) => MakePaymentDialog(bill: bill),
   );
 }

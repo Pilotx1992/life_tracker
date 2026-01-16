@@ -23,7 +23,6 @@ class FinanceScreen extends StatelessWidget {
                 context,
                 icon: Icons.account_balance_wallet,
                 title: 'Accounts',
-                subtitle: 'Manage your bank accounts and balances',
                 color: AppColors.financePrimary,
                 onTap: () => context.push('/finance/accounts'),
               ),
@@ -32,7 +31,6 @@ class FinanceScreen extends StatelessWidget {
                 context,
                 icon: Icons.arrow_upward,
                 title: 'Income',
-                subtitle: 'Record your income and earnings',
                 color: Colors.green,
                 onTap: () => context.push('/finance/income'),
               ),
@@ -41,7 +39,6 @@ class FinanceScreen extends StatelessWidget {
                 context,
                 icon: Icons.arrow_downward,
                 title: 'Expenses',
-                subtitle: 'Track your spending and expenses',
                 color: Colors.red,
                 onTap: () => context.push('/finance/expenses'),
               ),
@@ -50,7 +47,6 @@ class FinanceScreen extends StatelessWidget {
                 context,
                 icon: Icons.receipt_long,
                 title: 'Bills',
-                subtitle: 'Manage recurring bills and payments',
                 color: Colors.orange,
                 onTap: () => context.push('/finance/bills'),
               ),
@@ -59,7 +55,6 @@ class FinanceScreen extends StatelessWidget {
                 context,
                 icon: Icons.credit_card,
                 title: 'Debts',
-                subtitle: 'Track debts and loan payments',
                 color: Colors.deepPurple,
                 onTap: () => context.push('/finance/debts'),
               ),
@@ -68,7 +63,6 @@ class FinanceScreen extends StatelessWidget {
                 context,
                 icon: Icons.savings,
                 title: 'Commitments',
-                subtitle: 'Track financial goals and savings',
                 color: Colors.teal,
                 onTap: () => context.push('/finance/commitments'),
               ),
@@ -83,7 +77,6 @@ class FinanceScreen extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String title,
-    required String subtitle,
     required Color color,
     required VoidCallback onTap,
   }) {
@@ -115,23 +108,11 @@ class FinanceScreen extends StatelessWidget {
               const SizedBox(width: AppDesignTokens.space16),
               // Text content
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: AppDesignTokens.space4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                  ],
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
               // Arrow icon
