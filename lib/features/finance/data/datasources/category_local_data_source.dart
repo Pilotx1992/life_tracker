@@ -81,11 +81,6 @@ class CategoryLocalDataSourceImpl implements CategoryLocalDataSource {
       final isar = await _databaseService.database;
       final existingCategories = await isar.categoryModels.where().findAll();
 
-      // Only initialize if no categories exist
-      if (existingCategories.isNotEmpty) {
-        return;
-      }
-
       final defaultCategories = [
         CategoryModel()
           ..name = 'Food & Dining'
@@ -101,6 +96,16 @@ class CategoryLocalDataSourceImpl implements CategoryLocalDataSource {
           ..name = 'Transportation'
           ..icon = 'directions_car'
           ..color = '#45B7D1'
+          ..isDefault = true,
+        CategoryModel()
+          ..name = 'Fuel'
+          ..icon = 'local_gas_station'
+          ..color = '#FF9800'
+          ..isDefault = true,
+        CategoryModel()
+          ..name = 'Car Service'
+          ..icon = 'car_repair'
+          ..color = '#78909C'
           ..isDefault = true,
         CategoryModel()
           ..name = 'Bills & Utilities'
@@ -151,7 +156,10 @@ class CategoryLocalDataSourceImpl implements CategoryLocalDataSource {
 
       await isar.writeTxn(() async {
         for (final category in defaultCategories) {
-          await isar.categoryModels.put(category);
+          final exists = existingCategories.any((c) => c.name == category.name);
+          if (!exists) {
+            await isar.categoryModels.put(category);
+          }
         }
       });
     } catch (e) {

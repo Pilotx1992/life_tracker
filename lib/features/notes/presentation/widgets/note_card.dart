@@ -53,20 +53,7 @@ class NoteCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               // Content
-              if (note.isLocked)
-                Expanded(
-                  child: Text(
-                    '🔒 Locked',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
-                  ),
-                )
-              else if (note.content != null && note.content!.isNotEmpty)
+              if (note.content != null && note.content!.isNotEmpty)
                 Expanded(
                   child: Text(
                     note.content!,
@@ -92,7 +79,6 @@ class NoteCard extends StatelessWidget {
                   // Icons
                   Row(
                     children: [
-                      if (note.isLocked) const Icon(Icons.lock, size: 14),
                       if (note.voiceNotePath != null)
                         const Icon(Icons.mic, size: 14),
                       if (note.attachmentPaths.isNotEmpty)
@@ -137,8 +123,10 @@ class NoteCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.delete,
-                  color: Theme.of(context).colorScheme.error,),
+              leading: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+              ),
               title: const Text('Delete Note'),
               onTap: () {
                 Navigator.of(context).pop();

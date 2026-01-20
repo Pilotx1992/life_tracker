@@ -76,6 +76,8 @@ class AppColors {
     'bills': Color(0xFF607D8B),
     'education': Color(0xFF00BCD4),
     'gifts': Color(0xFFFF9800),
+    'fuel': Color(0xFFFF9800),
+    'car_service': Color(0xFF78909C),
     'other': Color(0xFF9E9E9E),
   };
 

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_tracker/core/router/app_router.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
-import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
 import 'package:life_tracker/features/settings/presentation/providers/settings_provider.dart';
 import 'package:life_tracker/features/settings/presentation/screens/device_setup_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -49,20 +48,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             backgroundColor: colorScheme.surface,
             scrolledUnderElevation: 0,
             actions: [
-               IconButton(
-                 icon: const Icon(Icons.help_outline),
-                 onPressed: () => context.push(AppRoutes.termsOfService),
-               ),
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                onPressed: () => context.push(AppRoutes.termsOfService),
+              ),
             ],
           ),
-          
           SliverList(
             delegate: SliverChildListDelegate([
               // General Settings
               SettingsSection(
                 title: 'General',
                 children: [
-                   SettingsTile(
+                  SettingsTile(
                     icon: const Icon(Icons.palette_outlined),
                     iconColor: Colors.blue,
                     title: 'App Theme',
@@ -79,35 +77,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ),
 
-              // Account & Security
+              // Security
               SettingsSection(
-                title: 'Account & Security',
+                title: 'Security',
                 children: [
                   SettingsTile(
                     icon: const Icon(Icons.lock_outline),
                     iconColor: Colors.orange,
                     title: 'App Lock',
-                    subtitle: 'Secure your app access',
+                    subtitle: 'Protect app with PIN or biometrics',
                     onTap: () => context.push(AppRoutes.appLockSetup),
-                  ),
-                  SettingsTile(
-                    icon: const Icon(Icons.fingerprint),
-                    iconColor: Colors.teal,
-                    title: 'Fingerprint for Notes',
-                    subtitle: 'Quick unlock for notes',
-                    trailing: Switch(
-                      value: true, // TODO: Bind to actual state
-                      onChanged: (v) => _showEnableFingerprintDialog(),
-                    ),
-                    showChevron: false,
-                    onTap: () => _showEnableFingerprintDialog(),
-                  ),
-                   SettingsTile(
-                    icon: const Icon(Icons.lock_reset),
-                    iconColor: Colors.red,
-                    title: 'Reset Note PIN',
-                    subtitle: 'Clear saved PIN',
-                    onTap: () => _showResetNotePinDialog(),
                   ),
                 ],
               ),
@@ -124,21 +103,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     trailing: Switch(
                       value: settings.notificationsEnabled,
                       onChanged: (value) {
-                         ref
-                          .read(settingsProvider.notifier)
-                          .setNotificationsEnabled(value);
+                        ref
+                            .read(settingsProvider.notifier)
+                            .setNotificationsEnabled(value);
                       },
                     ),
                     showChevron: false,
                   ),
                   if (settings.notificationsEnabled) ...[
-                     SettingsTile(
+                    SettingsTile(
                       icon: const Icon(Icons.volume_up_outlined),
                       iconColor: Colors.amber,
                       title: 'Sound',
                       trailing: Switch(
                         value: settings.notificationSound,
-                         onChanged: (value) {
+                        onChanged: (value) {
                           ref
                               .read(settingsProvider.notifier)
                               .setNotificationSound(value);
@@ -146,13 +125,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       showChevron: false,
                     ),
-                     SettingsTile(
+                    SettingsTile(
                       icon: const Icon(Icons.vibration),
                       iconColor: Colors.amber,
                       title: 'Vibration',
                       trailing: Switch(
                         value: settings.notificationVibration,
-                         onChanged: (value) {
+                        onChanged: (value) {
                           ref
                               .read(settingsProvider.notifier)
                               .setNotificationVibration(value);
@@ -168,7 +147,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               SettingsSection(
                 title: 'Data & Integrations',
                 children: [
-                   SettingsTile(
+                  SettingsTile(
                     icon: const Icon(Icons.cloud_upload_outlined),
                     iconColor: Colors.indigo,
                     title: 'Backup & Restore',
@@ -193,25 +172,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               SettingsSection(
                 title: 'Regional Format',
                 children: [
-                   SettingsTile(
+                  SettingsTile(
                     icon: const Icon(Icons.currency_exchange),
                     iconColor: Colors.green.shade700,
                     title: 'Currency',
                     subtitle: settings.defaultCurrency,
                     onTap: () => _showCurrencyDialog(settings.defaultCurrency),
                   ),
-                   SettingsTile(
+                  SettingsTile(
                     icon: const Icon(Icons.calendar_month),
                     iconColor: Colors.blueGrey,
                     title: 'Date Format',
                     subtitle: settings.dateFormat,
                     onTap: () => _showDateFormatDialog(settings.dateFormat),
                   ),
-                   SettingsTile(
+                  SettingsTile(
                     icon: const Icon(Icons.access_time),
                     iconColor: Colors.blueGrey,
                     title: 'Time Format',
-                    subtitle: settings.timeFormat == '12h' ? '12-hour' : '24-hour',
+                    subtitle:
+                        settings.timeFormat == '12h' ? '12-hour' : '24-hour',
                     onTap: () => _showTimeFormatDialog(settings.timeFormat),
                   ),
                 ],
@@ -224,8 +204,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   SettingsTile(
                     icon: const Icon(Icons.info_outline),
                     title: 'Version',
-                    subtitle: _packageInfo != null 
-                        ? '${_packageInfo!.version} (${_packageInfo!.buildNumber})' 
+                    subtitle: _packageInfo != null
+                        ? '${_packageInfo!.version} (${_packageInfo!.buildNumber})'
                         : 'Loading...',
                     showChevron: false,
                   ),
@@ -246,7 +226,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 48),
             ]),
           ),
@@ -254,8 +234,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
-
-
 
   String _getThemeModeLabel(ThemeMode mode) {
     switch (mode) {
@@ -456,228 +434,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Future<void> _showResetNotePinDialog() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Note PIN?'),
-        content: const Text(
-          'This will clear your saved PIN for locked notes. '
-          'You will need to set a new PIN next time you lock a note.\n\n'
-          'Warning: Existing locked notes may become inaccessible if you forgot the PIN.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Reset PIN'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await NoteEncryptionService().clearPIN();
-      if (mounted) {
-        FeedbackService.showSuccess(context, 'Note PIN has been reset');
-      }
-    }
-  }
-
-  Future<void> _showEnableFingerprintDialog() async {
-    final encryptionService = NoteEncryptionService();
-    
-    // Check prerequisites
-    final isAvailable = await encryptionService.isBiometricAvailable();
-    if (!isAvailable) {
-      if (mounted) {
-        FeedbackService.showWarning(
-          context,
-          'Biometric authentication is not available on this device',
-        );
-      }
-      return;
-    }
-
-    final hasPIN = await encryptionService.hasPIN();
-    if (!hasPIN) {
-      if (mounted) {
-        FeedbackService.showWarning(
-          context,
-          'Please set up a Note PIN first by locking a note',
-        );
-      }
-      return;
-    }
-
-    final isEnabled = await encryptionService.isBiometricEnabled();
-    if (!mounted) return;
-
-    if (isEnabled) {
-      // Show disable dialog
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Disable Fingerprint?'),
-          content: const Text(
-            'You will need to enter your PIN to unlock locked notes.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Disable'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmed == true) {
-        await encryptionService.disableBiometric();
-        if (mounted) {
-          FeedbackService.showSuccess(context, 'Fingerprint disabled for notes');
-        }
-      }
-    } else {
-      // Show enable dialog - requires PIN verification
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Enable Fingerprint?'),
-          content: const Text(
-            'Use your fingerprint to quickly unlock locked notes.\n\n'
-            'You will need to enter your PIN to enable this feature.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(true),
-              icon: const Icon(Icons.fingerprint),
-              label: const Text('Enable'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmed == true && mounted) {
-        // Ask for PIN to enable biometric
-        final pin = await showDialog<String>(
-          context: context,
-          builder: (context) => const _SimplePinDialog(
-            title: 'Enter PIN',
-            message: 'Enter your Note PIN to enable fingerprint',
-          ),
-        );
-
-        if (pin != null && mounted) {
-          final success = await encryptionService.enableBiometric(pin);
-          if (mounted) {
-            if (success) {
-              FeedbackService.showSuccess(context, 'Fingerprint enabled for notes');
-            } else {
-              FeedbackService.showError(context, 'Invalid PIN');
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-/// Simple PIN input dialog for Settings (doesn't trigger biometric)
-class _SimplePinDialog extends StatefulWidget {
-  final String title;
-  final String? message;
-
-  const _SimplePinDialog({
-    required this.title,
-    this.message,
-  });
-
-  @override
-  State<_SimplePinDialog> createState() => _SimplePinDialogState();
-}
-
-class _SimplePinDialogState extends State<_SimplePinDialog> {
-  final _controllers = List.generate(4, (_) => TextEditingController());
-  final _focusNodes = List.generate(4, (_) => FocusNode());
-
-  @override
-  void dispose() {
-    for (var c in _controllers) {
-      c.dispose();
-    }
-    for (var f in _focusNodes) {
-      f.dispose();
-    }
-    super.dispose();
-  }
-
-  void _onChanged(int index, String value) {
-    if (value.isNotEmpty && index < 3) {
-      _focusNodes[index + 1].requestFocus();
-    }
-    if (index == 3 && value.isNotEmpty) {
-      final pin = _controllers.map((c) => c.text).join();
-      Navigator.of(context).pop(pin);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.title),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (widget.message != null) ...[
-            Text(widget.message!),
-            const SizedBox(height: 16),
-          ],
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(4, (i) {
-              return SizedBox(
-                width: 50,
-                child: TextField(
-                  controller: _controllers[i],
-                  focusNode: _focusNodes[i],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  maxLength: 1,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    counterText: '',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (v) => _onChanged(i, v),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-      ],
     );
   }
 }

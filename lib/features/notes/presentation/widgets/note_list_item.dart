@@ -70,18 +70,7 @@ class NoteListItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     // Content preview
-                    if (note.isLocked)
-                      Text(
-                        '🔒 Locked',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.6),
-                            ),
-                      )
-                    else if (note.content != null && note.content!.isNotEmpty)
+                    if (note.content != null && note.content!.isNotEmpty)
                       Text(
                         note.content!,
                         style: Theme.of(context).textTheme.bodySmall,
@@ -105,15 +94,6 @@ class NoteListItem extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         // Icons
-                        if (note.isLocked)
-                          Icon(
-                            Icons.lock,
-                            size: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
-                          ),
                         if (note.voiceNotePath != null)
                           Icon(
                             Icons.mic,
@@ -165,8 +145,10 @@ class NoteListItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.delete,
-                  color: Theme.of(context).colorScheme.error,),
+              leading: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+              ),
               title: const Text('Delete Note'),
               onTap: () {
                 Navigator.of(context).pop();

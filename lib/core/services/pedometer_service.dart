@@ -39,13 +39,41 @@ class PedometerService {
     _startDayCheckTimer();
   }
 
+  /// Track if we need to initialize the offset on first event
+  bool _isFirstLoad = false;
+
   /// Load saved state from shared preferences
   Future<void> _loadSavedState() async {
     final prefs = await SharedPreferences.getInstance();
-    _stepCountAtMidnight = prefs.getInt(_stepCountAtMidnightKey) ?? 0;
+
+    // Check if we have a saved state
+    if (prefs.containsKey(_stepCountAtMidnightKey)) {
+      _stepCountAtMidnight = prefs.getInt(_stepCountAtMidnightKey) ?? 0;
+      _isFirstLoad = false;
+    } else {
+      // First time initialization - mark as first load
+      // We will set the midnight offset to the CURRENT steps when we receive the first event
+      _isFirstLoad = true;
+      _stepCountAtMidnight = 0;
+    }
+
     final lastResetDateStr = prefs.getString(_lastResetDateKey);
     if (lastResetDateStr != null) {
       _lastResetDate = DateTime.tryParse(lastResetDateStr);
+    } else {
+      // First time initialization - set to today
+      _lastResetDate = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
+    }
+
+    if (kDebugMode) {
+      debugPrint('📱 Pedometer: Loaded saved state');
+      debugPrint('   Steps at midnight: $_stepCountAtMidnight');
+      debugPrint('   isFirstLoad: $_isFirstLoad');
+      debugPrint('   Last reset date: $_lastResetDate');
     }
   }
 
@@ -78,7 +106,14 @@ class PedometerService {
       _todayStepsController.add(0);
 
       if (kDebugMode) {
-        debugPrint('✅ Pedometer: Reset complete - steps at midnight: $_stepCountAtMidnight');
+        debugPrint(
+            '✅ Pedometer: Reset complete - steps at midnight: $_stepCountAtMidnight');
+      }
+    } else {
+      if (kDebugMode) {
+        debugPrint('✓ Pedometer: Same day, no reset needed');
+        debugPrint('   Last reset: $_lastResetDate');
+        debugPrint('   Today start: $todayStart');
       }
     }
   }
@@ -115,7 +150,8 @@ class PedometerService {
     final timeUntilMidnight = nextMidnight.difference(now);
 
     if (kDebugMode) {
-      debugPrint('⏰ Pedometer: Scheduled midnight reset in ${timeUntilMidnight.inHours}h ${timeUntilMidnight.inMinutes % 60}m');
+      debugPrint(
+          '⏰ Pedometer: Scheduled midnight reset in ${timeUntilMidnight.inHours}h ${timeUntilMidnight.inMinutes % 60}m');
       debugPrint('   Next midnight: $nextMidnight');
     }
 
@@ -167,12 +203,48 @@ class PedometerService {
   void _onStepCount(StepCount event) {
     _currentStepCount = event.steps;
 
+    // FIX: If this is the FIRST time running the app (no saved state),
+    // set the midnight offset to the current step count so today starts at 0.
+    if (_isFirstLoad) {
+      if (kDebugMode) {
+        debugPrint(
+            '🆕 Pedometer: First load detected. Setting baseline to $_currentStepCount');
+      }
+      _stepCountAtMidnight = _currentStepCount;
+      _isFirstLoad = false;
+      _saveState();
+    }
+
+    // FIX: Detect device reboot
+    // If current steps < stored midnight steps, the device must have rebooted
+    // (since the sensor resets to 0 on reboot).
+    // In this case, we reset the offset to 0 to start counting from scratch.
+    if (_currentStepCount < _stepCountAtMidnight) {
+      if (kDebugMode) {
+        debugPrint(
+            '⚠️ Pedometer: Device reboot detected (Current: $_currentStepCount < Saved: $_stepCountAtMidnight)');
+        debugPrint('   Resetting baseline to 0');
+      }
+      _stepCountAtMidnight = 0;
+      _saveState();
+    }
+
+    if (kDebugMode) {
+      debugPrint('📊 Pedometer: Step count update received');
+      debugPrint('   Current total steps: $_currentStepCount');
+      debugPrint('   Steps at midnight: $_stepCountAtMidnight');
+    }
+
     // Check for day reset
     _checkDayReset();
 
     // Emit today's steps
     final steps = todaySteps;
     _todayStepsController.add(steps);
+
+    if (kDebugMode) {
+      debugPrint('   Today\'s steps: $steps');
+    }
   }
 
   /// Handle step count errors

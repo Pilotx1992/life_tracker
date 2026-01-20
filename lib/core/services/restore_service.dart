@@ -486,7 +486,6 @@ class RestoreService {
         ..id = item['id'] as int
         ..title = item['title'] as String
         ..content = item['content'] as String?
-        ..encryptedContent = item['encryptedContent'] as String?
         ..color = item['color'] as String
         ..attachmentPaths =
             List<String>.from(item['attachmentPaths'] as List<dynamic>? ?? [])
@@ -497,7 +496,6 @@ class RestoreService {
             ..text = ci['text'] as String
             ..isChecked = ci['isChecked'] as bool? ?? false;
         }).toList()
-        ..isLocked = item['isLocked'] as bool? ?? false
         ..createdAt = DateTime.parse(item['createdAt'] as String)
         ..updatedAt = DateTime.parse(item['updatedAt'] as String);
       await isar.noteModels.put(model);

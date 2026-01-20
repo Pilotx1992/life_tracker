@@ -59,38 +59,42 @@ final activitySummaryStreamProvider = StreamProvider<ActivitySummary>((ref) {
 final activityDataProvider = Provider<ActivityData>((ref) {
   final summaryAsync = ref.watch(activitySummaryStreamProvider);
 
-  // Default values
-  double move = 0;
-  double exercise = 0;
-  double stand = 0;
-  int steps = 0;
-  double distance = 0;
-  DataSource source = DataSource.pedometer;
-
-  // Use data if available
-  summaryAsync.whenData((summary) {
-    move = summary.activeCalories;
-    exercise = summary.exerciseMinutes;
-    stand = summary.standHours;
-    steps = summary.steps;
-    distance = summary.distanceMeters / 1000.0; // Convert to km
-    source = summary.source == ActivityDataSource.healthConnect
-        ? DataSource.healthConnect
-        : DataSource.pedometer;
-  });
-
-  // [Phase 2] Goals will be fetched from UserProfile or Settings
-
-  return ActivityData(
-    moveCurrent: move,
-    moveGoal: 270.0,
-    exerciseCurrent: exercise,
-    exerciseGoal: 30.0,
-    standCurrent: stand,
-    standGoal: 12.0,
-    steps: steps,
-    stepGoal: 10000,
-    distance: distance,
-    source: source,
+  return summaryAsync.when(
+    data: (summary) {
+      return ActivityData(
+        moveCurrent: summary.activeCalories,
+        moveGoal: 270.0,
+        exerciseCurrent: summary.exerciseMinutes,
+        exerciseGoal: 30.0,
+        standCurrent: summary.standHours,
+        standGoal: 12.0,
+        steps: summary.steps,
+        stepGoal: 10000,
+        distance: summary.distanceMeters / 1000.0, // Convert to km
+        source: summary.source == ActivityDataSource.healthConnect
+            ? DataSource.healthConnect
+            : DataSource.pedometer,
+      );
+    },
+    loading: () {
+      // Return default values while loading
+      return ActivityData(
+        moveCurrent: 0,
+        exerciseCurrent: 0,
+        standCurrent: 0,
+        steps: 0,
+        source: DataSource.pedometer,
+      );
+    },
+    error: (_, __) {
+      // Return default values on error
+      return ActivityData(
+        moveCurrent: 0,
+        exerciseCurrent: 0,
+        standCurrent: 0,
+        steps: 0,
+        source: DataSource.pedometer,
+      );
+    },
   );
 });

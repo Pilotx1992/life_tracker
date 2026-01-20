@@ -13,6 +13,7 @@ import 'package:life_tracker/features/health/data/models/user_profile_model.dart
 import 'package:life_tracker/features/health/data/models/weight_model.dart';
 import 'package:life_tracker/features/health/data/models/medication_model.dart';
 import 'package:life_tracker/features/health/data/models/medication_intake_model.dart';
+import 'package:life_tracker/features/health/data/models/daily_stand_log.dart';
 
 // Finance models
 import 'package:life_tracker/features/finance/data/models/account_model.dart';
@@ -51,7 +52,6 @@ class DatabaseService {
 
   Future<Isar> get database => _db;
 
-
   Future<String> _getEncryptionKey() async {
     String? key = await _secureStorage.read(key: _encryptionKeyKey);
     if (key == null) {
@@ -73,13 +73,14 @@ class DatabaseService {
     } catch (_) {
       // If secure storage is unavailable, ignore and continue opening DB.
     }
-    
+
     final schemas = [
       // Health schemas
       UserProfileModelSchema,
       WeightModelSchema,
       MedicationModelSchema,
       MedicationIntakeModelSchema,
+      DailyStandLogSchema,
       // Finance schemas
       AccountModelSchema,
       CategoryModelSchema,
@@ -98,7 +99,7 @@ class DatabaseService {
       // Reminders schemas
       ReminderModelSchema,
     ];
-    
+
     // Try to open the database
     try {
       return await Isar.open(
@@ -123,7 +124,7 @@ class DatabaseService {
       } catch (_) {
         // Ignore file deletion errors
       }
-      
+
       // Now try to open again with a fresh database
       return await Isar.open(
         schemas,

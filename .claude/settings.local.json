@@ -34,7 +34,8 @@
       "Bash(test:*)",
       "Bash(if not exist \"lib\\shared\\widgets\\states\" mkdir \"lib\\shared\\widgets\\states\")",
       "Bash(cat:*)",
-      "Bash(flutter doctor:*)"
+      "Bash(flutter doctor:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

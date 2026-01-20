@@ -6,13 +6,11 @@ class Note extends Equatable {
   final Id? id;
   final String title;
   final String? content;
-  final String? encryptedContent; // Encrypted content when note is locked
   final String color; // Hex color code
   final List<String> attachmentPaths; // File paths to attachments
   final String? voiceNotePath; // Path to voice note audio file
   final String? voiceNoteName; // Custom name for voice note
   final List<ChecklistItem> checklistItems; // Checklist items
-  final bool isLocked;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -20,13 +18,11 @@ class Note extends Equatable {
     this.id,
     required this.title,
     this.content,
-    this.encryptedContent,
     required this.color,
     this.attachmentPaths = const [],
     this.voiceNotePath,
     this.voiceNoteName,
     this.checklistItems = const [],
-    this.isLocked = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -49,13 +45,11 @@ class Note extends Equatable {
         id,
         title,
         content,
-        encryptedContent,
         color,
         attachmentPaths,
         voiceNotePath,
         voiceNoteName,
         checklistItems,
-        isLocked,
         createdAt,
         updatedAt,
       ];
@@ -64,13 +58,11 @@ class Note extends Equatable {
     Id? id,
     String? title,
     String? content,
-    String? encryptedContent,
     String? color,
     List<String>? attachmentPaths,
     String? voiceNotePath,
     String? voiceNoteName,
     List<ChecklistItem>? checklistItems,
-    bool? isLocked,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -78,13 +70,11 @@ class Note extends Equatable {
       id: id ?? this.id,
       title: title ?? this.title,
       content: content ?? this.content,
-      encryptedContent: encryptedContent ?? this.encryptedContent,
       color: color ?? this.color,
       attachmentPaths: attachmentPaths ?? this.attachmentPaths,
       voiceNotePath: voiceNotePath ?? this.voiceNotePath,
       voiceNoteName: voiceNoteName ?? this.voiceNoteName,
       checklistItems: checklistItems ?? this.checklistItems,
-      isLocked: isLocked ?? this.isLocked,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

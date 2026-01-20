@@ -8,11 +8,9 @@ import 'package:life_tracker/features/notes/presentation/widgets/attachment_widg
 import 'package:life_tracker/features/notes/presentation/widgets/audio_player_widget.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/checklist_widget.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/color_picker.dart';
-import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/voice_recorder_widget.dart';
 import 'package:life_tracker/features/notes/services/attachment_service.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
-import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
 import 'package:life_tracker/features/reminders/domain/entities/reminder.dart';
 import 'package:life_tracker/features/reminders/presentation/widgets/add_reminder_dialog.dart';
 import 'package:life_tracker/shared/widgets/fields/app_text_field.dart';
@@ -37,15 +35,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   List<String> _attachmentPaths = [];
   String? _voiceNotePath;
   String? _voiceNoteName;
-  String? _encryptedContent;
   final AttachmentService _attachmentService = AttachmentService();
-  final NoteEncryptionService _encryptionService = NoteEncryptionService();
   bool _hasChanges = false;
-  bool _isUnlocked = true; // Track if locked note is currently unlocked
   Note? _loadedNote; // Note loaded by ID
   bool _isLoading = false;
   bool _isInitialized = false; // Track if note data was loaded
-  bool _unlockInitiated = false; // Prevent multiple unlock dialogs
 
   Note? get _effectiveNote => widget.note ?? _loadedNote;
 
@@ -70,18 +64,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_isInitialized) {
           _loadNoteById();
-        }
-      });
-    }
-    // Check if we need to unlock the note - only once
-    if (_effectiveNote != null &&
-        _effectiveNote!.isLocked &&
-        !_isUnlocked &&
-        !_unlockInitiated) {
-      _unlockInitiated = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_isUnlocked) {
-          _unlockNote(context);
         }
       });
     }
@@ -116,13 +98,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _attachmentPaths = List<String>.from(note.attachmentPaths);
     _voiceNotePath = note.voiceNotePath;
     _voiceNoteName = note.voiceNoteName;
-    _encryptedContent = note.encryptedContent;
-
-    // If note is locked, require PIN to unlock
-    if (note.isLocked && note.encryptedContent != null) {
-      _isUnlocked = false;
-      _contentController.text = ''; // Don't show content until unlocked
-    }
 
     _titleController.addListener(_onChanged);
     _contentController.addListener(_onChanged);
@@ -145,309 +120,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   Future<void> _saveNote() async {
     if (_formKey.currentState!.validate()) {
-      // If it's a new note (not editing), ask if user wants to lock it
-      if (_effectiveNote == null && _encryptedContent == null) {
-        final shouldLock = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Lock Note?'),
-            content: const Text(
-              'Would you like to lock this note with a PIN? '
-              'Locked notes are encrypted and require a PIN to view.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('No, Save Unlocked'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Yes, Lock Note'),
-              ),
-            ],
-          ),
-        );
-
-        if (!mounted) return;
-
-        // If user chose to lock, encrypt the content first
-        if (shouldLock == true) {
-          final hasPIN = await _encryptionService.hasPIN();
-          if (!mounted) return;
-
-          String? userPin;
-          if (!hasPIN) {
-            // First time - set up PIN
-            userPin = await showDialog<String>(
-              context: context,
-              builder: (dialogContext) => const PINInputDialog(
-                title: 'Set PIN for Note Locking',
-                message: 'Create a 4-digit PIN to lock your notes',
-                isSetup: true,
-              ),
-            );
-            if (!mounted) return;
-
-            if (userPin != null && userPin.isNotEmpty) {
-              if (kDebugMode) {
-                debugPrint('🔑 Setting up new PIN: ${userPin.length} digits');
-              }
-              final success = await _encryptionService.setPIN(userPin);
-              if (!mounted) return;
-              if (!success) {
-                if (mounted) {
-                  FeedbackService.showError(context, 'Failed to set PIN');
-                }
-                return;
-              }
-              if (kDebugMode) {
-                debugPrint('✅ PIN set successfully');
-              }
-              // PIN set successfully, use it for encryption
-            } else {
-              // User cancelled PIN setup, save without locking
-              await _performSave(locked: false);
-              return;
-            }
-          } else {
-            // PIN exists - verify it
-            userPin = await showDialog<String>(
-              context: context,
-              builder: (dialogContext) => const PINInputDialog(
-                title: 'Verify PIN',
-                message: 'Enter your PIN to lock this note',
-              ),
-            );
-            if (!mounted) return;
-
-            if (userPin != null && userPin.isNotEmpty) {
-              final verified = await _encryptionService.verifyPIN(userPin);
-              if (!mounted) return;
-              if (!verified) {
-                if (mounted) {
-                  FeedbackService.showError(context, 'Invalid PIN');
-                }
-                return;
-              }
-              // PIN verified successfully, use it for encryption
-            } else {
-              // User cancelled, save without locking
-              await _performSave(locked: false);
-              return;
-            }
-          }
-
-          // Encrypt content with the user's PIN
-          // At this point, userPin is guaranteed to be non-null and non-empty
-          if (kDebugMode) {
-            debugPrint('🔐 Encrypting content with PIN: ${userPin.length} digits');
-          }
-          final content = _contentController.text.trim();
-          if (content.isNotEmpty) {
-            _encryptedContent = await _encryptionService.encryptContent(
-              content,
-              userPin,
-            );
-            if (kDebugMode) {
-              debugPrint(
-                _encryptedContent != null
-                    ? '✅ Content encrypted successfully'
-                    : '❌ Encryption failed',
-              );
-            }
-          }
-        }
-      }
-
-      // Perform the actual save
-      await _performSave(locked: _encryptedContent != null);
-    }
-  }
-
-  Future<void> _performSave({required bool locked}) async {
-    final now = DateTime.now();
-    // When saving a locked note, content should be null and encryptedContent should be set
-    // When saving an unlocked note, content should be set and encryptedContent should be null
-    final note = Note(
-      id: _effectiveNote?.id,
-      title: _titleController.text.trim(),
-      content: _encryptedContent != null
-          ? null
-          : (_contentController.text.trim().isEmpty
-              ? null
-              : _contentController.text.trim()),
-      encryptedContent: _encryptedContent,
-      color: _selectedColor,
-      attachmentPaths: _attachmentPaths,
-      voiceNotePath: _voiceNotePath,
-      voiceNoteName: _voiceNoteName,
-      checklistItems: _checklistItems,
-      isLocked: locked,
-      createdAt: _effectiveNote?.createdAt ?? now,
-      updatedAt: now,
-    );
-
-    if (_effectiveNote == null) {
-      await ref.read(noteNotifierProvider.notifier).addNoteEntry(note);
-    } else {
-      await ref.read(noteNotifierProvider.notifier).updateNoteEntry(note);
-    }
-
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _unlockNote(BuildContext context) async {
-    // Guard against multiple calls
-    if (_isUnlocked) return;
-
-    // Check if PIN is set
-    final hasPIN = await _encryptionService.hasPIN();
-    if (!context.mounted) return;
-    if (!hasPIN) {
-      // First time - set up PIN
-      final pin = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => const PINInputDialog(
-          title: 'Set PIN for Note Locking',
-          message: 'Create a 4-digit PIN to lock your notes',
-          isSetup: true,
-        ),
-      );
-      if (!context.mounted) return;
-
-      if (pin != null) {
-        final success = await _encryptionService.setPIN(pin);
-        if (!context.mounted) return;
-        if (success) {
-          await _decryptNoteContent(pin);
-        } else {
-          FeedbackService.showError(context, 'Failed to set PIN');
-          Navigator.of(context).pop();
-          return;
-        }
-      } else {
-        if (context.mounted) Navigator.of(context).pop();
-        return;
-      }
-    } else {
-      // PIN exists - verify it
-      final pin = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) => const PINInputDialog(
-          title: 'Unlock Note',
-          message: 'Enter your PIN to unlock this note',
-        ),
+      final now = DateTime.now();
+      final note = Note(
+        id: _effectiveNote?.id,
+        title: _titleController.text.trim(),
+        content: _contentController.text.trim().isEmpty
+            ? null
+            : _contentController.text.trim(),
+        color: _selectedColor,
+        attachmentPaths: _attachmentPaths,
+        voiceNotePath: _voiceNotePath,
+        voiceNoteName: _voiceNoteName,
+        checklistItems: _checklistItems,
+        createdAt: _effectiveNote?.createdAt ?? now,
+        updatedAt: now,
       );
 
-      if (!context.mounted) return;
-
-      if (pin != null) {
-        final isValid = await _encryptionService.verifyPIN(pin);
-        if (!context.mounted) return;
-        if (isValid) {
-          await _decryptNoteContent(pin);
-        } else {
-          FeedbackService.showError(context, 'Incorrect PIN');
-          Navigator.of(context).pop();
-          return;
-        }
+      if (_effectiveNote == null) {
+        await ref.read(noteNotifierProvider.notifier).addNoteEntry(note);
       } else {
+        await ref.read(noteNotifierProvider.notifier).updateNoteEntry(note);
+      }
+
+      if (mounted) {
         Navigator.of(context).pop();
-        return;
       }
     }
-  }
-
-  Future<void> _decryptNoteContent(String pin) async {
-    if (_effectiveNote?.encryptedContent != null) {
-      final decrypted = await _encryptionService.decryptContent(
-        _effectiveNote!.encryptedContent!,
-        pin,
-      );
-      if (!mounted) return;
-      if (decrypted != null) {
-        setState(() {
-          _contentController.text = decrypted;
-          _isUnlocked = true;
-        });
-      }
-    }
-  }
-
-  Future<void> _lockNote() async {
-    if (_contentController.text.trim().isEmpty) {
-      FeedbackService.showWarning(context, 'Note has no content to lock');
-      return;
-    }
-
-    // Check if PIN is set
-    final hasPIN = await _encryptionService.hasPIN();
-    if (!mounted) return;
-    String? pin;
-
-    if (!hasPIN) {
-      // Set up PIN first
-      pin = await showDialog<String>(
-        context: context,
-        builder: (context) => const PINInputDialog(
-          title: 'Set PIN for Note Locking',
-          message: 'Create a 4-digit PIN to lock your notes',
-          isSetup: true,
-        ),
-      );
-
-      if (pin == null) return;
-      if (!mounted) return;
-
-      final success = await _encryptionService.setPIN(pin);
-      if (!mounted) return;
-      if (!success) {
-        FeedbackService.showError(context, 'Failed to set PIN');
-        return;
-      }
-    } else {
-      // Verify PIN
-      pin = await showDialog<String>(
-        context: context,
-        builder: (context) => const PINInputDialog(
-          title: 'Lock Note',
-          message: 'Enter your PIN to lock this note',
-        ),
-      );
-
-      if (pin == null) return;
-      if (!mounted) return;
-
-      final isValid = await _encryptionService.verifyPIN(pin);
-      if (!mounted) return;
-      if (!isValid) {
-        FeedbackService.showError(context, 'Incorrect PIN');
-        return;
-      }
-    }
-
-    // Encrypt content
-    final encrypted = await _encryptionService.encryptContent(
-      _contentController.text.trim(),
-      pin,
-    );
-
-    if (!mounted) return;
-
-    if (encrypted != null) {
-      setState(() {
-        _encryptedContent = encrypted;
-        _contentController.text = ''; // Clear visible content
-        _isUnlocked = false;
-        _hasChanges = true;
-      });
-    }
-  }
-
-  Future<void> _unlockNoteForEditing() async {
-    await _unlockNote(context);
   }
 
   @override
@@ -457,33 +155,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text('Loading...')),
         body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // If note is locked and not unlocked, show lock screen
-    if (_effectiveNote != null && _effectiveNote!.isLocked && !_isUnlocked) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(_effectiveNote == null ? 'New Note' : 'Locked Note'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.lock, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                'This note is locked',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () => _unlockNoteForEditing(),
-                child: const Text('Unlock Note'),
-              ),
-            ],
-          ),
-        ),
       );
     }
 
@@ -531,27 +202,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         appBar: AppBar(
           title: Text(_effectiveNote == null ? 'New Note' : 'Edit Note'),
           actions: [
-            // Lock/Unlock button
-            if (_effectiveNote != null)
-              IconButton(
-                icon: Icon(
-                  _effectiveNote!.isLocked && _isUnlocked
-                      ? Icons.lock_open
-                      : _effectiveNote!.isLocked
-                          ? Icons.lock
-                          : Icons.lock_outline,
-                ),
-                onPressed: _effectiveNote!.isLocked && _isUnlocked
-                    ? _lockNote
-                    : _effectiveNote!.isLocked
-                        ? _unlockNoteForEditing
-                        : _lockNote,
-                tooltip: _effectiveNote!.isLocked && _isUnlocked
-                    ? 'Lock Note'
-                    : _effectiveNote!.isLocked
-                        ? 'Unlock Note'
-                        : 'Lock Note',
-              ),
             IconButton(
               icon: const Icon(Icons.save),
               onPressed: _saveNote,
@@ -583,11 +233,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 AppTextField(
                   controller: _contentController,
                   label: 'Content',
-                  hint: _effectiveNote?.isLocked == true && !_isUnlocked
-                      ? 'Note is locked'
-                      : 'Note content',
+                  hint: 'Note content',
                   maxLines: 10,
-                  enabled: !(_effectiveNote?.isLocked == true && !_isUnlocked),
                 ),
                 const SizedBox(height: 24),
                 // Color Picker
@@ -800,7 +447,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (_voiceNotePath == null) return;
 
     final pathToDelete = _voiceNotePath!;
-    if (kDebugMode) debugPrint('Attempting to delete voice note: $pathToDelete');
+    if (kDebugMode) {
+      debugPrint('Attempting to delete voice note: $pathToDelete');
+    }
 
     try {
       // Delete the file first
@@ -843,7 +492,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       });
 
       FeedbackService.showError(
-          context, 'Failed to delete voice note: ${e.toString()}',);
+        context,
+        'Failed to delete voice note: ${e.toString()}',
+      );
     }
   }
 }

@@ -32,15 +32,17 @@ class BillNotificationService {
     await cancelBillReminder(bill.id!);
 
     final notificationId = _generateNotificationId(bill.id!);
-    final reminderDate =
+    var reminderDate =
         bill.nextDueDate.subtract(Duration(days: bill.reminderDaysBefore));
 
-    // Only schedule if reminder date is in the future
-    if (reminderDate.isBefore(DateTime.now())) {
+    final now = DateTime.now();
+
+    // If reminder date has passed, schedule for immediate delivery (1 minute from now)
+    if (reminderDate.isBefore(now)) {
+      reminderDate = now.add(const Duration(minutes: 1));
       if (kDebugMode) {
-        debugPrint('Reminder date has passed, not scheduling');
+        debugPrint('Reminder date has passed, scheduling immediately in 1 minute');
       }
-      return;
     }
 
     final payload = jsonEncode({

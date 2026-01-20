@@ -12,8 +12,6 @@ import 'package:life_tracker/shared/widgets/states/empty_state_widget.dart';
 import 'package:life_tracker/shared/widgets/states/error_widget.dart'
     as error_widget;
 import 'package:life_tracker/shared/widgets/states/skeleton_widgets.dart';
-import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
-import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
 
 /// Note filter/sort options
 enum NoteSortBy { dateNewest, dateOldest, title }
@@ -193,13 +191,14 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                               key: ValueKey('note_${note.id}'),
                               note: note,
                               onTap: () => _navigateToEditor(context, note),
-                              onDelete: () =>
-                                  _showDeleteConfirmation(context, note),
+                              onDelete: () => _showDeleteConfirmation(note),
                             );
                           },
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 88), // Space for FAB
+                          padding: const EdgeInsets.only(
+                            bottom: 88,
+                          ), // Space for FAB
                           cacheExtent: 500,
                           addAutomaticKeepAlives: false,
                           addRepaintBoundaries: true,
@@ -224,9 +223,10 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                                 ),
                               ),
                               confirmDismiss: (direction) async {
-                                return await showDialog<bool>(
+                                // First, confirm delete
+                                final confirmed = await showDialog<bool>(
                                       context: context,
-                                      builder: (context) => AlertDialog(
+                                      builder: (dialogContext) => AlertDialog(
                                         title: const Text('Delete Note'),
                                         content: Text(
                                           'Are you sure you want to delete "${note.title}"?',
@@ -234,13 +234,14 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                                         actions: [
                                           TextButton(
                                             onPressed: () =>
-                                                Navigator.of(context)
+                                                Navigator.of(dialogContext)
                                                     .pop(false),
                                             child: const Text('Cancel'),
                                           ),
                                           TextButton(
                                             onPressed: () =>
-                                                Navigator.of(context).pop(true),
+                                                Navigator.of(dialogContext)
+                                                    .pop(true),
                                             style: TextButton.styleFrom(
                                               foregroundColor: Theme.of(context)
                                                   .colorScheme
@@ -252,15 +253,19 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
                                       ),
                                     ) ??
                                     false;
+
+                                if (!confirmed) return false;
+
+                                return true;
                               },
                               onDismissed: (direction) {
-                                _handleDelete(context, note);
+                                // At this point, PIN was already verified (if needed)
+                                _deleteNote(note);
                               },
                               child: NoteListItem(
                                 note: note,
                                 onTap: () => _navigateToEditor(context, note),
-                                onDelete: () =>
-                                    _showDeleteConfirmation(context, note),
+                                onDelete: () => _showDeleteConfirmation(note),
                               ),
                             );
                           },
@@ -673,87 +678,42 @@ class _NotesScreenState extends ConsumerState<NotesScreen> {
     context.push(path, extra: note);
   }
 
-  Future<void> _handleDelete(BuildContext context, Note note) async {
+  Future<void> _handleDelete(Note note) async {
     if (note.id == null) return;
 
-    // If note is locked, verify PIN before deleting
-    if (note.isLocked) {
-      final verified = await _verifyPINForDelete(context);
-      if (!verified) {
-        // Reload notes to restore the dismissed item
-        ref.read(noteNotifierProvider.notifier).loadNotes();
-        return;
-      }
-    }
-
-    if (!context.mounted) return;
-    _deleteNote(context, note);
+    if (!mounted) return;
+    _deleteNote(note);
   }
 
-  Future<bool> _verifyPINForDelete(BuildContext context) async {
-    final encryptionService = NoteEncryptionService();
-    final hasPIN = await encryptionService.hasPIN();
-
-    if (!hasPIN) {
-      // No PIN set, allow delete
-      return true;
-    }
-
-    if (!context.mounted) return false;
-
-    // Show PIN dialog
-    final pin = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PINInputDialog(
-        title: 'Delete Locked Note',
-        message: 'Enter your PIN to delete this locked note',
-      ),
-    );
-
-    if (pin == null) {
-      if (context.mounted) {
-        FeedbackService.showInfo(context, 'Delete cancelled');
-      }
-      return false;
-    }
-
-    // Verify PIN
-    final isValid = await encryptionService.verifyPIN(pin);
-    if (!isValid) {
-      if (context.mounted) {
-        FeedbackService.showError(context, 'Incorrect PIN');
-      }
-      return false;
-    }
-
-    return true;
-  }
-
-  void _deleteNote(BuildContext context, Note note) {
+  void _deleteNote(Note note) {
     if (note.id == null) return;
+    if (!mounted) return;
 
     ref.read(noteNotifierProvider.notifier).deleteNoteEntry(note.id!);
     FeedbackService.showSuccess(context, '"${note.title}" deleted');
   }
 
-  void _showDeleteConfirmation(BuildContext context, Note note) {
+  void _showDeleteConfirmation(Note note) {
+    if (!mounted) return;
+
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: context, // Use State context
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Note'),
         content: Text(
           'Are you sure you want to delete "${note.title}"?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.of(context).pop();
-              await _handleDelete(context, note);
+              Navigator.of(dialogContext).pop();
+              // Use State context (this.context)
+              if (!mounted) return;
+              await _handleDelete(note);
             },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,

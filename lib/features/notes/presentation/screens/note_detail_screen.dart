@@ -12,8 +12,6 @@ import 'package:life_tracker/features/notes/presentation/providers/note_provider
 import 'package:life_tracker/features/notes/presentation/widgets/attachment_widget.dart';
 import 'package:life_tracker/features/notes/presentation/widgets/audio_player_widget.dart';
 import 'package:life_tracker/features/notes/services/attachment_service.dart';
-import 'package:life_tracker/features/notes/presentation/widgets/pin_input_dialog.dart';
-import 'package:life_tracker/features/notes/services/note_encryption_service.dart';
 
 class NoteDetailScreen extends ConsumerStatefulWidget {
   final Note note;
@@ -28,40 +26,6 @@ class NoteDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
-  bool _isUnlocked = false;
-  String? _decryptedContent;
-  bool _unlockInitiated = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // If note is locked, we need to unlock it first
-    if (widget.note.isLocked) {
-      _isUnlocked = false;
-      _decryptedContent = null;
-    } else {
-      _isUnlocked = true;
-      _decryptedContent = widget.note.content;
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Auto-unlock when screen is shown (only once)
-    if (widget.note.isLocked &&
-        !_isUnlocked &&
-        !_unlockInitiated &&
-        mounted) {
-      _unlockInitiated = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_isUnlocked) {
-          _unlockNote(context);
-        }
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy HH:mm');
@@ -108,39 +72,6 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Lock indicator
-                  if (widget.note.isLocked)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.orange.shade300),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _isUnlocked ? Icons.lock_open : Icons.lock,
-                            size: 16,
-                            color: Colors.orange,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _isUnlocked ? 'UNLOCKED' : 'LOCKED',
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   // Title
                   Text(
                     widget.note.title,
@@ -171,36 +102,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
             ),
 
             // Content
-            if (widget.note.isLocked && !_isUnlocked)
-              Padding(
-                padding: const EdgeInsets.all(AppDesignTokens.space16),
-                child: Center(
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.lock_outline,
-                        size: 64,
-                        color: Colors.orange,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'This note is locked',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      FilledButton.icon(
-                        onPressed: () => _unlockNote(context),
-                        icon: const Icon(Icons.lock_open),
-                        label: const Text('Unlock Note'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else if ((_decryptedContent != null &&
-                    _decryptedContent!.isNotEmpty) ||
-                (widget.note.content != null &&
-                    widget.note.content!.isNotEmpty))
+            if (widget.note.content != null && widget.note.content!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppDesignTokens.space16),
                 child: Column(
@@ -214,7 +116,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _decryptedContent ?? widget.note.content ?? '',
+                      widget.note.content!,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ],
@@ -222,7 +124,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
               ),
 
             // Checklist
-            if (widget.note.checklistItems.isNotEmpty && _isUnlocked)
+            if (widget.note.checklistItems.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppDesignTokens.space16),
                 child: Column(
@@ -305,7 +207,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
               ),
 
             // Add Todo List Button (if no checklist exists)
-            if (widget.note.checklistItems.isEmpty && _isUnlocked)
+            if (widget.note.checklistItems.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppDesignTokens.space16),
                 child: OutlinedButton.icon(
@@ -319,7 +221,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
               ),
 
             // Attachments
-            if (widget.note.attachmentPaths.isNotEmpty && _isUnlocked)
+            if (widget.note.attachmentPaths.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppDesignTokens.space16),
                 child: Column(
@@ -343,7 +245,7 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
               ),
 
             // Voice Note
-            if (widget.note.voiceNotePath != null && _isUnlocked)
+            if (widget.note.voiceNotePath != null)
               Padding(
                 padding: const EdgeInsets.all(AppDesignTokens.space16),
                 child: Column(
@@ -400,12 +302,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
                       _buildInfoRow(
                         context,
                         'Status',
-                        widget.note.isLocked
-                            ? (_isUnlocked ? 'Unlocked' : 'Locked')
-                            : 'Unlocked',
-                        widget.note.isLocked
-                            ? (_isUnlocked ? Icons.lock_open : Icons.lock)
-                            : Icons.lock_open,
+                        'Active',
+                        Icons.check_circle_outline,
                       ),
                     ],
                   ),
@@ -421,85 +319,6 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         label: const Text('Edit'),
       ),
     );
-  }
-
-  Future<void> _unlockNote(BuildContext context) async {
-    if (_isUnlocked) return;
-
-    final encryptionService = NoteEncryptionService();
-    final hasPIN = await encryptionService.hasPIN();
-    if (!context.mounted) return;
-
-    if (!hasPIN) {
-      // No PIN set - this shouldn't happen for locked notes, but handle it
-      if (context.mounted) {
-        FeedbackService.showError(
-          context,
-          'No PIN set. Cannot unlock note.',
-        );
-        Navigator.of(context).pop();
-      }
-      return;
-    }
-
-    // Show PIN dialog
-    final pin = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => const PINInputDialog(
-        title: 'Unlock Note',
-        message: 'Enter your PIN to unlock this note',
-      ),
-    );
-
-    if (!context.mounted) return;
-
-    if (pin != null) {
-      final isValid = await encryptionService.verifyPIN(pin);
-      if (!context.mounted) return;
-
-      if (isValid) {
-        // Decrypt content
-        if (widget.note.encryptedContent != null) {
-          final decrypted = await encryptionService.decryptContent(
-            widget.note.encryptedContent!,
-            pin,
-          );
-          if (!mounted) return;
-
-          if (decrypted != null) {
-            setState(() {
-              _decryptedContent = decrypted;
-              _isUnlocked = true;
-            });
-          } else {
-            if (context.mounted) {
-              FeedbackService.showError(
-                context,
-                'Failed to decrypt note content',
-              );
-            }
-          }
-        } else {
-          // No encrypted content - note might be locked but content is empty
-          setState(() {
-            _decryptedContent = '';
-            _isUnlocked = true;
-          });
-        }
-      } else {
-        if (context.mounted) {
-          FeedbackService.showError(context, 'Incorrect PIN');
-        }
-        // Reset unlock initiated flag to allow retry
-        _unlockInitiated = false;
-      }
-    } else {
-      // User cancelled - go back
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-    }
   }
 
   Widget _buildInfoRow(
@@ -549,7 +368,8 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Note?'),
-        content: Text('Are you sure you want to delete "${widget.note.title}"?'),
+        content:
+            Text('Are you sure you want to delete "${widget.note.title}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -567,58 +387,15 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      // If note is locked, verify PIN before deleting
-      if (widget.note.isLocked) {
-        final verified = await _verifyPINForDelete(context);
-        if (!verified) return;
-      }
+      await ref
+          .read(noteNotifierProvider.notifier)
+          .deleteNoteEntry(widget.note.id!);
 
-      await ref.read(noteNotifierProvider.notifier).deleteNoteEntry(widget.note.id!);
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        FeedbackService.showSuccess(context, 'Note deleted');
-      }
+      if (!context.mounted) return;
+
+      Navigator.of(context).pop();
+      FeedbackService.showSuccess(context, 'Note deleted');
     }
-  }
-
-  Future<bool> _verifyPINForDelete(BuildContext context) async {
-    final encryptionService = NoteEncryptionService();
-    final hasPIN = await encryptionService.hasPIN();
-
-    if (!hasPIN) {
-      // No PIN set, allow delete
-      return true;
-    }
-
-    if (!context.mounted) return false;
-
-    // Show PIN dialog
-    final pin = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const PINInputDialog(
-        title: 'Delete Locked Note',
-        message: 'Enter your PIN to delete this locked note',
-      ),
-    );
-
-    if (pin == null) {
-      if (context.mounted) {
-        FeedbackService.showInfo(context, 'Delete cancelled');
-      }
-      return false;
-    }
-
-    // Verify PIN
-    final isValid = await encryptionService.verifyPIN(pin);
-    if (!isValid) {
-      if (context.mounted) {
-        FeedbackService.showError(context, 'Incorrect PIN');
-      }
-      return false;
-    }
-
-    return true;
   }
 
   /// Add a new checklist item
@@ -668,7 +445,9 @@ class _NoteDetailScreenState extends ConsumerState<NoteDetailScreen> {
         updatedAt: DateTime.now(),
       );
 
-      await ref.read(noteNotifierProvider.notifier).updateNoteEntry(updatedNote);
+      await ref
+          .read(noteNotifierProvider.notifier)
+          .updateNoteEntry(updatedNote);
       if (context.mounted) {
         FeedbackService.showSuccess(context, 'Todo item added');
       }

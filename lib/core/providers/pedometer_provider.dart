@@ -22,7 +22,7 @@ final currentPedometerStepsProvider = Provider<int>((ref) {
   final asyncSteps = ref.watch(todayStepsFromPedometerProvider);
   return asyncSteps.when(
     data: (steps) => steps,
-    loading: () => 0,
+    loading: () => ref.watch(pedometerServiceProvider).todaySteps,
     error: (_, __) => 0,
   );
 });

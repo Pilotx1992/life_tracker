@@ -31,7 +31,13 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
   void initState() {
     super.initState();
     // Default to the regular bill/installment amount
-    _amountController.text = widget.bill.amount.toStringAsFixed(2);
+    double initialAmount = widget.bill.amount;
+    // For installments, cap at remaining amount
+    if (widget.bill.isInstallment &&
+        initialAmount > widget.bill.remainingAmount) {
+      initialAmount = widget.bill.remainingAmount;
+    }
+    _amountController.text = initialAmount.toStringAsFixed(2);
   }
 
   @override
@@ -127,65 +133,96 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Progress card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            // Progress bar
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: LinearProgressIndicator(
-                                value: bill.progressPercentage / 100,
-                                minHeight: 10,
-                                backgroundColor:
-                                    theme.colorScheme.surfaceContainerHigh,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  bill.progressPercentage >= 100
-                                      ? Colors.green
-                                      : theme.colorScheme.primary,
+                      // Progress card (Only for installments)
+                      if (bill.isInstallment)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              // Progress bar
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: LinearProgressIndicator(
+                                  value: bill.progressPercentage / 100,
+                                  minHeight: 10,
+                                  backgroundColor:
+                                      theme.colorScheme.surfaceContainerHigh,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    bill.progressPercentage >= 100
+                                        ? Colors.green
+                                        : theme.colorScheme.primary,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            // Stats row
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildStatItem(
-                                    theme,
-                                    'Paid',
-                                    formatter.format(bill.paidAmount),
-                                    Colors.green,
+                              const SizedBox(height: 12),
+                              // Stats row
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildStatItem(
+                                      theme,
+                                      'Paid',
+                                      formatter.format(bill.paidAmount),
+                                      Colors.green,
+                                    ),
                                   ),
-                                ),
-                                Container(
-                                  width: 1,
-                                  height: 40,
-                                  color: theme.colorScheme.outline
-                                      .withValues(alpha: 0.2),
-                                ),
-                                Expanded(
-                                  child: _buildStatItem(
-                                    theme,
-                                    'Remaining',
-                                    formatter.format(bill.remainingAmount),
-                                    theme.colorScheme.error,
+                                  Container(
+                                    width: 1,
+                                    height: 40,
+                                    color: theme.colorScheme.outline
+                                        .withValues(alpha: 0.2),
                                   ),
+                                  Expanded(
+                                    child: _buildStatItem(
+                                      theme,
+                                      'Remaining',
+                                      formatter.format(bill.remainingAmount),
+                                      theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        // Simple Amount Display for Regular Bills
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 20, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Total Amount',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                formatter.format(bill.amount),
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 20),
 
-                      // Payment type - using Column for compact display
+                      // Payment type - Material 3 SegmentedButton
                       Text(
                         'Payment Type',
                         style: theme.textTheme.labelLarge?.copyWith(
@@ -193,38 +230,35 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildPaymentTypeCard(
-                              theme,
-                              'Full',
-                              Icons.check_circle_rounded,
-                              _isFullPayment,
-                              () {
-                                setState(() {
-                                  _isFullPayment = true;
-                                  _amountController.text =
-                                      bill.amount.toStringAsFixed(2);
-                                });
-                              },
-                            ),
+                      SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment<bool>(
+                            value: true,
+                            label: Text('Full Payment'),
+                            icon: Icon(Icons.payments_rounded, size: 18),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildPaymentTypeCard(
-                              theme,
-                              'Custom',
-                              Icons.edit_rounded,
-                              !_isFullPayment,
-                              () {
-                                setState(() {
-                                  _isFullPayment = false;
-                                });
-                              },
-                            ),
+                          ButtonSegment<bool>(
+                            value: false,
+                            label: Text('Custom Amount'),
+                            icon: Icon(Icons.edit_rounded, size: 18),
                           ),
                         ],
+                        selected: {_isFullPayment},
+                        onSelectionChanged: (Set<bool> selection) {
+                          setState(() {
+                            _isFullPayment = selection.first;
+                            if (_isFullPayment) {
+                              double amount = bill.amount;
+                              // For installments, cap at remaining amount
+                              if (bill.isInstallment &&
+                                  amount > bill.remainingAmount) {
+                                amount = bill.remainingAmount;
+                              }
+                              _amountController.text =
+                                  amount.toStringAsFixed(2);
+                            }
+                          });
+                        },
                       ),
                       const SizedBox(height: 16),
 
@@ -245,7 +279,8 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                           ),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,),
+                          decimal: true,
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter an amount';
@@ -254,7 +289,9 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                           if (amount == null || amount <= 0) {
                             return 'Please enter a valid amount';
                           }
-                          if (amount > bill.remainingAmount) {
+                          // Only check remaining balance for installments
+                          if (bill.isInstallment &&
+                              amount > bill.remainingAmount) {
                             return 'Amount exceeds remaining balance';
                           }
                           return null;
@@ -268,109 +305,115 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
                           final accountsAsync = ref.watch(accountListProvider);
 
                           return accountsAsync.when(
-                              data: (accounts) {
-                                if (accounts.isEmpty) {
-                                  return Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.errorContainer,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                            data: (accounts) {
+                              if (accounts.isEmpty) {
+                                return Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.warning_rounded,
+                                        color: theme.colorScheme.error,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'No accounts available. Please add an account first.',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: theme
+                                                .colorScheme.onErrorContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              _selectedAccount ??= accounts.first;
+
+                              return DropdownButtonFormField<Account>(
+                                initialValue: _selectedAccount,
+                                decoration: InputDecoration(
+                                  labelText: 'Pay from Account',
+                                  prefixIcon:
+                                      const Icon(Icons.account_balance_wallet),
+                                  filled: true,
+                                  fillColor: theme
+                                      .colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.3),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                                isExpanded: true,
+                                items: accounts.map((account) {
+                                  final balanceText = NumberFormat.currency(
+                                    symbol: account.currency,
+                                    decimalDigits: 0,
+                                  ).format(account.balance);
+
+                                  return DropdownMenuItem(
+                                    value: account,
                                     child: Row(
                                       children: [
-                                        Icon(
-                                          Icons.warning_rounded,
-                                          color: theme.colorScheme.error,
-                                        ),
-                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
-                                            'No accounts available. Please add an account first.',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: theme.colorScheme.onErrorContainer,
-                                            ),
+                                            account.name,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          balanceText,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ],
                                     ),
                                   );
-                                }
-
-                                _selectedAccount ??= accounts.first;
-
-                                return DropdownButtonFormField<Account>(
-                                  initialValue: _selectedAccount,
-                                  decoration: InputDecoration(
-                                    labelText: 'Pay from Account',
-                                    prefixIcon: const Icon(Icons.account_balance_wallet),
-                                    filled: true,
-                                    fillColor: theme.colorScheme.surfaceContainerHighest
-                                        .withValues(alpha: 0.3),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                  ),
-                                  isExpanded: true,
-                                  items: accounts.map((account) {
-                                    final balanceText = NumberFormat.currency(
-                                      symbol: account.currency,
-                                      decimalDigits: 0,
-                                    ).format(account.balance);
-
-                                    return DropdownMenuItem(
-                                      value: account,
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              account.name,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            balanceText,
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _selectedAccount = value;
-                                    });
-                                  },
-                                  validator: (value) {
-                                    if (value == null) {
-                                      return 'Please select an account';
-                                    }
-                                    return null;
-                                  },
-                                );
-                              },
-                              loading: () => const Center(
-                                child: CircularProgressIndicator(),
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedAccount = value;
+                                  });
+                                },
+                                validator: (value) {
+                                  if (value == null) {
+                                    return 'Please select an account';
+                                  }
+                                  return null;
+                                },
+                              );
+                            },
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (_, __) => Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.errorContainer,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              error: (_, __) => Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.errorContainer,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Error loading accounts',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onErrorContainer,
-                                  ),
+                              child: Text(
+                                'Error loading accounts',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onErrorContainer,
                                 ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 16),
 
                       // Note field
@@ -415,7 +458,11 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
   }
 
   Widget _buildStatItem(
-      ThemeData theme, String label, String value, Color color,) {
+    ThemeData theme,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Column(
       children: [
         Text(
@@ -436,56 +483,6 @@ class _MakePaymentDialogState extends ConsumerState<MakePaymentDialog> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPaymentTypeCard(
-    ThemeData theme,
-    String label,
-    IconData icon,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withValues(alpha: 0.2),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? theme.colorScheme.onPrimaryContainer
-                  : theme.colorScheme.onSurfaceVariant,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

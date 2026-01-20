@@ -122,7 +122,6 @@ class NotesSummaryCard extends ConsumerWidget {
   }
 
   Widget _buildRecentNote(BuildContext context, Note note) {
-    final isLocked = note.isLocked;
     final hasChecklist = note.checklistItems.isNotEmpty;
     final checkedCount =
         note.checklistItems.where((item) => item.isChecked).length;
@@ -133,8 +132,8 @@ class NotesSummaryCard extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(
-              isLocked ? Icons.lock : Icons.note_outlined,
+            const Icon(
+              Icons.note_outlined,
               size: 20,
               color: Colors.grey,
             ),
@@ -152,7 +151,7 @@ class NotesSummaryCard extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 4),
-        if (note.content != null && note.content!.isNotEmpty && !isLocked)
+        if (note.content != null && note.content!.isNotEmpty)
           Text(
             note.content!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -160,14 +159,6 @@ class NotesSummaryCard extends ConsumerWidget {
                 ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-          )
-        else if (isLocked)
-          Text(
-            '🔒 Locked',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
           ),
         if (hasChecklist) ...[
           const SizedBox(height: 4),

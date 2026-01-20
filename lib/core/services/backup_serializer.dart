@@ -215,14 +215,12 @@ class BackupSerializer {
       'id': model.id,
       'title': model.title,
       'content': model.content,
-      'encryptedContent': model.encryptedContent,
       'color': model.color,
       'attachmentPaths': model.attachmentPaths,
       'voiceNotePath': model.voiceNotePath,
       'checklistItems': model.checklistItems
           .map((item) => checklistItemToJson(item))
           .toList(),
-      'isLocked': model.isLocked,
       'createdAt': model.createdAt.toIso8601String(),
       'updatedAt': model.updatedAt.toIso8601String(),
     };

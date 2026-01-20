@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_tracker/core/providers/gps_provider.dart';
 import 'package:life_tracker/core/providers/health_provider.dart';
@@ -40,6 +41,12 @@ class SmartActivityRepository implements ActivityRepository {
     final healthState = _ref.read(healthConnectProvider);
     final int currentPedometerSteps =
         (pedometerSteps ?? _ref.read(currentPedometerStepsProvider)) as int;
+
+    if (kDebugMode) {
+      debugPrint('🏃 SmartActivityRepository: Emitting activity update');
+      debugPrint('   Pedometer steps param: $pedometerSteps');
+      debugPrint('   Current pedometer steps: $currentPedometerSteps');
+    }
 
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -176,6 +183,13 @@ class SmartActivityRepository implements ActivityRepository {
           CalorieCalculator.calculateExerciseMinutes(usedSteps);
       final standHours = CalorieCalculator.calculateStandHours(
           usedSteps, now.hour + now.minute / 60.0,);
+
+      if (kDebugMode) {
+        debugPrint('📊 ActivitySummary: Using phone sensor data');
+        debugPrint('   Steps: $usedSteps');
+        debugPrint('   Calories: $calculatedCalories');
+        debugPrint('   Distance: ${distanceToUse}m');
+      }
 
       _controller.add(ActivitySummary(
         steps: usedSteps,

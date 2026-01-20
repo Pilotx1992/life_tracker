@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:life_tracker/core/constants/app_colors.dart';
 import 'package:life_tracker/core/constants/app_design_tokens.dart';
 import 'package:life_tracker/core/services/feedback_service.dart';
 import 'package:life_tracker/features/finance/domain/entities/account.dart';
@@ -112,96 +113,97 @@ class AccountDetailScreen extends ConsumerWidget {
             ],
             const SizedBox(height: AppDesignTokens.space16),
 
-            // Transaction Summary Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDesignTokens.space16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Transaction Summary',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: AppDesignTokens.space16),
-                    _buildTransactionList(
-                      context,
-                      ref,
-                      currentAccount,
-                      currencyFormat,
-                    ),
-                  ],
-                ),
+            // Quick Actions Section
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppDesignTokens.space4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Quick Actions',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: AppDesignTokens.space12),
+                  Row(
+                    children: [
+                      // Add Expense Button
+                      Expanded(
+                        child: _buildQuickActionButton(
+                          context,
+                          icon: Icons.remove_circle_outline,
+                          label: 'Expense',
+                          color: Colors.red,
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) => AddExpenseBottomSheet(
+                                preSelectedAccountId: currentAccount.id,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Add Income Button
+                      Expanded(
+                        child: _buildQuickActionButton(
+                          context,
+                          icon: Icons.add_circle_outline,
+                          label: 'Income',
+                          color: Colors.green,
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AddIncomeDialog(
+                                preSelectedAccountId: currentAccount.id,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Transfer Button
+                      Expanded(
+                        child: _buildQuickActionButton(
+                          context,
+                          icon: Icons.swap_horiz_rounded,
+                          label: 'Transfer',
+                          color: Colors.blue,
+                          onTap: () {
+                            _showTransferDialog(context, ref, currentAccount);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AppDesignTokens.space16),
 
-            // Quick Actions Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDesignTokens.space16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick Actions',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+            // Transaction Summary Section
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppDesignTokens.space16),
+              child: Text(
+                'Transaction Summary',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: AppDesignTokens.space16),
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.red.shade100,
-                        child: const Icon(Icons.remove, color: Colors.red),
-                      ),
-                      title: const Text('Add Expense'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => AddExpenseBottomSheet(
-                            preSelectedAccountId: currentAccount.id,
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.green.shade100,
-                        child: const Icon(Icons.add, color: Colors.green),
-                      ),
-                      title: const Text('Add Income'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AddIncomeDialog(
-                            preSelectedAccountId: currentAccount.id,
-                          ),
-                        );
-                      },
-                    ),
-                    const Divider(),
-                    ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue.shade100,
-                        child: const Icon(Icons.swap_horiz, color: Colors.blue),
-                      ),
-                      title: const Text('Transfer'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        _showTransferDialog(context, ref, currentAccount);
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
+            const SizedBox(height: AppDesignTokens.space8),
+            _buildTransactionList(
+              context,
+              ref,
+              currentAccount,
+              currencyFormat,
+            ),
+            const SizedBox(height: AppDesignTokens.space24),
           ],
         ),
       ),
@@ -476,7 +478,9 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         account.currency,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -512,17 +516,21 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Account Type',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         account.type,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
                     ],
                   ),
@@ -542,7 +550,9 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Status',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
@@ -660,7 +670,8 @@ class AccountDetailScreen extends ConsumerWidget {
                                 .titleLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
                         ),
@@ -686,17 +697,21 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         account.currency,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         currencyFormat.format(utilizedLimit),
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
                     ],
                   ),
@@ -722,17 +737,21 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Total limit',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${account.currency} ${totalLimit.toInt()}',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
                     ],
                   ),
@@ -752,17 +771,21 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         'Available limit',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${account.currency} ${currencyFormat.format(availableLimit).replaceAll(currencyFormat.currencySymbol, '').trim()}',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
                     ],
                   ),
@@ -770,6 +793,61 @@ class AccountDetailScreen extends ConsumerWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -849,7 +927,10 @@ class AccountDetailScreen extends ConsumerWidget {
                           Icon(
                             Icons.receipt_long,
                             size: 48,
-                            color: Colors.grey.shade400,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -858,7 +939,9 @@ class AccountDetailScreen extends ConsumerWidget {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                  color: Colors.grey,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                           ),
                         ],
@@ -896,53 +979,23 @@ class AccountDetailScreen extends ConsumerWidget {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Date header with rounded container and horizontal lines
+                          // Date header
                           Padding(
-                            padding: const EdgeInsets.only(top: 16, bottom: 8),
-                            child: Row(
-                              children: [
-                                // Left horizontal line
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: Colors.grey.shade400,
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: Text(
+                              DateFormat('EEEE, d MMMM')
+                                  .format(date)
+                                  .toUpperCase(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
                                   ),
-                                ),
-                                // Date in rounded container
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.grey.shade400,
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    DateFormat('dd MMM yyyy')
-                                        .format(date)
-                                        .toUpperCase(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                        ),
-                                  ),
-                                ),
-                                // Right horizontal line
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                           // Transactions for this date
@@ -1010,6 +1063,7 @@ class AccountDetailScreen extends ConsumerWidget {
     String currency,
     Account currentAccount,
   ) {
+    final theme = Theme.of(context);
     final isExpense = transaction.type == _TransactionType.expense;
     final isTransfer = transaction.type == _TransactionType.transfer;
     final amount = isExpense
@@ -1025,143 +1079,162 @@ class AccountDetailScreen extends ConsumerWidget {
           transaction.transfer!.fromAccountId == currentAccount.id;
     }
 
-    // Determine if the transaction is negative (red) or positive (green)
-    // Negative: expenses or outgoing transfers (money leaving the account)
-    // Positive: income or incoming transfers (money entering the account)
     final isNegative = isExpense || (isTransfer && isTransferOutgoing);
+    final amountColor = isNegative ? AppColors.expense : AppColors.income;
+    final sign = isNegative ? '-' : '+';
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
+          // Icon
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isNegative
+                  ? AppColors.expense.withValues(alpha: 0.1)
+                  : AppColors.income.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isExpense
+                  ? Icons.shopping_bag_outlined
+                  : isTransfer
+                      ? Icons.swap_horiz_rounded
+                      : Icons.attach_money_rounded,
+              color: isNegative ? AppColors.expense : AppColors.income,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Transaction title
-                isExpense
-                    ? Consumer(
-                        builder: (context, ref, child) {
-                          final categoriesAsync = ref.watch(categoriesProvider);
-                          return categoriesAsync.when(
-                            data: (categories) {
-                              final category = categories.firstWhere(
-                                (c) => c.id == transaction.expense!.categoryId,
-                                orElse: () => categories.isNotEmpty
-                                    ? categories.first
-                                    : throw StateError('No categories'),
-                              );
-                              return Text(
-                                '${category.name} -',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                    ),
-                              );
-                            },
-                            loading: () => const Text('Loading...'),
-                            error: (_, __) => const Text('Expense -'),
+                if (isExpense)
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final categoriesAsync = ref.watch(categoriesProvider);
+                      return categoriesAsync.when(
+                        data: (categories) {
+                          if (categories.isEmpty) {
+                            return Text(
+                              'Expense',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          }
+                          final category = categories.firstWhere(
+                            (c) => c.id == transaction.expense!.categoryId,
+                            orElse: () => categories.first,
+                          );
+                          return Text(
+                            category.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           );
                         },
-                      )
-                    : isTransfer
-                        ? Consumer(
-                            builder: (context, ref, child) {
-                              final accountsAsync =
-                                  ref.watch(accountListProvider);
-                              return accountsAsync.when(
-                                data: (accounts) {
-                                  final otherAccountId = isTransferOutgoing
-                                      ? transaction.transfer!.toAccountId
-                                      : transaction.transfer!.fromAccountId;
-                                  final otherAccount = accounts.firstWhere(
-                                    (a) => a.id == otherAccountId,
-                                    orElse: () => currentAccount,
-                                  );
-                                  return Text(
-                                    '${isTransferOutgoing ? 'To' : 'From'} ${otherAccount.name} -',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                        ),
-                                  );
-                                },
-                                loading: () => const Text('Transfer -'),
-                                error: (_, __) => const Text('Transfer -'),
-                              );
-                            },
-                          )
-                        : Text(
-                            '${transaction.income!.source} -',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                          ),
-                // Location or note (if available)
-                if (isExpense &&
-                    transaction.expense!.note != null &&
-                    transaction.expense!.note!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      transaction.expense!.note!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                    ),
+                        loading: () => const SizedBox(),
+                        error: (_, __) => const Text('Expense'),
+                      );
+                    },
                   )
-                else if (isTransfer &&
-                    transaction.transfer!.note != null &&
-                    transaction.transfer!.note!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      transaction.transfer!.note!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
-                    ),
+                else if (isTransfer)
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final accountsAsync = ref.watch(accountListProvider);
+                      return accountsAsync.when(
+                        data: (accounts) {
+                          final otherAccountId = isTransferOutgoing
+                              ? transaction.transfer!.toAccountId
+                              : transaction.transfer!.fromAccountId;
+                          final otherAccount = accounts.firstWhere(
+                            (a) => a.id == otherAccountId,
+                            orElse: () => currentAccount,
+                          );
+                          return Text(
+                            '${isTransferOutgoing ? 'To' : 'From'} ${otherAccount.name}',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                        loading: () => const SizedBox(),
+                        error: (_, __) => const Text('Transfer'),
+                      );
+                    },
                   )
-                else if (!isExpense &&
-                    !isTransfer &&
-                    transaction.income!.note != null &&
-                    transaction.income!.note!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      transaction.income!.note!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
+                else
+                  Text(
+                    transaction.income!.source,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                const SizedBox(height: 4),
+                // Note or Date/Time fallback
+                Text(
+                  _getTransactionNote(transaction) ??
+                      DateFormat.jm().format(transaction.date),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
-          // Amount with sign (aligned to the right)
+          const SizedBox(width: 8),
+          // Amount
           Text(
-            '$currency ${isNegative ? '-' : '+'}${currencyFormat.format(amount).replaceAll(currencyFormat.currencySymbol, '').trim()}',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isNegative ? Colors.red : Colors.green,
-                ),
+            '$sign${currencyFormat.format(amount).replaceAll(currencyFormat.currencySymbol, '').trim()}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: amountColor,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  String? _getTransactionNote(_TransactionItem transaction) {
+    switch (transaction.type) {
+      case _TransactionType.expense:
+        return transaction.expense?.note?.isNotEmpty == true
+            ? transaction.expense!.note
+            : null;
+      case _TransactionType.income:
+        return transaction.income?.note?.isNotEmpty == true
+            ? transaction.income!.note
+            : null;
+      case _TransactionType.transfer:
+        return transaction.transfer?.note?.isNotEmpty == true
+            ? transaction.transfer!.note
+            : null;
+    }
   }
 
   void _showAllTransactions(
@@ -1212,7 +1285,7 @@ class AccountDetailScreen extends ConsumerWidget {
                     height: 4,
                     margin: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1232,7 +1305,9 @@ class AccountDetailScreen extends ConsumerWidget {
                       Text(
                         '${transactions.length} transactions',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                       ),
                     ],
@@ -1253,48 +1328,21 @@ class AccountDetailScreen extends ConsumerWidget {
                         children: [
                           // Date header
                           Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 4),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: Colors.grey.shade300,
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: Text(
+                              DateFormat('EEEE, d MMMM')
+                                  .format(date)
+                                  .toUpperCase(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
                                   ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Text(
-                                    DateFormat('dd MMM yyyy')
-                                        .format(date)
-                                        .toUpperCase(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                           // Transactions
