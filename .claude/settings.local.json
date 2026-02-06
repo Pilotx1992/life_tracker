@@ -35,7 +35,15 @@
       "Bash(if not exist \"lib\\shared\\widgets\\states\" mkdir \"lib\\shared\\widgets\\states\")",
       "Bash(cat:*)",
       "Bash(flutter doctor:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(flutter pub outdated:*)",
+      "Bash(flutter pub deps:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(adb devices:*)",
+      "Bash(dart run:*)",
+      "Bash(flutter install:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

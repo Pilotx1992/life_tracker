@@ -16,16 +16,15 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-}
 
-subprojects {
-    plugins.withId("com.android.library") {
-        if (name == "isar_flutter_libs") {
+    // Fix compileSdk for all Android library subprojects
+    afterEvaluate {
+        if (project.plugins.hasPlugin("com.android.library")) {
             extensions.configure<BaseExtension>("android") {
-                namespace = "dev.isar.isar_flutter_libs"
+                if (name == "isar_flutter_libs") {
+                    namespace = "dev.isar.isar_flutter_libs"
+                }
+                compileSdkVersion(34)
             }
         }
     }
@@ -34,3 +33,4 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+

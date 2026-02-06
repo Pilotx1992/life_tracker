@@ -2,7 +2,7 @@
 
 **Project Status**: 97% Complete (MVP Ready) ⬆️
 **Target**: Production Release
-**Last Updated**: 2026-01-18 (Phases 3 & 4 Complete, Phase 5 In Progress!)
+**Last Updated**: 2026-01-20 (Finance UI Polish Complete, Phase 5 Ongoing)
 
 ---
 
@@ -356,6 +356,19 @@ Semantics(
 - [ ] Large dataset performance (1000+ items)
 - [ ] Rapid user input handling (debouncing)
 - [ ] App lifecycle (background/foreground)
+
+### 3.5 Finance UI & Experience Polish ✅ COMPLETE (2026-01-20)
+**Goal**: Modernize and improve usability of finance screens
+
+- [x] **Transaction Summary Redesign**:
+  - Modern card styling with shadow and distinct icons
+  - Simplified date headers (clean uppercase text)
+  - Theme-aware colors (removed hardcoded colors)
+- [x] **Add Expense UX**:
+  - Replaced dropdown with specialized **Category Picker Bottom Sheet**
+  - Larger touch targets and better visibility
+- [x] **New Categories**: Added 'Fuel' and 'Car Service' with auto-initialization
+- [x] **Visual Consistency**: Unified "View All" modal style with main list
 
 ---
 
